@@ -1,0 +1,72 @@
+<?php
+
+namespace App\Services;
+
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Service untuk menghitung saldo/kas koperasi secara real-time.
+ * Saldo dihitung dari seluruh transaksi: simpanan masuk, angsuran, potongan, pencairan, pengembalian.
+ */
+class SaldoService
+{
+    /**
+     * Hitung total saldo koperasi saat ini.
+     */
+    public function saldoKoperasi(): float
+    {
+        return $this->totalDanaMasuk() - $this->totalDanaKeluar();
+    }
+
+    /**
+     * Total dana yang masuk ke kas koperasi.
+     */
+    public function totalDanaMasuk(): float
+    {
+        $simpanan = (float) DB::table('simpanan')->sum('nominal');
+
+        $angsuranLunas = (float) DB::table('angsuran')
+            ->where('status', 'lunas')
+            ->sum(DB::raw('nominal_pokok + nominal_bunga'));
+
+        $danaResiko = (float) DB::table('pinjaman')
+            ->whereIn('status', ['berjalan', 'lunas'])
+            ->sum('potongan_dana_resiko');
+
+        $biayaAdmin = (float) DB::table('pinjaman')
+            ->whereIn('status', ['berjalan', 'lunas'])
+            ->sum('potongan_biaya_admin');
+
+        return $simpanan + $angsuranLunas + $danaResiko + $biayaAdmin;
+    }
+
+    /**
+     * Total dana yang keluar dari kas koperasi.
+     */
+    public function totalDanaKeluar(): float
+    {
+        $pencairan = (float) DB::table('pinjaman')
+            ->whereIn('status', ['berjalan', 'lunas'])
+            ->sum('dana_diterima');
+
+        $penarikan = (float) DB::table('penarikan_simpanan')->sum('nominal');
+
+        return $pencairan + $penarikan;
+    }
+
+    /**
+     * Cek apakah saldo mencukupi untuk pinjaman tertentu.
+     * Mengembalikan array [cukup, saldo_saat_ini, sisa_setelah].
+     */
+    public function cekKecukupanSaldo(float $nominalPinjaman): array
+    {
+        $saldo = $this->saldoKoperasi();
+        $sisa = $saldo - ($nominalPinjaman * 0.95); // Yang keluar = 95% (dana diterima)
+
+        return [
+            'cukup' => $sisa >= 0,
+            'saldo_saat_ini' => $saldo,
+            'sisa_setelah_approve' => $sisa,
+        ];
+    }
+}
