@@ -90,10 +90,21 @@
         </div>
         @endif
         
-        <div class="p-4 border-t border-white/10 text-center bg-black/20">
+        <div class="p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-white/10 bg-black/20">
             <a href="{{ route('pinjaman.guest.status') }}" class="text-sm text-blue-400 hover:text-blue-300 transition-colors">
                 &larr; Cek Pengajuan Lain
             </a>
+            
+            @if($pinjaman->status->value === 'menunggu')
+            <form action="{{ route('pinjaman.guest.cancel') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pengajuan ini?');">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="no_referensi" value="{{ $pinjaman->no_referensi }}">
+                <button type="submit" class="px-4 py-2 border border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl text-sm font-medium transition-colors">
+                    Batalkan Pengajuan
+                </button>
+            </form>
+            @endif
         </div>
     </div>
 </div>

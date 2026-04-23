@@ -19,10 +19,7 @@ class Anggota extends Model
     protected $fillable = [
         'nip',
         'nama',
-        'golongan',
-        'jabatan',
         'bidang_id',
-        'alamat',
         'no_hp',
         'tanggal_masuk',
         'tanggal_keluar',

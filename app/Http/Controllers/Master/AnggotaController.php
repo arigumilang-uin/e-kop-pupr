@@ -41,6 +41,7 @@ class AnggotaController extends Controller
     {
         $anggota = Anggota::create([
             ...$request->validated(),
+            'tanggal_masuk' => $request->input('tanggal_masuk', now()->format('Y-m-d')),
             'status' => StatusAnggota::Aktif,
         ]);
 
@@ -51,6 +52,32 @@ class AnggotaController extends Controller
         );
 
         return redirect()->route('anggota.index')->with('success', 'Data anggota berhasil ditambahkan.');
+    }
+
+    public function show(Anggota $anggotum)
+    {
+        $anggota = collect([$anggotum])->first();
+        if(!$anggota->id) $anggota = request()->route('anggota');
+
+        $anggota->load(['bidang', 'simpanan.jenisSimpanan', 'pinjaman' => function($q) {
+            $q->whereIn('status', ['berjalan', 'lunas', 'menunggu', 'ditinjau'])->with('angsuran');
+        }]);
+
+        // Hitung total simpanan per jenis
+        $simpananPerJenis = $anggota->simpanan->groupBy('jenisSimpanan.nama')->map(function($items) {
+            return $items->sum('nominal');
+        });
+        $totalSimpanan = $anggota->simpanan->sum('nominal');
+
+        // Hitung piutang aktif tersisa (berdasarkan angsuran yang belum lunas)
+        $pinjamanAktif = $anggota->pinjaman->filter(fn($p) => $p->status->value === 'berjalan');
+        $sisaUtang = 0;
+        foreach($pinjamanAktif as $p) {
+            $lunas = $p->angsuran->filter(fn($a) => $a->status->value === 'lunas')->sum('nominal_total');
+            $sisaUtang += ($p->total_bayar - $lunas);
+        }
+
+        return view('anggota.show', compact('anggota', 'simpananPerJenis', 'totalSimpanan', 'pinjamanAktif', 'sisaUtang'));
     }
 
     public function edit(Anggota $anggotum) // Laravel resource binding weirdness workaround

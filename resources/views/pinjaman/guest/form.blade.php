@@ -145,8 +145,29 @@
                 </div>
             </div>
 
+            @if(session('needs_override_confirmation'))
+            <div class="p-8 bg-amber-500/10 border-t border-b border-amber-500/20">
+                <div class="flex gap-4">
+                    <div class="shrink-0 mt-1">
+                        <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-amber-500 font-bold mb-1">Konfirmasi Pengajuan Tambahan</h3>
+                        <p class="text-amber-200/80 text-sm mb-4">
+                            {{ session('needs_override_confirmation') }}
+                        </p>
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox" name="confirm_override" value="1" required
+                                   class="w-5 h-5 rounded border-amber-500/50 bg-amber-500/10 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900 focus:ring-offset-2">
+                            <span class="text-sm font-medium text-amber-100 group-hover:text-amber-300 transition-colors">Saya Yakin Melanjutkan Pengajuan Ini</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             {{-- Submit --}}
-            <div class="p-8 bg-black/20 flex items-center justify-between">
+            <div class="p-8 bg-black/20 flex flex-col md:flex-row gap-6 items-center justify-between">
                 <p class="text-sm text-slate-400 max-w-xl">
                     Dengan klik "Kirim Pengajuan", saya menyatakan bahwa data di atas benar dan bersedia mematuhi aturan potongan 5% serta bunga flat sebesar {{ $pengaturan['bunga_persen'] }}%.
                 </p>

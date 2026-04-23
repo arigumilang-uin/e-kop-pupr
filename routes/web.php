@@ -3,10 +3,14 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Keuangan\SimpananController;
+use App\Http\Controllers\Keuangan\PotonganBulananController;
 use App\Http\Controllers\Master\AnggotaController;
 use App\Http\Controllers\Periode\PeriodeController;
+use App\Http\Controllers\Pinjaman\PinjamanAdminController;
 use App\Http\Controllers\Pinjaman\PinjamanGuestController;
 use App\Http\Controllers\Simulasi\SimulasiController;
+use App\Http\Controllers\Sistem\PengaturanController;
+use App\Http\Controllers\Sistem\LogAktivitasController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -44,10 +48,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // === Master Data ===
-    Route::resource('anggota', AnggotaController::class)->except(['show']);
+    Route::resource('anggota', AnggotaController::class);
 
     // === Keuangan ===
     Route::resource('simpanan', SimpananController::class)->except(['show', 'edit', 'update', 'destroy']);
+    Route::get('/potongan', [PotonganBulananController::class, 'index'])->name('potongan.index');
+    Route::post('/potongan/proses', [PotonganBulananController::class, 'proses'])->name('potongan.proses');
+
+    // === Pinjaman Admin/Approve ===
+    Route::get('/pinjaman', [PinjamanAdminController::class, 'index'])->name('pinjaman.index');
+    Route::get('/pinjaman/{pinjaman}', [PinjamanAdminController::class, 'show'])->name('pinjaman.show');
+    Route::patch('/pinjaman/{pinjaman}/approve', [PinjamanAdminController::class, 'approve'])->name('pinjaman.approve');
+    Route::patch('/pinjaman/{pinjaman}/reject', [PinjamanAdminController::class, 'reject'])->name('pinjaman.reject');
+    Route::patch('/pinjaman/{pinjaman}/angsuran/{angsuran}/bayar', [PinjamanAdminController::class, 'bayarAngsuran'])->name('pinjaman.angsuran.bayar');
 
     // === Periode Pinjaman ===
     Route::get('/periode', [PeriodeController::class, 'index'])->name('periode.index');
@@ -57,6 +70,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('/periode/{periode}/tutup', [PeriodeController::class, 'tutup'])->name('periode.tutup');
     Route::patch('/periode/{periode}/buka', [PeriodeController::class, 'buka'])->name('periode.buka');
     Route::patch('/periode/{periode}/reset-token', [PeriodeController::class, 'resetToken'])->name('periode.reset-token');
+
+    // === Sistem ===
+    Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan.index');
+    Route::patch('/pengaturan/{pengaturan}', [PengaturanController::class, 'update'])->name('pengaturan.update');
+    Route::get('/log', [LogAktivitasController::class, 'index'])->name('log.index');
 });
 
 /*
@@ -67,5 +85,6 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/pinjaman/ajukan/{token}', [PinjamanGuestController::class, 'form'])->name('pinjaman.guest.form');
 Route::post('/pinjaman/ajukan/{token}', [PinjamanGuestController::class, 'submit'])->name('pinjaman.guest.submit');
-Route::get('/pinjaman/status', [PinjamanGuestController::class, 'statusForm'])->name('pinjaman.guest.status');
-Route::post('/pinjaman/status', [PinjamanGuestController::class, 'statusCheck'])->name('pinjaman.guest.check');
+Route::get('/cek-pinjaman', [PinjamanGuestController::class, 'statusForm'])->name('pinjaman.guest.status');
+Route::post('/cek-pinjaman', [PinjamanGuestController::class, 'statusCheck'])->name('pinjaman.guest.check');
+Route::patch('/cek-pinjaman/batal', [PinjamanGuestController::class, 'cancel'])->name('pinjaman.guest.cancel');

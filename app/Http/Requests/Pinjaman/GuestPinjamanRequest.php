@@ -14,13 +14,14 @@ class GuestPinjamanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nip' => ['required', 'string', 'max:20'],
-            'nama' => ['required', 'string', 'max:100'],
+            'nip' => ['required', 'string', 'max:50'],
+            'nama' => ['required', 'string', 'max:150'],
             'nama_bank' => ['required', 'string', 'max:100'],
             'nama_rekening' => ['required', 'string', 'max:100'],
             'no_rekening' => ['required', 'string', 'max:30'],
             'nominal_pinjaman' => ['required', 'numeric', 'min:100000'],
             'tenor_bulan' => ['required', 'integer', 'min:1'],
+            'confirm_override' => ['nullable', 'boolean'],
         ];
     }
 

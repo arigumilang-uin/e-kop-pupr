@@ -16,13 +16,10 @@ class UpdateAnggotaRequest extends FormRequest
         $anggotaId = $this->route('anggotum')->id ?? $this->route('anggota')->id ?? null;
 
         return [
-            'nip' => ['required', 'string', 'max:20', 'unique:anggota,nip,' . $anggotaId],
-            'nama' => ['required', 'string', 'max:100'],
-            'golongan' => ['required', 'string', 'max:10'],
-            'jabatan' => ['nullable', 'string', 'max:100'],
+            'nip' => ['required', 'string', 'max:50', 'unique:anggota,nip,' . $anggotaId],
+            'nama' => ['required', 'string', 'max:150'],
             'bidang_id' => ['required', 'exists:bidang,id'],
-            'alamat' => ['nullable', 'string'],
-            'no_hp' => ['nullable', 'string', 'max:15'],
+            'no_hp' => ['nullable', 'string', 'max:20'],
         ];
     }
 }

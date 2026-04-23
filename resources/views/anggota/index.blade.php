@@ -31,7 +31,7 @@
             <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 text-[13px] uppercase tracking-wider">
                 <tr>
                     <th scope="col" class="px-6 py-4">Informasi Pegawai</th>
-                    <th scope="col" class="px-6 py-4">Bidang / Jabatan</th>
+                    <th scope="col" class="px-6 py-4">Bidang</th>
                     <th scope="col" class="px-6 py-4">Status</th>
                     <th scope="col" class="px-6 py-4 text-right">Aksi</th>
                 </tr>
@@ -41,15 +41,15 @@
                 <tr class="hover:bg-slate-50/80 transition-colors">
                     <td class="px-6 py-4">
                         <div class="flex flex-col">
-                            <span class="font-semibold text-slate-800">{{ $anggota->nama }}</span>
+                            <a href="{{ route('anggota.show', $anggota->id) }}" class="font-semibold text-slate-800 hover:text-blue-600 transition-colors flex items-center gap-1.5" title="Lihat Profil Anggota">
+                                {{ $anggota->nama }}
+                                <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            </a>
                             <span class="text-xs text-slate-500 font-mono mt-0.5">NIP. {{ $anggota->nip }}</span>
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="flex flex-col">
-                            <span class="text-slate-800">{{ $anggota->bidang ? $anggota->bidang->nama_bidang : '-' }}</span>
-                            <span class="text-xs text-slate-500 mt-0.5">{{ $anggota->jabatan ?: '-' }}</span>
-                        </div>
+                        <span class="text-slate-800">{{ $anggota->bidang ? $anggota->bidang->nama_bidang : '-' }}</span>
                     </td>
                     <td class="px-6 py-4">
                         @if($anggota->status->value === 'aktif')

@@ -22,17 +22,14 @@ return new class extends Migration
         // 2. Anggota — Data anggota koperasi (untuk pencocokan NIP, bukan login)
         Schema::create('anggota', function (Blueprint $table) {
             $table->id();
-            $table->string('nip', 20)->unique()->comment('NIP — identitas unik, pencocokan form guest');
-            $table->string('nama', 100);
-            $table->string('golongan', 10)->comment('Golongan PNS');
-            $table->string('jabatan', 100)->nullable();
+            $table->string('nip', 50)->unique()->comment('NIP — identitas unik, pencocokan form guest');
+            $table->string('nama', 150);
             $table->foreignId('bidang_id')->constrained('bidang')->cascadeOnUpdate();
-            $table->text('alamat')->nullable();
-            $table->string('no_hp', 15)->nullable();
-            $table->date('tanggal_masuk');
+            $table->string('no_hp', 20)->nullable();
+            $table->date('tanggal_masuk')->nullable();
             $table->date('tanggal_keluar')->nullable()->comment('NULL = masih aktif');
             $table->boolean('is_pendaftar_ulang')->default(false);
-            $table->enum('status', ['aktif', 'nonaktif'])->default('aktif');
+            $table->enum('status', ['aktif', 'nonaktif', 'pensiun'])->default('aktif');
             $table->timestamps();
         });
 

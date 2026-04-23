@@ -78,6 +78,11 @@ class PinjamanGuestController extends Controller
             return back()->withInput()->withErrors(['nominal_pinjaman' => implode(' ', $kelayakan['pesan'])]);
         }
 
+        // Cek Confirmation Override jika anggota sudah punya pinjaman
+        if ($kelayakan['perlu_override'] && !$request->boolean('confirm_override')) {
+            return back()->withInput()->with('needs_override_confirmation', 'Anda sudah memiliki pinjaman aktif pada tahun ini. Apakah Anda yakin ingin mengajukan pinjaman baru? Pengajuan ini akan membutuhkan persetujuan/override khusus dari pengurus.');
+        }
+
         // 3. Hitung Keseluruhan Rincian Pinjaman
         $rincian = $this->pinjamanService->hitungPinjaman($request->nominal_pinjaman, $request->tenor_bulan);
 
@@ -139,5 +144,28 @@ class PinjamanGuestController extends Controller
         }
 
         return view('pinjaman.guest.status-result', compact('anggota', 'pinjaman'));
+    }
+
+    /**
+     * Membatalkan pengajuan pinjaman (Guest).
+     */
+    public function cancel(Request $request)
+    {
+        $request->validate([
+            'no_referensi' => 'required|string',
+        ]);
+
+        $pinjaman = Pinjaman::where('no_referensi', $request->no_referensi)->firstOrFail();
+
+        if ($pinjaman->status !== \App\Enums\StatusPinjaman::Menunggu) {
+            return back()->with('error', 'Hanya pengajuan dengan status Menunggu yang dapat dibatalkan.');
+        }
+
+        $pinjaman->update([
+            'status' => \App\Enums\StatusPinjaman::Ditolak,
+            'catatan' => 'Dibatalkan oleh peminjam.',
+        ]);
+
+        return back()->with('success', 'Pengajuan pinjaman berhasil dibatalkan.');
     }
 }

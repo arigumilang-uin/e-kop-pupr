@@ -30,19 +30,7 @@
                     @error('nama') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Golongan <span class="text-red-500">*</span></label>
-                    <input type="text" name="golongan" value="{{ old('golongan') }}" required placeholder="Misal: III/a"
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm">
-                    @error('golongan') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Jabatan</label>
-                    <input type="text" name="jabatan" value="{{ old('jabatan') }}"
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm">
-                    @error('jabatan') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
-                </div>
+
 
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1.5">Bidang Dinas <span class="text-red-500">*</span></label>
@@ -63,12 +51,15 @@
                            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm">
                     @error('no_hp') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
-                
-                <div class="sm:col-span-2">
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Alamat Tempat Tinggal</label>
-                    <textarea name="alamat" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm">{{ old('alamat') }}</textarea>
-                    @error('alamat') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Tanggal Masuk Koperasi</label>
+                    <input type="date" name="tanggal_masuk" value="{{ old('tanggal_masuk', now()->format('Y-m-d')) }}"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm">
+                    <p class="mt-1 text-[11px] text-slate-400">Potongan TPP mulai berlaku di bulan berikutnya setelah tanggal ini.</p>
+                    @error('tanggal_masuk') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
+
             </div>
 
             <div class="pt-4 border-t border-slate-200 mt-6 flex justify-end">

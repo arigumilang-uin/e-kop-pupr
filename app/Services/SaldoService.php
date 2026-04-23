@@ -47,7 +47,7 @@ class SaldoService
     {
         $pencairan = (float) DB::table('pinjaman')
             ->whereIn('status', ['berjalan', 'lunas'])
-            ->sum('dana_diterima');
+            ->sum('nominal_pinjaman');
 
         $penarikan = (float) DB::table('penarikan_simpanan')->sum('nominal');
 
