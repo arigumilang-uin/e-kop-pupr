@@ -60,6 +60,30 @@
     Potongan Bulanan
 </a>
 
+<a href="{{ route('keuangan.laporan') }}"
+   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 {{ $isActive('keuangan.*') }}">
+    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    Laporan Keuangan
+</a>
+
+<a href="{{ route('keuangan.simulasi') }}"
+   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 {{ $isActive('keuangan.simulasi') }}">
+    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+    </svg>
+    Simulasi Proyeksi
+</a>
+
+<a href="{{ route('keuangan.arsip') }}"
+   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 {{ $isActive('keuangan.arsip') }}">
+    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+    </svg>
+    Arsip Transaksi
+</a>
+
 {{-- Persetujuan (Pimpinan Only) --}}
 @if(auth()->user()->isPimpinan())
 <p class="px-3 pt-4 pb-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Persetujuan</p>

@@ -18,6 +18,20 @@
             </svg>
         </div>
     </div>
+
+    {{-- Tombol Copy Link Cek Status --}}
+    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <p class="text-sm font-medium text-slate-500 mb-3">Link Cek Status Pinjaman</p>
+        <div class="flex items-center gap-2">
+            <input type="text" id="linkCekStatus" value="{{ route('pinjaman.guest.status') }}" readonly
+                   class="flex-1 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-600 truncate">
+            <button onclick="navigator.clipboard.writeText(document.getElementById('linkCekStatus').value); this.textContent='Tersalin!'; setTimeout(() => this.textContent='Copy', 2000);"
+                    class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors whitespace-nowrap">
+                Copy
+            </button>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-2">Bagikan link ini kepada anggota agar mereka bisa cek status pinjaman.</p>
+    </div>
 </div>
 
 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -63,9 +77,17 @@
                         <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
                             Aktif / Berjalan
                         </span>
+                        @elseif($pinjaman->status->value === 'ditolak')
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-red-50 text-red-700 border border-red-200 text-xs font-semibold">
+                            Ditolak
+                        </span>
+                        @elseif($pinjaman->status->value === 'dibatalkan')
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 border border-slate-300 text-xs font-semibold">
+                            Dibatalkan
+                        </span>
                         @else
                         <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold capitalize">
-                            {{ $pinjaman->status->value }}
+                            {{ $pinjaman->status->label() }}
                         </span>
                         @endif
                     </td>

@@ -38,19 +38,20 @@
                     <h2 class="text-lg font-semibold text-white">Data Keanggotaan</h2>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="max-w-md">
                     <div>
-                        <label for="nip" class="block text-sm font-medium text-slate-300 mb-1.5">NIP Koperasi <span class="text-red-400">*</span></label>
-                        <input type="text" id="nip" name="nip" value="{{ old('nip') }}" required
+                        <label for="nip" class="block text-sm font-medium text-slate-300 mb-1.5">NIP <span class="text-red-400">*</span></label>
+                        <input type="text" id="nip" name="nip" value="{{ old('nip') }}" required placeholder="Masukkan NIP Anda"
                                class="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-white/10 text-white placeholder-slate-600
                                       focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-sm">
+                        <p class="text-xs text-slate-500 mt-2">Sistem akan otomatis mencari data keanggotaan berdasarkan NIP.</p>
                     </div>
-                    <div>
-                        <label for="nama" class="block text-sm font-medium text-slate-300 mb-1.5">Nama Lengkap (Sesuai KTP) <span class="text-red-400">*</span></label>
-                        <input type="text" id="nama" name="nama" value="{{ old('nama') }}" required
-                               class="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-white/10 text-white placeholder-slate-600
-                                      focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-sm">
-                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a href="{{ route('pinjaman.guest.status') }}" class="text-xs text-blue-400 hover:text-blue-300 transition-colors underline underline-offset-2">
+                        Sudah pernah mengajukan? Cek status pengajuan di sini →
+                    </a>
                 </div>
             </div>
 
@@ -131,7 +132,7 @@
                             </div>
                         </div>
                         <div class="space-y-2">
-                            <p class="text-xs text-amber-500/80 mb-2 mt-2 uppercase tracking-wider font-semibold">Pemotongan di Muka (Total 5%)</p>
+                            <p class="text-xs text-amber-500/80 mb-2 mt-2 uppercase tracking-wider font-semibold">Pemotongan di Muka (Total {{ $pengaturan['swp_persen'] + $pengaturan['resiko_persen'] + $pengaturan['admin_persen'] }}%)</p>
                             <div class="flex justify-between text-sm">
                                 <span class="text-slate-400">Total Potongan (SWP+Resiko+Admin)</span>
                                 <span id="res-potongan" class="text-amber-400 font-mono">- Rp 0</span>
@@ -169,7 +170,7 @@
             {{-- Submit --}}
             <div class="p-8 bg-black/20 flex flex-col md:flex-row gap-6 items-center justify-between">
                 <p class="text-sm text-slate-400 max-w-xl">
-                    Dengan klik "Kirim Pengajuan", saya menyatakan bahwa data di atas benar dan bersedia mematuhi aturan potongan 5% serta bunga flat sebesar {{ $pengaturan['bunga_persen'] }}%.
+                    Dengan klik "Kirim Pengajuan", saya menyatakan bahwa data di atas benar dan bersedia mematuhi aturan potongan {{ $pengaturan['swp_persen'] + $pengaturan['resiko_persen'] + $pengaturan['admin_persen'] }}% serta bunga flat sebesar {{ $pengaturan['bunga_persen'] }}%.
                 </p>
                 <button type="submit"
                         class="shrink-0 py-3 px-8 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-medium text-sm

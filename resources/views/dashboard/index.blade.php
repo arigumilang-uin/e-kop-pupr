@@ -7,7 +7,7 @@
 {{-- Stats Grid --}}
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
     {{-- Saldo Koperasi --}}
-    <div onclick="document.getElementById('modal-kas').classList.remove('hidden')" class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 text-white shadow-lg shadow-blue-600/20 cursor-pointer hover:shadow-xl hover:-translate-y-0.5 transition-all">
+    <a href="{{ route('keuangan.laporan', ['tab' => 'kas']) }}" class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 text-white shadow-lg shadow-blue-600/20 cursor-pointer hover:shadow-xl hover:-translate-y-0.5 transition-all block">
         <div class="flex items-center justify-between mb-3">
             <span class="text-blue-200 text-sm font-medium">Kas Saldo Tersedia</span>
             <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
@@ -18,11 +18,11 @@
         </div>
         <p class="text-2xl font-bold">{{ format_rupiah($stats['saldo_koperasi']) }}</p>
         <p class="text-blue-200 text-xs mt-1">Liquid / Bisa dicairkan</p>
-    </div>
+    </a>
 
     {{-- Total Anggota --}}
     {{-- Piutang --}}
-    <div onclick="document.getElementById('modal-piutang').classList.remove('hidden')" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all group">
+    <a href="{{ route('keuangan.laporan', ['tab' => 'piutang']) }}" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all group block">
         <div class="flex items-center justify-between mb-3">
             <span class="text-slate-500 text-sm font-medium">Piutang Koperasi</span>
             <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
@@ -33,10 +33,10 @@
         </div>
         <p class="text-xl lg:text-2xl font-bold text-slate-800">{{ format_rupiah($stats['piutang_berjalan']) }}</p>
         <p class="text-slate-400 text-xs mt-1">Dana pinjaman + Angsuran bunga belum lunas</p>
-    </div>
+    </a>
 
     {{-- Total Simpanan --}}
-    <div onclick="document.getElementById('modal-simpanan').classList.remove('hidden')" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm cursor-pointer hover:shadow-md hover:border-violet-300 transition-all group">
+    <a href="{{ route('keuangan.laporan', ['tab' => 'simpanan']) }}" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm cursor-pointer hover:shadow-md hover:border-violet-300 transition-all group block">
         <div class="flex items-center justify-between mb-3">
             <span class="text-slate-500 text-sm font-medium">Simpanan Anggota</span>
             <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
@@ -47,10 +47,10 @@
         </div>
         <p class="text-xl lg:text-2xl font-bold text-slate-800">{{ format_rupiah($stats['total_simpanan']) }}</p>
         <p class="text-slate-400 text-xs mt-1">Titipan dana anggota</p>
-    </div>
+    </a>
 
     {{-- Aset Estimasi --}}
-    <div onclick="document.getElementById('modal-aset').classList.remove('hidden')" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm cursor-pointer hover:shadow-md hover:border-emerald-300 transition-all group">
+    <a href="{{ route('keuangan.laporan', ['tab' => 'ringkasan']) }}" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm cursor-pointer hover:shadow-md hover:border-emerald-300 transition-all group block">
         <div class="flex items-center justify-between mb-3">
             <span class="text-slate-500 text-sm font-medium">Estimasi Total Aset</span>
             <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -60,8 +60,8 @@
             </div>
         </div>
         <p class="text-xl lg:text-2xl font-bold text-slate-800">{{ format_rupiah($stats['total_aset']) }}</p>
-        <p class="text-slate-400 text-xs mt-1">Kas Saldo + Total Piutang</p>
-    </div>
+        <p class="text-slate-400 text-xs mt-1">Kas Saldo + Total Piutang → <span class="underline text-blue-500 text-[10px]">Lihat Detail</span></p>
+    </a>
 </div>
 
 {{-- Pinjaman Menunggu Approval --}}
@@ -132,156 +132,6 @@
     @endif
 </div>
 
-{{-- MODALS KEUANGAN --}}
-{{-- 1. Modal Kas --}}
-<div id="modal-kas" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity backdrop-blur-sm bg-slate-900/60" aria-hidden="true" onclick="document.getElementById('modal-kas').classList.add('hidden')"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full border border-slate-100">
-            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    Rincian Kas Saldo Tersedia
-                </h3>
-            </div>
-            <div class="px-6 py-5 bg-slate-50/50">
-                <ul class="space-y-3 text-sm">
-                    <li class="flex justify-between items-center text-slate-600">
-                        <span>[+] Pemasukan Simpanan</span>
-                        <span class="font-mono text-emerald-600 font-semibold">{{ format_rupiah($stats['breakdown_kas']['masuk_simpanan']) }}</span>
-                    </li>
-                    <li class="flex justify-between items-center text-slate-600">
-                        <span>[+] Pembayaran Angsuran Lunas</span>
-                        <span class="font-mono text-emerald-600 font-semibold">{{ format_rupiah($stats['breakdown_kas']['masuk_angsuran']) }}</span>
-                    </li>
-                    <li class="flex justify-between items-center text-slate-600 pb-3 border-b border-slate-200">
-                        <span>[+] Potongan (Resiko & Admin)</span>
-                        <span class="font-mono text-emerald-600 font-semibold">{{ format_rupiah($stats['breakdown_kas']['masuk_fee']) }}</span>
-                    </li>
-                    <li class="flex justify-between items-center text-slate-600 pt-1">
-                        <span>[-] Pencairan Pinjaman</span>
-                        <span class="font-mono text-red-500 font-semibold">-{{ format_rupiah($stats['breakdown_kas']['keluar_pinjaman']) }}</span>
-                    </li>
-                    <li class="flex justify-between items-center text-slate-600 pb-3 border-b border-slate-200">
-                        <span>[-] Penarikan Simpanan</span>
-                        <span class="font-mono text-red-500 font-semibold">-{{ format_rupiah($stats['breakdown_kas']['keluar_tarik']) }}</span>
-                    </li>
-                    <li class="flex justify-between items-center pt-2">
-                        <span class="font-bold text-slate-800">Total Kas (Liquid) di Bank</span>
-                        <span class="font-mono text-lg font-bold text-blue-700">{{ format_rupiah($stats['saldo_koperasi']) }}</span>
-                    </li>
-                </ul>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
-                <button type="button" class="w-full inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:ml-3 sm:w-auto sm:text-sm" onclick="document.getElementById('modal-kas').classList.add('hidden')">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- 2. Modal Piutang --}}
-<div id="modal-piutang" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity backdrop-blur-sm bg-slate-900/60" aria-hidden="true" onclick="document.getElementById('modal-piutang').classList.add('hidden')"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full border border-slate-100">
-            <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-amber-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                    Rincian Piutang Koperasi
-                </h3>
-            </div>
-            <div class="px-6 py-5 bg-slate-50/50">
-                <ul class="space-y-3 text-sm">
-                    <li class="flex justify-between items-center text-slate-600">
-                        <span>Total Tagihan Berjalan (Pokok+Bunga)</span>
-                        <span class="font-mono text-slate-800 font-semibold">{{ format_rupiah($stats['breakdown_piutang']['total_tagihan']) }}</span>
-                    </li>
-                    <li class="flex justify-between items-center text-slate-600 pb-3 border-b border-slate-200">
-                        <span>Angsuran Lunas Diterima</span>
-                        <span class="font-mono text-emerald-600 font-semibold">-{{ format_rupiah($stats['breakdown_piutang']['total_angsuran_masuk']) }}</span>
-                    </li>
-                    <li class="flex justify-between items-center pt-2">
-                        <span class="font-bold text-slate-800">Sisa Tagihan (Piutang Riil)</span>
-                        <span class="font-mono text-lg font-bold text-amber-600">{{ format_rupiah($stats['piutang_berjalan']) }}</span>
-                    </li>
-                </ul>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
-                <button type="button" class="w-full inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:ml-3 sm:w-auto sm:text-sm" onclick="document.getElementById('modal-piutang').classList.add('hidden')">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- 3. Modal Simpanan --}}
-<div id="modal-simpanan" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity backdrop-blur-sm bg-slate-900/60" aria-hidden="true" onclick="document.getElementById('modal-simpanan').classList.add('hidden')"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full border border-slate-100">
-            <div class="bg-gradient-to-r from-violet-600 to-violet-700 px-6 py-4">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-violet-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                    Rincian Simpanan Anggota
-                </h3>
-            </div>
-            <div class="px-6 py-5 bg-slate-50/50">
-                <ul class="space-y-3 text-sm">
-                    @foreach($stats['breakdown_simpanan'] as $sim)
-                    <li class="flex justify-between items-center text-slate-600">
-                        <span>{{ $sim->nama }}</span>
-                        <span class="font-mono text-slate-800 font-semibold">{{ format_rupiah($sim->total) }}</span>
-                    </li>
-                    @endforeach
-                    <li class="flex justify-between items-center pt-3 border-t border-slate-200">
-                        <span class="font-bold text-slate-800">Total Keseluruhan</span>
-                        <span class="font-mono text-lg font-bold text-violet-600">{{ format_rupiah($stats['total_simpanan']) }}</span>
-                    </li>
-                </ul>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
-                <button type="button" class="w-full inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:ml-3 sm:w-auto sm:text-sm" onclick="document.getElementById('modal-simpanan').classList.add('hidden')">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- 4. Modal Aset --}}
-<div id="modal-aset" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity backdrop-blur-sm bg-slate-900/60" aria-hidden="true" onclick="document.getElementById('modal-aset').classList.add('hidden')"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full border border-slate-100">
-            <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-4">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-emerald-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
-                    Estimasi Total Aset (Kekayaan)
-                </h3>
-            </div>
-            <div class="px-6 py-5 bg-slate-50/50">
-                <ul class="space-y-3 text-sm flex flex-col gap-2">
-                    <li class="flex justify-between items-center p-3 bg-blue-50 border border-blue-100 rounded-xl text-blue-800">
-                        <span class="font-semibold">Kas Saldo Liquid di Bank</span>
-                        <span class="font-mono font-bold">{{ format_rupiah($stats['saldo_koperasi']) }}</span>
-                    </li>
-                    <div class="flex justify-center -my-3 z-10"><span class="bg-white rounded-full p-1 text-slate-400 text-xs shadow-sm font-bold border border-slate-100">+</span></div>
-                    <li class="flex justify-between items-center p-3 bg-amber-50 border border-amber-100 rounded-xl text-amber-800">
-                        <span class="font-semibold">Nilai Piutang Beredar</span>
-                        <span class="font-mono font-bold">{{ format_rupiah($stats['piutang_berjalan']) }}</span>
-                    </li>
-                    <li class="flex justify-between items-center pt-4 border-t border-slate-200">
-                        <span class="font-bold text-slate-800">Total Kekayaan Bersih</span>
-                        <span class="font-mono text-xl font-bold text-emerald-600">{{ format_rupiah($stats['total_aset']) }}</span>
-                    </li>
-                </ul>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
-                <button type="button" class="w-full inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:ml-3 sm:w-auto sm:text-sm" onclick="document.getElementById('modal-aset').classList.add('hidden')">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 @endsection
+

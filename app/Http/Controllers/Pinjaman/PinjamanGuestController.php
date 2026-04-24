@@ -55,14 +55,13 @@ class PinjamanGuestController extends Controller
             return back()->with('error', 'Periode pinjaman ini sudah ditutup.');
         }
 
-        // 1. Cari & Validasi Anggota
+        // 1. Cari & Validasi Anggota (hanya berdasarkan NIP)
         $anggota = Anggota::where('nip', $request->nip)
-            ->where('nama', $request->nama)
             ->aktif()
             ->first();
 
         if (!$anggota) {
-            return back()->withInput()->with('error', 'Data NIP atau Nama tidak cocok dengan data keanggotaan aktif yang terdaftar.');
+            return back()->withInput()->with('error', 'NIP tidak terdaftar sebagai anggota koperasi aktif. Pastikan NIP yang Anda masukkan benar.');
         }
 
         // 2. Cek Kelayakan (Pinjaman aktif tahun ini, limit, tenor)
@@ -162,7 +161,7 @@ class PinjamanGuestController extends Controller
         }
 
         $pinjaman->update([
-            'status' => \App\Enums\StatusPinjaman::Ditolak,
+            'status' => \App\Enums\StatusPinjaman::Dibatalkan,
             'catatan' => 'Dibatalkan oleh peminjam.',
         ]);
 

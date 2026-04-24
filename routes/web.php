@@ -4,6 +4,9 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Keuangan\SimpananController;
 use App\Http\Controllers\Keuangan\PotonganBulananController;
+use App\Http\Controllers\Keuangan\LaporanKeuanganController;
+use App\Http\Controllers\Keuangan\SimulasiKeuanganController;
+use App\Http\Controllers\Keuangan\ArsipTransaksiController;
 use App\Http\Controllers\Master\AnggotaController;
 use App\Http\Controllers\Periode\PeriodeController;
 use App\Http\Controllers\Pinjaman\PinjamanAdminController;
@@ -54,6 +57,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('simpanan', SimpananController::class)->except(['show', 'edit', 'update', 'destroy']);
     Route::get('/potongan', [PotonganBulananController::class, 'index'])->name('potongan.index');
     Route::post('/potongan/proses', [PotonganBulananController::class, 'proses'])->name('potongan.proses');
+    Route::get('/keuangan/laporan', [LaporanKeuanganController::class, 'index'])->name('keuangan.laporan');
+    Route::get('/keuangan/simulasi', [SimulasiKeuanganController::class, 'index'])->name('keuangan.simulasi');
+    Route::get('/keuangan/arsip', [ArsipTransaksiController::class, 'index'])->name('keuangan.arsip');
 
     // === Pinjaman Admin/Approve ===
     Route::get('/pinjaman', [PinjamanAdminController::class, 'index'])->name('pinjaman.index');

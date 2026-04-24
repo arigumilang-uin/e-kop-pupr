@@ -62,18 +62,24 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <h4 class="text-[11px] font-bold text-slate-400 uppercase mb-3">Skema Pemotongan (5%)</h4>
+                    @php
+                        $swpPersen = $pinjaman->nominal_pinjaman > 0 ? round(($pinjaman->potongan_swp / $pinjaman->nominal_pinjaman) * 100, 1) : 0;
+                        $resikoPersen = $pinjaman->nominal_pinjaman > 0 ? round(($pinjaman->potongan_dana_resiko / $pinjaman->nominal_pinjaman) * 100, 1) : 0;
+                        $adminPersen = $pinjaman->nominal_pinjaman > 0 ? round(($pinjaman->potongan_biaya_admin / $pinjaman->nominal_pinjaman) * 100, 1) : 0;
+                        $totalPotPersen = $swpPersen + $resikoPersen + $adminPersen;
+                    @endphp
+                    <h4 class="text-[11px] font-bold text-slate-400 uppercase mb-3">Skema Pemotongan ({{ $totalPotPersen }}%)</h4>
                     <ul class="space-y-3 text-sm">
                         <li class="flex justify-between">
-                            <span class="text-slate-500">SWP (3%)</span>
+                            <span class="text-slate-500">SWP ({{ $swpPersen }}%)</span>
                             <span class="font-mono text-slate-700">Rp {{ number_format($pinjaman->potongan_swp, 0, ',', '.') }}</span>
                         </li>
                         <li class="flex justify-between">
-                            <span class="text-slate-500">Dana Resiko (1.5%)</span>
+                            <span class="text-slate-500">Dana Resiko ({{ $resikoPersen }}%)</span>
                             <span class="font-mono text-slate-700">Rp {{ number_format($pinjaman->potongan_dana_resiko, 0, ',', '.') }}</span>
                         </li>
                         <li class="flex justify-between">
-                            <span class="text-slate-500">Biaya Admin (0.5%)</span>
+                            <span class="text-slate-500">Biaya Admin ({{ $adminPersen }}%)</span>
                             <span class="font-mono text-slate-700">Rp {{ number_format($pinjaman->potongan_biaya_admin, 0, ',', '.') }}</span>
                         </li>
                         <li class="flex justify-between pt-2 border-t border-slate-100 font-semibold text-amber-600">

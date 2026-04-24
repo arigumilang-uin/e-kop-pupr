@@ -74,7 +74,7 @@ return new class extends Migration
             // Status & Approval
             $table->dateTime('tanggal_pengajuan');
             $table->dateTime('tanggal_approval')->nullable();
-            $table->enum('status', ['menunggu', 'disetujui', 'ditolak', 'berjalan', 'lunas'])->default('menunggu');
+            $table->enum('status', ['menunggu', 'disetujui', 'ditolak', 'dibatalkan', 'berjalan', 'lunas'])->default('menunggu');
             $table->foreignId('approved_by')->nullable()->constrained('users')->cascadeOnUpdate()->nullOnDelete();
             $table->boolean('is_override')->default(false)->comment('Override aturan 1 pinjaman/tahun');
             $table->text('catatan')->nullable();

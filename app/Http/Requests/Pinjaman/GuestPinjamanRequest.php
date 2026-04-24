@@ -15,7 +15,6 @@ class GuestPinjamanRequest extends FormRequest
     {
         return [
             'nip' => ['required', 'string', 'max:50'],
-            'nama' => ['required', 'string', 'max:150'],
             'nama_bank' => ['required', 'string', 'max:100'],
             'nama_rekening' => ['required', 'string', 'max:100'],
             'no_rekening' => ['required', 'string', 'max:30'],
@@ -29,7 +28,6 @@ class GuestPinjamanRequest extends FormRequest
     {
         return [
             'nip.required' => 'NIP wajib diisi.',
-            'nama.required' => 'Nama wajib diisi.',
             'nama_bank.required' => 'Nama bank wajib diisi.',
             'nama_rekening.required' => 'Nama rekening wajib diisi.',
             'no_rekening.required' => 'Nomor rekening wajib diisi.',

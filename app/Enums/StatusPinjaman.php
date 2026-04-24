@@ -36,11 +36,10 @@ enum StatusPinjaman: string
     }
 
     /**
-     * Status yang dianggap "aktif" (belum selesai/ditolak/dibatalkan).
+     * Status yang dianggap "aktif" (belum selesai/ditolak).
      */
     public static function aktif(): array
     {
         return [self::Menunggu, self::Disetujui, self::Berjalan];
     }
 }
-

@@ -120,7 +120,7 @@ class PinjamanAdminController extends Controller
             'alasan_penolakan' => 'required|string|max:255'
         ]);
 
-        if ($pinjaman->status !== StatusPinjaman::Menunggu && $pinjaman->status !== StatusPinjaman::Ditinjau) {
+        if ($pinjaman->status !== StatusPinjaman::Menunggu) {
             return back()->with('error', 'Pengajuan ini sudah tidak bisa ditolak.');
         }
 
