@@ -28,13 +28,13 @@ class LaporanKeuanganController extends Controller
         $totalPenarikan = (float) DB::table('penarikan_simpanan')->sum('nominal');
         $simpananBersih = $totalSimpanan - $totalPenarikan;
 
-        $totalBayarPinjamanAktif = (float) DB::table('pinjaman')->where('status', 'berjalan')->sum('total_bayar');
-        $angsuranTerbayar = (float) DB::table('angsuran')
+        $totalPokokPinjamanAktif = (float) DB::table('pinjaman')->where('status', 'berjalan')->sum('nominal_pinjaman');
+        $angsuranPokokTerbayar = (float) DB::table('angsuran')
             ->join('pinjaman', 'angsuran.pinjaman_id', '=', 'pinjaman.id')
             ->where('pinjaman.status', 'berjalan')
             ->where('angsuran.status', 'lunas')
-            ->sum('angsuran.nominal_total');
-        $piutangBerjalan = $totalBayarPinjamanAktif - $angsuranTerbayar;
+            ->sum('angsuran.nominal_pokok');
+        $piutangBerjalan = $totalPokokPinjamanAktif - $angsuranPokokTerbayar;
 
         $totalAset = $saldoKoperasi + $piutangBerjalan;
 
@@ -44,17 +44,30 @@ class LaporanKeuanganController extends Controller
         $masukFee = (float) DB::table('pinjaman')->whereIn('status', ['berjalan', 'lunas'])->sum(DB::raw('potongan_dana_resiko + potongan_biaya_admin'));
         $keluarPinjaman = (float) DB::table('pinjaman')->whereIn('status', ['berjalan', 'lunas'])->sum('nominal_pinjaman');
         $keluarTarik = $totalPenarikan;
+        $keluarPengeluaranKas = (float) DB::table('pengeluaran_kas')->sum('nominal');
 
-        // Breakdown Simpanan per Jenis
-        $simpananPerJenis = DB::table('simpanan')
+        // Breakdown Simpanan per Jenis (Neto)
+        $setorPerJenis = DB::table('simpanan')
             ->join('jenis_simpanan', 'simpanan.jenis_simpanan_id', '=', 'jenis_simpanan.id')
             ->select('jenis_simpanan.nama', 'jenis_simpanan.kode', DB::raw('SUM(simpanan.nominal) as total'))
             ->groupBy('jenis_simpanan.nama', 'jenis_simpanan.kode')
-            ->get();
+            ->get()->keyBy('kode');
+
+        $tarikPerJenis = DB::table('penarikan_simpanan')
+            ->join('jenis_simpanan', 'penarikan_simpanan.jenis_simpanan_id', '=', 'jenis_simpanan.id')
+            ->select('jenis_simpanan.kode', DB::raw('SUM(penarikan_simpanan.nominal) as total'))
+            ->groupBy('jenis_simpanan.kode')
+            ->get()->keyBy('kode');
+
+        $simpananPerJenis = $setorPerJenis->map(function ($item) use ($tarikPerJenis) {
+            $tarik = isset($tarikPerJenis[$item->kode]) ? (float) $tarikPerJenis[$item->kode]->total : 0;
+            $item->total = (float) $item->total - $tarik;
+            return $item;
+        })->filter(fn($item) => $item->total > 0)->values();
 
         $ringkasan = compact(
             'saldoKoperasi', 'totalSimpanan', 'simpananBersih', 'piutangBerjalan', 'totalAset',
-            'masukSimpanan', 'masukAngsuran', 'masukFee', 'keluarPinjaman', 'keluarTarik',
+            'masukSimpanan', 'masukAngsuran', 'masukFee', 'keluarPinjaman', 'keluarTarik', 'keluarPengeluaranKas',
             'simpananPerJenis', 'totalPenarikan'
         );
 
@@ -102,38 +115,56 @@ class LaporanKeuanganController extends Controller
                 'anggota.id as anggota_id',
                 'anggota.nip',
                 'anggota.nama',
+                'anggota.status as status_anggota',
+                'jenis_simpanan.id as jenis_id',
                 'jenis_simpanan.kode as jenis_kode',
                 'jenis_simpanan.nama as jenis_nama',
-                DB::raw('SUM(simpanan.nominal) as total'),
+                DB::raw('SUM(simpanan.nominal) as total_setor'),
                 DB::raw('COUNT(simpanan.id) as jumlah_transaksi')
             )
-            ->groupBy('anggota.id', 'anggota.nip', 'anggota.nama', 'jenis_simpanan.kode', 'jenis_simpanan.nama')
+            ->groupBy('anggota.id', 'anggota.nip', 'anggota.nama', 'anggota.status',
+                       'jenis_simpanan.id', 'jenis_simpanan.kode', 'jenis_simpanan.nama')
             ->orderBy('anggota.nama')
             ->get();
 
-        // Group: anggota_id => [jenis => total]
-        $simpananGrouped = $simpananAnggota->groupBy('anggota_id')->map(function ($items) {
+        // Ambil penarikan per anggota per jenis
+        $penarikanMap = DB::table('penarikan_simpanan')
+            ->select('anggota_id', 'jenis_simpanan_id', DB::raw('SUM(nominal) as total_tarik'))
+            ->groupBy('anggota_id', 'jenis_simpanan_id')
+            ->get()
+            ->groupBy('anggota_id')
+            ->map(fn($items) => $items->keyBy('jenis_simpanan_id'));
+
+        // Group: anggota_id => [jenis => neto]
+        $simpananGrouped = $simpananAnggota->groupBy('anggota_id')->map(function ($items) use ($penarikanMap) {
             $first = $items->first();
             $detail = [];
             $grandTotal = 0;
 
             foreach ($items as $item) {
+                $penarikan = 0;
+                if (isset($penarikanMap[$item->anggota_id][$item->jenis_id])) {
+                    $penarikan = (float) $penarikanMap[$item->anggota_id][$item->jenis_id]->total_tarik;
+                }
+                $neto = (float) $item->total_setor - $penarikan;
+
                 $detail[$item->jenis_kode] = [
                     'nama' => $item->jenis_nama,
-                    'total' => (float) $item->total,
+                    'total' => $neto,
                     'transaksi' => $item->jumlah_transaksi,
                 ];
-                $grandTotal += (float) $item->total;
+                $grandTotal += $neto;
             }
 
             return (object) [
                 'anggota_id' => $first->anggota_id,
                 'nip' => $first->nip,
                 'nama' => $first->nama,
+                'status_anggota' => $first->status_anggota,
                 'detail' => $detail,
                 'grand_total' => $grandTotal,
             ];
-        })->sortByDesc('grand_total');
+        })->filter(fn($d) => $d->grand_total > 0)->sortByDesc('grand_total');
 
         // Get all jenis simpanan codes for table headers
         $jenisKodes = DB::table('jenis_simpanan')->orderBy('id')->pluck('nama', 'kode');

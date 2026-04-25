@@ -86,17 +86,35 @@ class ArsipTransaksiController extends Controller
         $totalPinjamanCair = $pinjamans->sum('nominal_pinjaman');
         $totalPinjamanDiterima = $pinjamans->sum('dana_diterima');
 
+        // === 4. PENGELUARAN KAS (MANUAL) ===
+        $pengeluaranQuery = \App\Models\PengeluaranKas::with(['kategori', 'pencatat'])
+            ->whereBetween('tanggal', [$dari->toDateString(), $sampai->toDateString()])
+            ->orderByDesc('tanggal')
+            ->orderByDesc('id');
+
+        $pengeluarans = $pengeluaranQuery->get();
+        $totalPengeluaranKas = $pengeluarans->sum('nominal');
+
+        // === 5. PENARIKAN SIMPANAN ===
+        $penarikanQuery = \App\Models\PenarikanSimpanan::with(['anggota', 'jenisSimpanan', 'pemroses'])
+            ->whereBetween('tanggal', [$dari->toDateString(), $sampai->toDateString()])
+            ->orderByDesc('tanggal')
+            ->orderByDesc('id');
+
+        $penarikans = $penarikanQuery->get();
+        $totalPenarikanSimpanan = $penarikans->sum('nominal');
+
         // === RINGKASAN ===
-        $grandTotal = $totalSimpanan + $totalAngsuran + $totalPinjamanCair;
+        $grandTotal = $totalSimpanan + $totalAngsuran + $totalPinjamanCair + $totalPengeluaranKas + $totalPenarikanSimpanan;
 
         $ringkasan = compact(
             'totalSimpanan', 'totalAngsuranPokok', 'totalAngsuranBunga', 'totalAngsuran',
-            'totalPinjamanCair', 'totalPinjamanDiterima', 'grandTotal'
+            'totalPinjamanCair', 'totalPinjamanDiterima', 'totalPengeluaranKas', 'totalPenarikanSimpanan', 'grandTotal'
         );
 
         return view('keuangan.arsip', compact(
             'preset', 'dari', 'sampai', 'tab',
-            'simpanans', 'simpananPerJenis', 'angsurans', 'pinjamans', 'ringkasan'
+            'simpanans', 'simpananPerJenis', 'angsurans', 'pinjamans', 'pengeluarans', 'penarikans', 'ringkasan'
         ));
     }
 }

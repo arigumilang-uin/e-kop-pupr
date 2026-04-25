@@ -53,7 +53,12 @@ class PeriodePinjaman extends Model
 
     public function isBuka(): bool
     {
-        return $this->status === StatusPeriode::Buka;
+        if ($this->status !== \App\Enums\StatusPeriode::Buka) {
+            return false;
+        }
+        
+        $now = now()->startOfDay();
+        return $now->betweenIncluded($this->tanggal_buka, $this->tanggal_tutup);
     }
 
     /**

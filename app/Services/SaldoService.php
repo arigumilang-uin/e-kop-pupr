@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\PengeluaranKas;
+use App\Models\Pinjaman;
+use App\Models\PenarikanSimpanan;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -45,13 +48,18 @@ class SaldoService
      */
     public function totalDanaKeluar(): float
     {
-        $pencairan = (float) DB::table('pinjaman')
-            ->whereIn('status', ['berjalan', 'lunas'])
+        // Pencairan = nominal_pinjaman BRUTO (bukan dana_diterima)
+        // Karena di danaMasuk sudah menghitung SWP (simpanan), resiko, dan admin
+        // sebagai arus masuk terpisah, maka arus keluar harus pakai nominal bruto
+        // agar tidak terjadi double-counting potongan 5%.
+        $pencairan = (float) Pinjaman::whereIn('status', ['berjalan', 'lunas'])
             ->sum('nominal_pinjaman');
 
-        $penarikan = (float) DB::table('penarikan_simpanan')->sum('nominal');
+        $penarikan = (float) PenarikanSimpanan::sum('nominal');
 
-        return $pencairan + $penarikan;
+        $pengeluaran = (float) PengeluaranKas::sum('nominal');
+
+        return $pencairan + $penarikan + $pengeluaran;
     }
 
     /**

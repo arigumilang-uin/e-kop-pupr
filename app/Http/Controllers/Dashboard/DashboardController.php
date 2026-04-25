@@ -38,15 +38,16 @@ class DashboardController extends Controller
             ->sum(\DB::raw('potongan_dana_resiko + potongan_biaya_admin'));
         $dana_cair_pinjaman = (float) \DB::table('pinjaman')->whereIn('status', ['berjalan', 'lunas'])->sum('nominal_pinjaman');
         $tarik_simpanan = (float) \DB::table('penarikan_simpanan')->sum('nominal');
+        $keluar_pengeluaran_kas = (float) \DB::table('pengeluaran_kas')->sum('nominal');
 
-        // Data Pendukung Piutang Breakdown
-        $totalBayarPinjamanAktif = (float) DB::table('pinjaman')->where('status', 'berjalan')->sum('total_bayar');
-        $angsuranTerbayar = (float) DB::table('angsuran')
+        // Data Pendukung Piutang Breakdown (HANYA sisa pokok, bunga belum diakui)
+        $totalPokokPinjamanAktif = (float) DB::table('pinjaman')->where('status', 'berjalan')->sum('nominal_pinjaman');
+        $angsuranPokokTerbayar = (float) DB::table('angsuran')
             ->join('pinjaman', 'angsuran.pinjaman_id', '=', 'pinjaman.id')
             ->where('pinjaman.status', 'berjalan')
             ->where('angsuran.status', 'lunas')
-            ->sum('angsuran.nominal_total');
-        $piutangBerjalan = $totalBayarPinjamanAktif - $angsuranTerbayar;
+            ->sum('angsuran.nominal_pokok');
+        $piutangBerjalan = $totalPokokPinjamanAktif - $angsuranPokokTerbayar;
 
         // Data Pendukung Simpanan Breakdown
         $simpanan_per_jenis = DB::table('simpanan')
@@ -58,7 +59,7 @@ class DashboardController extends Controller
         return [
             'total_anggota' => Anggota::aktif()->count(),
             'total_pinjaman_aktif' => Pinjaman::berjalan()->count(),
-            'total_simpanan' => $simpanan_all,
+            'total_simpanan' => $simpanan_all - $tarik_simpanan,
             'saldo_koperasi' => $saldoKoperasi,
             'piutang_berjalan' => $piutangBerjalan,
             'total_aset' => $saldoKoperasi + $piutangBerjalan,
@@ -70,10 +71,11 @@ class DashboardController extends Controller
                 'masuk_fee' => $pendapatan_potongan,
                 'keluar_pinjaman' => $dana_cair_pinjaman,
                 'keluar_tarik' => $tarik_simpanan,
+                'keluar_pengeluaran_kas' => $keluar_pengeluaran_kas,
             ],
             'breakdown_piutang' => [
-                'total_tagihan' => $totalBayarPinjamanAktif,
-                'total_angsuran_masuk' => $angsuranTerbayar,
+                'total_pokok' => $totalPokokPinjamanAktif,
+                'pokok_terbayar' => $angsuranPokokTerbayar,
             ],
             'breakdown_simpanan' => $simpanan_per_jenis
         ];

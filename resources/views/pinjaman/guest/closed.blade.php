@@ -14,7 +14,7 @@
     
     <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-2xl mt-6 text-left">
         <p class="text-slate-300 text-sm leading-relaxed mb-4">
-            Mohon maaf, pengajuan pinjaman untuk periode <strong>{{ $periode->nama_periode }}</strong> saat ini sedang tidak dibuka atau sudah ditutup oleh Pengurus.
+            {!! $pesan_tutup ?? 'Mohon maaf, pengajuan pinjaman untuk periode <strong>'.$periode->nama_periode.'</strong> saat ini sedang tidak dibuka atau sudah ditutup oleh Pengurus.' !!}
         </p>
 
         <p class="text-slate-300 text-sm leading-relaxed">

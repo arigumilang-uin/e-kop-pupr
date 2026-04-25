@@ -25,9 +25,19 @@ class PinjamanGuestController extends Controller
     {
         $periode = PeriodePinjaman::where('token', $token)->firstOrFail();
 
-        // Hanya periode yang masih "buka" yang boleh diakses
-        if (!$periode->isBuka()) {
-            return view('pinjaman.guest.closed', compact('periode'));
+        $now = now()->startOfDay();
+        $pesan_tutup = null;
+
+        if ($periode->status !== \App\Enums\StatusPeriode::Buka) {
+            $pesan_tutup = 'Status periode pinjaman saat ini sedang dinonaktifkan atau ditutup secara manual oleh Pengurus.';
+        } elseif ($now->lessThan($periode->tanggal_buka)) {
+            $pesan_tutup = 'Formulir pengajuan pinjaman belum dibuka. Pelayanan pengajuan pinjaman pada periode ini baru akan diakses secara publik mulai tanggal <strong>' . $periode->tanggal_buka->translatedFormat('d F Y') . '</strong>.';
+        } elseif ($now->greaterThan($periode->tanggal_tutup)) {
+            $pesan_tutup = 'Mohon maaf, batas waktu untuk pengajuan pinjaman pada periode ini telah berakhir sejak tanggal <strong>' . $periode->tanggal_tutup->translatedFormat('d F Y') . '</strong>.';
+        }
+
+        if ($pesan_tutup) {
+            return view('pinjaman.guest.closed', compact('periode', 'pesan_tutup'));
         }
 
         $pengaturan = [
@@ -51,8 +61,14 @@ class PinjamanGuestController extends Controller
     {
         $periode = PeriodePinjaman::where('token', $token)->firstOrFail();
 
-        if (!$periode->isBuka()) {
-            return back()->with('error', 'Periode pinjaman ini sudah ditutup.');
+        $now = now()->startOfDay();
+
+        if ($periode->status !== \App\Enums\StatusPeriode::Buka) {
+            return back()->with('error', 'Status periode pinjaman saat ini sedang dinonaktifkan atau ditutup secara manual oleh Pengurus.');
+        } elseif ($now->lessThan($periode->tanggal_buka)) {
+            return back()->with('error', 'Formulir pengajuan pinjaman belum dibuka. Pelayanan baru akan dibuka pada tanggal ' . $periode->tanggal_buka->translatedFormat('d F Y') . '.');
+        } elseif ($now->greaterThan($periode->tanggal_tutup)) {
+            return back()->with('error', 'Batasan waktu pengajuan periode ini telah berakhir sejak ' . $periode->tanggal_tutup->translatedFormat('d F Y') . '.');
         }
 
         // 1. Cari & Validasi Anggota (hanya berdasarkan NIP)

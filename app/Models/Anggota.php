@@ -64,6 +64,11 @@ class Anggota extends Model
         return $this->hasMany(PotonganBulanan::class);
     }
 
+    public function arsipKeluar(): HasMany
+    {
+        return $this->hasMany(ArsipKeluarAnggota::class);
+    }
+
     // === Business Logic ===
 
     /**

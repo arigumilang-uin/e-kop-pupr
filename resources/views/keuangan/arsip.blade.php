@@ -67,26 +67,36 @@
     {{-- ============================== --}}
     {{-- RINGKASAN KARTU                --}}
     {{-- ============================== --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-            <p class="text-slate-500 text-xs font-medium mb-1">Total Simpanan Tercatat</p>
-            <p class="text-xl font-bold font-mono text-violet-600">{{ format_rupiah($ringkasan['totalSimpanan']) }}</p>
-            <p class="text-slate-400 text-[10px] mt-1">{{ $simpanans->count() }} transaksi simpanan</p>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+            <p class="text-slate-500 text-[11px] font-bold uppercase tracking-wider mb-1">Simpanan Masuk</p>
+            <p class="text-lg font-bold font-mono text-violet-600 truncate">{{ format_rupiah($ringkasan['totalSimpanan']) }}</p>
+            <p class="text-slate-400 text-[9px] mt-1">{{ $simpanans->count() }} transaksi</p>
         </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-            <p class="text-slate-500 text-xs font-medium mb-1">Total Angsuran Lunas</p>
-            <p class="text-xl font-bold font-mono text-emerald-600">{{ format_rupiah($ringkasan['totalAngsuran']) }}</p>
-            <p class="text-slate-400 text-[10px] mt-1">Pokok: {{ format_rupiah($ringkasan['totalAngsuranPokok']) }} + Bunga: {{ format_rupiah($ringkasan['totalAngsuranBunga']) }}</p>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+            <p class="text-slate-500 text-[11px] font-bold uppercase tracking-wider mb-1">Angsuran Masuk</p>
+            <p class="text-lg font-bold font-mono text-emerald-600 truncate">{{ format_rupiah($ringkasan['totalAngsuran']) }}</p>
+            <p class="text-slate-400 text-[9px] mt-1">{{ $angsurans->count() }} lunas</p>
         </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-            <p class="text-slate-500 text-xs font-medium mb-1">Pinjaman Dicairkan</p>
-            <p class="text-xl font-bold font-mono text-amber-600">{{ format_rupiah($ringkasan['totalPinjamanCair']) }}</p>
-            <p class="text-slate-400 text-[10px] mt-1">{{ $pinjamans->count() }} pinjaman · Diterima: {{ format_rupiah($ringkasan['totalPinjamanDiterima']) }}</p>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+            <p class="text-slate-500 text-[11px] font-bold uppercase tracking-wider mb-1">Pinjaman Cair</p>
+            <p class="text-lg font-bold font-mono text-amber-600 truncate">{{ format_rupiah($ringkasan['totalPinjamanCair']) }}</p>
+            <p class="text-slate-400 text-[9px] mt-1">{{ $pinjamans->count() }} pinjaman</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+            <p class="text-slate-500 text-[11px] font-bold uppercase tracking-wider mb-1">Pengeluaran Kas</p>
+            <p class="text-lg font-bold font-mono text-red-500 truncate">{{ format_rupiah($ringkasan['totalPengeluaranKas']) }}</p>
+            <p class="text-slate-400 text-[9px] mt-1">{{ $pengeluarans->count() }} bayar beban</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+            <p class="text-slate-500 text-[11px] font-bold uppercase tracking-wider mb-1">Penarikan (Keluar)</p>
+            <p class="text-lg font-bold font-mono text-red-600 truncate">{{ format_rupiah($ringkasan['totalPenarikanSimpanan']) }}</p>
+            <p class="text-slate-400 text-[9px] mt-1">{{ $penarikans->count() }} penarikan</p>
         </div>
         <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 text-white shadow-lg shadow-blue-600/20">
             <p class="text-blue-200 text-xs font-medium mb-1">Volume Transaksi</p>
             <p class="text-xl font-bold font-mono">{{ format_rupiah($ringkasan['grandTotal']) }}</p>
-            <p class="text-blue-200 text-[10px] mt-1">Total seluruh aktivitas keuangan di periode ini</p>
+            <p class="text-blue-200 text-[10px] mt-1">Total seluruh aktivitas</p>
         </div>
     </div>
 
@@ -96,8 +106,10 @@
     @php
         $tabs = [
             'simpanan' => ['label' => 'Simpanan (' . $simpanans->count() . ')', 'icon' => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'],
+            'tarik' => ['label' => 'Penarikan Simpanan (' . $penarikans->count() . ')', 'icon' => 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4'],
             'angsuran' => ['label' => 'Angsuran Lunas (' . $angsurans->count() . ')', 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
             'pinjaman' => ['label' => 'Pinjaman Dicairkan (' . $pinjamans->count() . ')', 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'],
+            'pengeluaran' => ['label' => 'Pengeluaran Manual (' . $pengeluarans->count() . ')', 'icon' => 'M12 6v6m0 0v6m0-6h6m-6 0H6'],
         ];
     @endphp
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-1.5 flex flex-wrap gap-1">
@@ -319,6 +331,122 @@
                         <td class="px-4 py-3 text-right font-mono font-bold text-red-500">-{{ format_rupiah($pinjamans->sum('total_potongan')) }}</td>
                         <td class="px-4 py-3 text-right font-mono font-bold text-emerald-700">{{ format_rupiah($ringkasan['totalPinjamanDiterima']) }}</td>
                         <td colspan="3"></td>
+                    </tr>
+                </tfoot>
+                @endif
+            </table>
+        </div>
+    </div>
+    @endif
+
+    {{-- ============================== --}}
+    {{-- TAB: PENARIKAN                 --}}
+    {{-- ============================== --}}
+    @if($tab === 'tarik')
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50/80 border-b border-slate-100">
+                    <tr>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">No Ref</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Anggota</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Jenis</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Nominal</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Keterangan</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Pemroses</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($penarikans as $p)
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-4 py-3 font-mono text-red-600 text-xs font-semibold whitespace-nowrap">{{ $p->no_referensi }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <p class="text-sm font-medium text-slate-800">{{ $p->anggota->nama ?? '-' }}</p>
+                            <p class="text-xs text-slate-400">{{ $p->anggota->nip ?? '' }}</p>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            @php
+                                $jenisColors = ['POKOK' => 'blue', 'WAJIB' => 'violet', 'SWP' => 'amber', 'SUKARELA' => 'emerald'];
+                                $kode = $p->jenisSimpanan->kode ?? '';
+                                $c = $jenisColors[$kode] ?? 'slate';
+                            @endphp
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-{{ $c }}-50 text-{{ $c }}-700 border border-{{ $c }}-200">
+                                {{ $p->jenisSimpanan->nama ?? '-' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-right font-mono font-bold text-red-600 whitespace-nowrap">{{ format_rupiah($p->nominal) }}</td>
+                        <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{{ $p->tanggal->translatedFormat('d M Y') }}</td>
+                        <td class="px-4 py-3 text-slate-700 text-xs max-w-[200px] truncate" title="{{ $p->keterangan }}">{{ $p->keterangan ?? '-' }}</td>
+                        <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{{ $p->pemroses->nama ?? '-' }}</td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="7" class="px-4 py-12 text-center text-slate-400">
+                            Tidak ada penarikan simpanan pada periode ini.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+                @if($penarikans->isNotEmpty())
+                <tfoot class="bg-slate-50 border-t-2 border-slate-200">
+                    <tr>
+                        <td colspan="3" class="px-4 py-3 text-xs font-bold text-slate-700 uppercase">Total {{ $penarikans->count() }} Penarikan</td>
+                        <td class="px-4 py-3 text-right font-mono font-bold text-red-600">{{ format_rupiah($ringkasan['totalPenarikanSimpanan']) }}</td>
+                        <td colspan="3"></td>
+                    </tr>
+                </tfoot>
+                @endif
+            </table>
+        </div>
+    </div>
+    @endif
+
+    {{-- ============================== --}}
+    {{-- TAB: PENGELUARAN               --}}
+    {{-- ============================== --}}
+    @if($tab === 'pengeluaran')
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50/80 border-b border-slate-100">
+                    <tr>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">No Ref</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Kategori</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Keterangan</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Nominal</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Pencatat</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($pengeluarans as $p)
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-4 py-3 font-mono text-red-600 text-xs font-semibold whitespace-nowrap">{{ $p->no_referensi }}</td>
+                        <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{{ $p->tanggal->translatedFormat('d M Y') }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                {{ $p->kategori->nama ?? '-' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-slate-700 text-xs">{{ $p->keterangan }}</td>
+                        <td class="px-4 py-3 text-right font-mono font-bold text-red-600 whitespace-nowrap">{{ format_rupiah($p->nominal) }}</td>
+                        <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{{ $p->pencatat->nama ?? '-' }}</td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="px-4 py-12 text-center text-slate-400">
+                            Tidak ada pengeluaran kas pada periode ini.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+                @if($pengeluarans->isNotEmpty())
+                <tfoot class="bg-slate-50 border-t-2 border-slate-200">
+                    <tr>
+                        <td colspan="4" class="px-4 py-3 text-xs font-bold text-slate-700 uppercase">Total {{ $pengeluarans->count() }} Pengeluaran</td>
+                        <td class="px-4 py-3 text-right font-mono font-bold text-red-600">{{ format_rupiah($ringkasan['totalPengeluaranKas']) }}</td>
+                        <td></td>
                     </tr>
                 </tfoot>
                 @endif

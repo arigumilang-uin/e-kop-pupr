@@ -49,7 +49,7 @@
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
             <p class="text-slate-500 text-sm font-medium mb-1">Simpanan Anggota</p>
             <p class="text-2xl font-bold font-mono text-violet-600">{{ format_rupiah($ringkasan['simpananBersih']) }}</p>
-            <p class="text-slate-400 text-xs mt-2">Bruto: {{ format_rupiah($ringkasan['totalSimpanan']) }} - Penarikan: {{ format_rupiah($ringkasan['totalPenarikan']) }}</p>
+            <p class="text-slate-400 text-xs mt-2">Titipan dana anggota (neto)</p>
         </div>
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
             <p class="text-slate-500 text-sm font-medium mb-1">Estimasi Total Aset</p>
@@ -107,7 +107,7 @@
             </h3>
             <div class="space-y-3">
                 @foreach($ringkasan['simpananPerJenis'] as $sim)
-                @php $pct = $ringkasan['totalSimpanan'] > 0 ? round(($sim->total / $ringkasan['totalSimpanan']) * 100, 1) : 0; @endphp
+                @php $pct = $ringkasan['simpananBersih'] > 0 ? round(($sim->total / $ringkasan['simpananBersih']) * 100, 1) : 0; @endphp
                 <div>
                     <div class="flex justify-between text-sm mb-1">
                         <span class="text-slate-600 font-medium">{{ $sim->nama }} <span class="text-[10px] text-slate-400 font-mono">({{ $sim->kode }})</span></span>
@@ -119,8 +119,8 @@
                 </div>
                 @endforeach
                 <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
-                    <span class="font-bold text-slate-800">Total Simpanan Bruto</span>
-                    <span class="font-mono font-bold text-violet-600">{{ format_rupiah($ringkasan['totalSimpanan']) }}</span>
+                    <span class="font-bold text-slate-800">Total Simpanan Neto</span>
+                    <span class="font-mono font-bold text-violet-600">{{ format_rupiah($ringkasan['simpananBersih']) }}</span>
                 </div>
             </div>
         </div>
@@ -332,8 +332,8 @@
             <div class="space-y-4">
                 <div class="flex justify-between items-center p-3 bg-red-50/50 rounded-xl border border-red-100">
                     <div>
-                        <p class="text-sm font-medium text-slate-700">Pencairan/Disalurkan Pinjaman</p>
-                        <p class="text-[11px] text-slate-400">Nominal pinjaman yang dicairkan ke anggota</p>
+                        <p class="text-sm font-medium text-slate-700">Pencairan Pinjaman (Bruto)</p>
+                        <p class="text-[11px] text-slate-400">Nominal pinjaman bruto sebelum potongan 5%</p>
                     </div>
                     <span class="font-mono font-bold text-red-600">{{ format_rupiah($ringkasan['keluarPinjaman']) }}</span>
                 </div>
@@ -344,9 +344,16 @@
                     </div>
                     <span class="font-mono font-bold text-red-600">{{ format_rupiah($ringkasan['keluarTarik']) }}</span>
                 </div>
+                <div class="flex justify-between items-center p-3 bg-red-50/50 rounded-xl border border-red-100">
+                    <div>
+                        <p class="text-sm font-medium text-slate-700">Pengeluaran Kas (Beban Manual)</p>
+                        <p class="text-[11px] text-slate-400">Total belanja dan beban operasional</p>
+                    </div>
+                    <span class="font-mono font-bold text-red-600">{{ format_rupiah($ringkasan['keluarPengeluaranKas']) }}</span>
+                </div>
                 <div class="pt-3 border-t-2 border-red-200 flex justify-between items-center">
                     <span class="font-bold text-red-800">Total Pengeluaran</span>
-                    <span class="font-mono text-lg font-bold text-red-600">{{ format_rupiah($ringkasan['keluarPinjaman'] + $ringkasan['keluarTarik']) }}</span>
+                    <span class="font-mono text-lg font-bold text-red-600">{{ format_rupiah($ringkasan['keluarPinjaman'] + $ringkasan['keluarTarik'] + $ringkasan['keluarPengeluaranKas']) }}</span>
                 </div>
             </div>
         </div>

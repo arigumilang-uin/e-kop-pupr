@@ -67,6 +67,7 @@ class PengaturanSeeder extends Seeder
                 'kategori' => 'keuangan',
                 'memerlukan_persetujuan' => true,
             ],
+            // (SHU proportions are now managed via shu_distribusi table)
 
             // Pengaturan Teknis (Admin bisa ubah langsung)
             [

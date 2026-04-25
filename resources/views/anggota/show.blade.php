@@ -170,7 +170,70 @@
                 @endif
             </div>
         </div>
-        
+
+        {{-- Button Proses Keluar --}}
+        @if($anggota->status->value === 'aktif')
+        <div class="bg-white rounded-2xl border border-red-200 shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-red-700 text-sm">Proses Keluarkan Anggota</h3>
+                    <p class="text-xs text-slate-400 mt-1">Analisis kelayakan & pengembalian simpanan sebelum proses keluar</p>
+                </div>
+                <a href="{{ route('anggota.keluar', $anggota) }}" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
+                    Proses Keluar →
+                </a>
+            </div>
+        </div>
+        @endif
+
+        {{-- Arsip Keluar Sebelumnya --}}
+        @if(isset($arsipKeluar) && $arsipKeluar->isNotEmpty())
+        <div class="bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 bg-amber-50 border-b border-amber-200">
+                <h3 class="text-sm font-bold text-amber-700">📋 Riwayat Keluar dari Koperasi</h3>
+            </div>
+            <div class="p-6 space-y-3">
+                @foreach($arsipKeluar as $arsip)
+                <div class="bg-amber-50/50 border border-amber-100 rounded-xl p-4">
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <span class="text-slate-500 text-xs">Tanggal Keluar</span>
+                            <p class="font-semibold text-slate-800">{{ $arsip->tanggal_keluar->translatedFormat('d F Y') }}</p>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 text-xs">Total Dikembalikan</span>
+                            <p class="font-mono font-bold text-slate-800">{{ format_rupiah($arsip->total_simpanan_dikembalikan) }}</p>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-slate-500 text-xs">Wajib Setor Jika Daftar Ulang</span>
+                            <p class="font-mono font-bold text-amber-700">{{ format_rupiah($arsip->nominal_wajib_setor_ulang) }}</p>
+                        </div>
+                        @if($arsip->rincian_simpanan)
+                        <div class="col-span-2">
+                            <span class="text-slate-500 text-xs block mb-1">Rincian Simpanan Dikembalikan</span>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($arsip->rincian_simpanan as $r)
+                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-white border border-amber-200 rounded-lg text-xs">
+                                    <span class="text-slate-600">{{ $r['nama'] }}:</span>
+                                    <span class="font-mono font-semibold">{{ format_rupiah($r['nominal']) }}</span>
+                                </span>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+                        @if($arsip->catatan)
+                        <div class="col-span-2">
+                            <span class="text-slate-500 text-xs">Catatan</span>
+                            <p class="text-slate-700 text-xs mt-0.5">{{ $arsip->catatan }}</p>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
     </div>
 </div>
 @endsection

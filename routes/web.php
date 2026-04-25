@@ -7,6 +7,9 @@ use App\Http\Controllers\Keuangan\PotonganBulananController;
 use App\Http\Controllers\Keuangan\LaporanKeuanganController;
 use App\Http\Controllers\Keuangan\SimulasiKeuanganController;
 use App\Http\Controllers\Keuangan\ArsipTransaksiController;
+use App\Http\Controllers\Keuangan\PengeluaranKasController;
+use App\Http\Controllers\Keuangan\ShuController;
+use App\Http\Controllers\Keuangan\NeracaController;
 use App\Http\Controllers\Master\AnggotaController;
 use App\Http\Controllers\Periode\PeriodeController;
 use App\Http\Controllers\Pinjaman\PinjamanAdminController;
@@ -52,6 +55,10 @@ Route::middleware('auth')->group(function () {
 
     // === Master Data ===
     Route::resource('anggota', AnggotaController::class);
+    Route::get('/anggota/{anggota}/keluar', [AnggotaController::class, 'keluarAnalisis'])->name('anggota.keluar');
+    Route::post('/anggota/{anggota}/keluar', [AnggotaController::class, 'keluarProses'])->name('anggota.keluar.proses');
+    Route::get('/anggota/{anggota}/reaktivasi', [AnggotaController::class, 'reaktivasiForm'])->name('anggota.reaktivasi');
+    Route::post('/anggota/{anggota}/reaktivasi', [AnggotaController::class, 'reaktivasiProses'])->name('anggota.reaktivasi.proses');
 
     // === Keuangan ===
     Route::resource('simpanan', SimpananController::class)->except(['show', 'edit', 'update', 'destroy']);
@@ -59,7 +66,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/potongan/proses', [PotonganBulananController::class, 'proses'])->name('potongan.proses');
     Route::get('/keuangan/laporan', [LaporanKeuanganController::class, 'index'])->name('keuangan.laporan');
     Route::get('/keuangan/simulasi', [SimulasiKeuanganController::class, 'index'])->name('keuangan.simulasi');
+    Route::get('/keuangan/shu', [ShuController::class, 'index'])->name('keuangan.shu');
+    Route::post('/keuangan/shu/komponen', [ShuController::class, 'storeKomponen'])->name('shu.komponen.store');
+    Route::patch('/keuangan/shu/komponen/{komponen}', [ShuController::class, 'updateKomponen'])->name('shu.komponen.update');
+    Route::delete('/keuangan/shu/komponen/{komponen}', [ShuController::class, 'destroyKomponen'])->name('shu.komponen.destroy');
+    Route::post('/keuangan/shu/distribusi', [ShuController::class, 'storeDistribusi'])->name('shu.distribusi.store');
+    Route::patch('/keuangan/shu/distribusi/{distribusi}', [ShuController::class, 'updateDistribusi'])->name('shu.distribusi.update');
+    Route::delete('/keuangan/shu/distribusi/{distribusi}', [ShuController::class, 'destroyDistribusi'])->name('shu.distribusi.destroy');
+    Route::get('/keuangan/neraca', [NeracaController::class, 'index'])->name('keuangan.neraca');
     Route::get('/keuangan/arsip', [ArsipTransaksiController::class, 'index'])->name('keuangan.arsip');
+    
+    // === Pengeluaran Kas (Beban) ===
+    Route::get('/pengeluaran', [PengeluaranKasController::class, 'index'])->name('pengeluaran.index');
+    Route::post('/pengeluaran/kategori', [PengeluaranKasController::class, 'storeKategori'])->name('pengeluaran.kategori.store');
+    Route::post('/pengeluaran', [PengeluaranKasController::class, 'store'])->name('pengeluaran.store');
+    Route::delete('/pengeluaran/{pengeluaran}', [PengeluaranKasController::class, 'destroy'])->name('pengeluaran.destroy');
 
     // === Pinjaman Admin/Approve ===
     Route::get('/pinjaman', [PinjamanAdminController::class, 'index'])->name('pinjaman.index');

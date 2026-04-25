@@ -82,7 +82,7 @@
                             + Rp {{ number_format($simpanan->nominal, 0, ',', '.') }}
                         </span>
                         <div class="text-[10px] text-slate-400 mt-0.5 uppercase tracking-wide">
-                            Ditambah oleh: {{ $simpanan->pencatat->nama }}
+                            Ditambah oleh: {{ $simpanan->pencatat?->nama ?? '-' }}
                         </div>
                     </td>
                 </tr>
