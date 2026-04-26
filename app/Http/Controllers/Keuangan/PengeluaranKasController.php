@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Keuangan;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Pengeluaran\StoreKategoriPengeluaranRequest;
+use App\Http\Requests\Pengeluaran\StorePengeluaranRequest;
 use App\Models\KategoriPengeluaran;
 use App\Models\PengeluaranKas;
 use Illuminate\Http\Request;
@@ -10,6 +12,10 @@ use Illuminate\Support\Facades\DB;
 
 class PengeluaranKasController extends Controller
 {
+    public function __construct(
+        private \App\Services\ActivityLogService $logger
+    ) {}
+
     public function index(Request $request)
     {
         $kategori = KategoriPengeluaran::withCount('pengeluaranKas')->get();
@@ -32,43 +38,38 @@ class PengeluaranKasController extends Controller
         return view('keuangan.pengeluaran.index', compact('kategori', 'pengeluaran', 'totalPengeluaran'));
     }
 
-    public function storeKategori(Request $request)
+    public function storeKategori(StoreKategoriPengeluaranRequest $request)
     {
-        $request->validate([
-            'nama' => 'required|string|max:100|unique:kategori_pengeluaran,nama',
-            'deskripsi' => 'nullable|string',
-        ]);
-
-        KategoriPengeluaran::create($request->all());
+        KategoriPengeluaran::create($request->validated());
 
         return back()->with('success', 'Kategori pengeluaran berhasil ditambahkan.');
     }
 
-    public function store(Request $request)
+    public function store(StorePengeluaranRequest $request)
     {
-        $request->validate([
-            'kategori_pengeluaran_id' => 'required|exists:kategori_pengeluaran,id',
-            'nominal' => 'required|numeric|min:1',
-            'tanggal' => 'required|date',
-            'keterangan' => 'required|string',
-        ]);
 
         DB::transaction(function () use ($request) {
-            PengeluaranKas::create([
+            $pengeluaran = PengeluaranKas::create([
                 'kategori_pengeluaran_id' => $request->kategori_pengeluaran_id,
                 'nominal' => $request->nominal,
                 'tanggal' => $request->tanggal,
                 'keterangan' => $request->keterangan,
                 'dicatat_oleh' => auth()->id(),
             ]);
+
+            $this->logger->logPengeluaran(
+                $pengeluaran->kategori->nama ?? '-',
+                $pengeluaran->nominal,
+                $pengeluaran->no_referensi,
+            );
         });
 
         return back()->with('success', 'Data pengeluaran kas berhasil dicatat.');
     }
 
-    // Add delete feature just in case
     public function destroy(PengeluaranKas $pengeluaran)
     {
+        $this->logger->logPengeluaranDeleted($pengeluaran->no_referensi, $pengeluaran->nominal);
         $pengeluaran->delete();
         return back()->with('success', 'Data pengeluaran kas berhasil dihapus.');
     }

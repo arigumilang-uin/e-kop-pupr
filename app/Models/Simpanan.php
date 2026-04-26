@@ -6,11 +6,12 @@ use App\Traits\HasNoReferensi;
 use App\Traits\HasRupiahFormat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class Simpanan extends Model
 {
-    use HasFactory, HasNoReferensi, HasRupiahFormat;
+    use HasFactory, HasNoReferensi, HasRupiahFormat, SoftDeletes;
 
     protected static string $refPrefix = 'SIM';
 

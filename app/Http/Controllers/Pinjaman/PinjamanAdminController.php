@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pinjaman;
 use App\Services\ActivityLogService;
 use App\Services\SaldoService;
+use App\Http\Requests\Pinjaman\RejectPinjamanRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -114,11 +115,8 @@ class PinjamanAdminController extends Controller
         }
     }
 
-    public function reject(Request $request, Pinjaman $pinjaman)
+    public function reject(RejectPinjamanRequest $request, Pinjaman $pinjaman)
     {
-        $request->validate([
-            'alasan_penolakan' => 'required|string|max:255'
-        ]);
 
         if ($pinjaman->status !== StatusPinjaman::Menunggu) {
             return back()->with('error', 'Pengajuan ini sudah tidak bisa ditolak.');

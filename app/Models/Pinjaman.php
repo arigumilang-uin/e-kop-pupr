@@ -8,11 +8,12 @@ use App\Traits\HasRupiahFormat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class Pinjaman extends Model
 {
-    use HasFactory, HasNoReferensi, HasRupiahFormat;
+    use HasFactory, HasNoReferensi, HasRupiahFormat, SoftDeletes;
 
     protected static string $refPrefix = 'PJM';
 

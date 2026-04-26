@@ -6,11 +6,12 @@ use App\Enums\StatusAngsuran;
 use App\Traits\HasRupiahFormat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class Angsuran extends Model
 {
-    use HasFactory, HasRupiahFormat;
+    use HasFactory, HasRupiahFormat, SoftDeletes;
 
     protected $table = 'angsuran';
 

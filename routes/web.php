@@ -53,55 +53,81 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // === Master Data ===
-    Route::resource('anggota', AnggotaController::class);
-    Route::get('/anggota/{anggota}/keluar', [AnggotaController::class, 'keluarAnalisis'])->name('anggota.keluar');
-    Route::post('/anggota/{anggota}/keluar', [AnggotaController::class, 'keluarProses'])->name('anggota.keluar.proses');
-    Route::get('/anggota/{anggota}/reaktivasi', [AnggotaController::class, 'reaktivasiForm'])->name('anggota.reaktivasi');
-    Route::post('/anggota/{anggota}/reaktivasi', [AnggotaController::class, 'reaktivasiProses'])->name('anggota.reaktivasi.proses');
+    // =============================================
+    // READ-ONLY — Admin & Pimpinan
+    // =============================================
+    Route::middleware('role:admin,pimpinan')->group(function () {
+        // Laporan & Monitor
+        Route::get('/keuangan/laporan', [LaporanKeuanganController::class, 'index'])->name('keuangan.laporan');
+        Route::get('/keuangan/simulasi', [SimulasiKeuanganController::class, 'index'])->name('keuangan.simulasi');
+        Route::get('/keuangan/shu', [ShuController::class, 'index'])->name('keuangan.shu');
+        Route::get('/keuangan/neraca', [NeracaController::class, 'index'])->name('keuangan.neraca');
+        Route::get('/keuangan/arsip', [ArsipTransaksiController::class, 'index'])->name('keuangan.arsip');
+        Route::get('/log', [LogAktivitasController::class, 'index'])->name('log.index');
 
-    // === Keuangan ===
-    Route::resource('simpanan', SimpananController::class)->except(['show', 'edit', 'update', 'destroy']);
-    Route::get('/potongan', [PotonganBulananController::class, 'index'])->name('potongan.index');
-    Route::post('/potongan/proses', [PotonganBulananController::class, 'proses'])->name('potongan.proses');
-    Route::get('/keuangan/laporan', [LaporanKeuanganController::class, 'index'])->name('keuangan.laporan');
-    Route::get('/keuangan/simulasi', [SimulasiKeuanganController::class, 'index'])->name('keuangan.simulasi');
-    Route::get('/keuangan/shu', [ShuController::class, 'index'])->name('keuangan.shu');
-    Route::post('/keuangan/shu/komponen', [ShuController::class, 'storeKomponen'])->name('shu.komponen.store');
-    Route::patch('/keuangan/shu/komponen/{komponen}', [ShuController::class, 'updateKomponen'])->name('shu.komponen.update');
-    Route::delete('/keuangan/shu/komponen/{komponen}', [ShuController::class, 'destroyKomponen'])->name('shu.komponen.destroy');
-    Route::post('/keuangan/shu/distribusi', [ShuController::class, 'storeDistribusi'])->name('shu.distribusi.store');
-    Route::patch('/keuangan/shu/distribusi/{distribusi}', [ShuController::class, 'updateDistribusi'])->name('shu.distribusi.update');
-    Route::delete('/keuangan/shu/distribusi/{distribusi}', [ShuController::class, 'destroyDistribusi'])->name('shu.distribusi.destroy');
-    Route::get('/keuangan/neraca', [NeracaController::class, 'index'])->name('keuangan.neraca');
-    Route::get('/keuangan/arsip', [ArsipTransaksiController::class, 'index'])->name('keuangan.arsip');
-    
-    // === Pengeluaran Kas (Beban) ===
-    Route::get('/pengeluaran', [PengeluaranKasController::class, 'index'])->name('pengeluaran.index');
-    Route::post('/pengeluaran/kategori', [PengeluaranKasController::class, 'storeKategori'])->name('pengeluaran.kategori.store');
-    Route::post('/pengeluaran', [PengeluaranKasController::class, 'store'])->name('pengeluaran.store');
-    Route::delete('/pengeluaran/{pengeluaran}', [PengeluaranKasController::class, 'destroy'])->name('pengeluaran.destroy');
+        // View anggota & pinjaman (read-only)
+        Route::get('/anggota', [AnggotaController::class, 'index'])->name('anggota.index');
+        Route::get('/anggota/{anggotum}', [AnggotaController::class, 'show'])->name('anggota.show');
+        Route::get('/pinjaman', [PinjamanAdminController::class, 'index'])->name('pinjaman.index');
+        Route::get('/pinjaman/{pinjaman}', [PinjamanAdminController::class, 'show'])->name('pinjaman.show');
+        Route::get('/simpanan', [SimpananController::class, 'index'])->name('simpanan.index');
+        Route::get('/pengeluaran', [PengeluaranKasController::class, 'index'])->name('pengeluaran.index');
+        Route::get('/potongan', [PotonganBulananController::class, 'index'])->name('potongan.index');
+        Route::get('/periode', [PeriodeController::class, 'index'])->name('periode.index');
+        Route::get('/periode/{periode}', [PeriodeController::class, 'show'])->name('periode.show');
+        Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan.index');
+    });
 
-    // === Pinjaman Admin/Approve ===
-    Route::get('/pinjaman', [PinjamanAdminController::class, 'index'])->name('pinjaman.index');
-    Route::get('/pinjaman/{pinjaman}', [PinjamanAdminController::class, 'show'])->name('pinjaman.show');
-    Route::patch('/pinjaman/{pinjaman}/approve', [PinjamanAdminController::class, 'approve'])->name('pinjaman.approve');
-    Route::patch('/pinjaman/{pinjaman}/reject', [PinjamanAdminController::class, 'reject'])->name('pinjaman.reject');
-    Route::patch('/pinjaman/{pinjaman}/angsuran/{angsuran}/bayar', [PinjamanAdminController::class, 'bayarAngsuran'])->name('pinjaman.angsuran.bayar');
+    // =============================================
+    // WRITE — Admin Only
+    // =============================================
+    Route::middleware('role:admin')->group(function () {
+        // Master Anggota (CRUD)
+        Route::get('/anggota/create', [AnggotaController::class, 'create'])->name('anggota.create');
+        Route::post('/anggota', [AnggotaController::class, 'store'])->name('anggota.store');
+        Route::get('/anggota/{anggotum}/edit', [AnggotaController::class, 'edit'])->name('anggota.edit');
+        Route::put('/anggota/{anggotum}', [AnggotaController::class, 'update'])->name('anggota.update');
+        Route::delete('/anggota/{anggotum}', [AnggotaController::class, 'destroy'])->name('anggota.destroy');
+        Route::get('/anggota/{anggota}/keluar', [AnggotaController::class, 'keluarAnalisis'])->name('anggota.keluar');
+        Route::post('/anggota/{anggota}/keluar', [AnggotaController::class, 'keluarProses'])->name('anggota.keluar.proses');
+        Route::get('/anggota/{anggota}/reaktivasi', [AnggotaController::class, 'reaktivasiForm'])->name('anggota.reaktivasi');
+        Route::post('/anggota/{anggota}/reaktivasi', [AnggotaController::class, 'reaktivasiProses'])->name('anggota.reaktivasi.proses');
 
-    // === Periode Pinjaman ===
-    Route::get('/periode', [PeriodeController::class, 'index'])->name('periode.index');
-    Route::get('/periode/create', [PeriodeController::class, 'create'])->name('periode.create');
-    Route::post('/periode', [PeriodeController::class, 'store'])->name('periode.store');
-    Route::get('/periode/{periode}', [PeriodeController::class, 'show'])->name('periode.show');
-    Route::patch('/periode/{periode}/tutup', [PeriodeController::class, 'tutup'])->name('periode.tutup');
-    Route::patch('/periode/{periode}/buka', [PeriodeController::class, 'buka'])->name('periode.buka');
-    Route::patch('/periode/{periode}/reset-token', [PeriodeController::class, 'resetToken'])->name('periode.reset-token');
+        // Simpanan (Create)
+        Route::get('/simpanan/create', [SimpananController::class, 'create'])->name('simpanan.create');
+        Route::post('/simpanan', [SimpananController::class, 'store'])->name('simpanan.store');
 
-    // === Sistem ===
-    Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan.index');
-    Route::patch('/pengaturan/{pengaturan}', [PengaturanController::class, 'update'])->name('pengaturan.update');
-    Route::get('/log', [LogAktivitasController::class, 'index'])->name('log.index');
+        // Potongan TPP (Proses)
+        Route::post('/potongan/proses', [PotonganBulananController::class, 'proses'])->name('potongan.proses');
+
+        // Pinjaman (Approve/Reject/Bayar)
+        Route::patch('/pinjaman/{pinjaman}/approve', [PinjamanAdminController::class, 'approve'])->name('pinjaman.approve');
+        Route::patch('/pinjaman/{pinjaman}/reject', [PinjamanAdminController::class, 'reject'])->name('pinjaman.reject');
+        Route::patch('/pinjaman/{pinjaman}/angsuran/{angsuran}/bayar', [PinjamanAdminController::class, 'bayarAngsuran'])->name('pinjaman.angsuran.bayar');
+
+        // Pengeluaran Kas (CRUD)
+        Route::post('/pengeluaran/kategori', [PengeluaranKasController::class, 'storeKategori'])->name('pengeluaran.kategori.store');
+        Route::post('/pengeluaran', [PengeluaranKasController::class, 'store'])->name('pengeluaran.store');
+        Route::delete('/pengeluaran/{pengeluaran}', [PengeluaranKasController::class, 'destroy'])->name('pengeluaran.destroy');
+
+        // SHU Konfigurasi (CRUD)
+        Route::post('/keuangan/shu/komponen', [ShuController::class, 'storeKomponen'])->name('shu.komponen.store');
+        Route::patch('/keuangan/shu/komponen/{komponen}', [ShuController::class, 'updateKomponen'])->name('shu.komponen.update');
+        Route::delete('/keuangan/shu/komponen/{komponen}', [ShuController::class, 'destroyKomponen'])->name('shu.komponen.destroy');
+        Route::post('/keuangan/shu/distribusi', [ShuController::class, 'storeDistribusi'])->name('shu.distribusi.store');
+        Route::patch('/keuangan/shu/distribusi/{distribusi}', [ShuController::class, 'updateDistribusi'])->name('shu.distribusi.update');
+        Route::delete('/keuangan/shu/distribusi/{distribusi}', [ShuController::class, 'destroyDistribusi'])->name('shu.distribusi.destroy');
+
+        // Periode Pinjaman (CRUD)
+        Route::get('/periode/create', [PeriodeController::class, 'create'])->name('periode.create');
+        Route::post('/periode', [PeriodeController::class, 'store'])->name('periode.store');
+        Route::patch('/periode/{periode}/tutup', [PeriodeController::class, 'tutup'])->name('periode.tutup');
+        Route::patch('/periode/{periode}/buka', [PeriodeController::class, 'buka'])->name('periode.buka');
+        Route::patch('/periode/{periode}/reset-token', [PeriodeController::class, 'resetToken'])->name('periode.reset-token');
+
+        // Pengaturan Sistem (Update)
+        Route::patch('/pengaturan/{pengaturan}', [PengaturanController::class, 'update'])->name('pengaturan.update');
+    });
 });
 
 /*

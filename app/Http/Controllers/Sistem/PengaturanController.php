@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Sistem;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Sistem\UpdatePengaturanRequest;
 use App\Models\Pengaturan;
 use App\Services\ActivityLogService;
 use App\Services\PengaturanService;
@@ -25,11 +26,8 @@ class PengaturanController extends Controller
         return view('pengaturan.index', compact('grouped'));
     }
 
-    public function update(Request $request, Pengaturan $pengaturan)
+    public function update(UpdatePengaturanRequest $request, Pengaturan $pengaturan)
     {
-        $request->validate([
-            'value' => 'required|string',
-        ]);
 
         $oldValue = $pengaturan->value;
         $newValue = $request->input('value');

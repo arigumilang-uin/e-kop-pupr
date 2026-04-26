@@ -7,10 +7,11 @@ use App\Traits\HasRupiahFormat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PengeluaranKas extends Model
 {
-    use HasFactory, HasNoReferensi, HasRupiahFormat;
+    use HasFactory, HasNoReferensi, HasRupiahFormat, SoftDeletes;
 
     protected static string $refPrefix = 'KLR';
 

@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Keuangan;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Shu\StoreShuKomponenRequest;
+use App\Http\Requests\Shu\UpdateShuKomponenRequest;
+use App\Http\Requests\Shu\StoreShuDistribusiRequest;
+use App\Http\Requests\Shu\UpdateShuDistribusiRequest;
 use App\Models\ShuKomponen;
 use App\Models\ShuDistribusi;
 use App\Models\Pinjaman;
@@ -55,15 +59,8 @@ class ShuController extends Controller
     //  CRUD Komponen SHU
     // =============================================
 
-    public function storeKomponen(Request $request)
+    public function storeKomponen(StoreShuKomponenRequest $request)
     {
-        $request->validate([
-            'nama'        => 'required|string|max:100',
-            'tipe'        => 'required|in:pendapatan,beban',
-            'sumber_data' => 'required|string|max:50',
-            'deskripsi'   => 'nullable|string',
-        ]);
-
         $komponen = ShuKomponen::create([
             'nama'        => $request->nama,
             'tipe'        => $request->tipe,
@@ -77,17 +74,9 @@ class ShuController extends Controller
         return back()->with('success', "Komponen '{$komponen->nama}' berhasil ditambahkan.");
     }
 
-    public function updateKomponen(Request $request, ShuKomponen $komponen)
+    public function updateKomponen(UpdateShuKomponenRequest $request, ShuKomponen $komponen)
     {
-        $request->validate([
-            'nama'        => 'required|string|max:100',
-            'tipe'        => 'required|in:pendapatan,beban',
-            'sumber_data' => 'required|string|max:50',
-            'deskripsi'   => 'nullable|string',
-            'is_aktif'    => 'sometimes|boolean',
-        ]);
-
-        $komponen->update($request->only(['nama', 'tipe', 'sumber_data', 'deskripsi', 'is_aktif']));
+        $komponen->update($request->validated());
 
         $this->logger->log('shu_komponen_updated', "Komponen SHU '{$komponen->nama}' berhasil diperbarui.");
 
@@ -108,14 +97,8 @@ class ShuController extends Controller
     //  CRUD Distribusi SHU
     // =============================================
 
-    public function storeDistribusi(Request $request)
+    public function storeDistribusi(StoreShuDistribusiRequest $request)
     {
-        $request->validate([
-            'nama'        => 'required|string|max:100',
-            'persen'      => 'required|numeric|min:0|max:100',
-            'deskripsi'   => 'nullable|string',
-        ]);
-
         $distribusi = ShuDistribusi::create([
             'nama'      => $request->nama,
             'persen'    => $request->persen,
@@ -128,16 +111,9 @@ class ShuController extends Controller
         return back()->with('success', "Alokasi '{$distribusi->nama}' berhasil ditambahkan.");
     }
 
-    public function updateDistribusi(Request $request, ShuDistribusi $distribusi)
+    public function updateDistribusi(UpdateShuDistribusiRequest $request, ShuDistribusi $distribusi)
     {
-        $request->validate([
-            'nama'        => 'required|string|max:100',
-            'persen'      => 'required|numeric|min:0|max:100',
-            'deskripsi'   => 'nullable|string',
-            'is_aktif'    => 'sometimes|boolean',
-        ]);
-
-        $distribusi->update($request->only(['nama', 'persen', 'deskripsi', 'is_aktif']));
+        $distribusi->update($request->validated());
 
         $this->logger->log('shu_distribusi_updated', "Alokasi SHU '{$distribusi->nama}' berhasil diperbarui.");
 

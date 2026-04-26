@@ -6,11 +6,12 @@ use App\Enums\StatusPotongan;
 use App\Traits\HasRupiahFormat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class PotonganBulanan extends Model
 {
-    use HasFactory, HasRupiahFormat;
+    use HasFactory, HasRupiahFormat, SoftDeletes;
 
     protected $table = 'potongan_bulanan';
 
