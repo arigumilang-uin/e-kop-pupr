@@ -1,5 +1,5 @@
 @extends('layouts.guest')
-@section('title', 'Periode Ditutup - ASSET')
+@section('title', 'Periode Ditutup - Tirta Bina Karya')
 
 @section('content')
 <x-guest-nav />
@@ -8,13 +8,9 @@
     
     <!-- Premium Header Area -->
     <div class="mb-10 text-left max-w-2xl">
-        <div class="flex flex-row items-center justify-start gap-4 mb-6">
-            <h1 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 46px; font-weight: 800; margin: 0; letter-spacing: -2.5px; line-height: 1; color: #0f172a; white-space: nowrap;">ASSET</h1>
-            <div style="width: 2px; height: 38px; background: #cbd5e1;"></div>
-            <p style="color: #475569; font-size: 12px; margin: 0; line-height: 1.4; font-weight: 600;">
-                Periode<br>Ditutup
-            </p>
-        </div>
+        <h1 class="font-['Plus_Jakarta_Sans'] text-3xl md:text-4xl font-extrabold tracking-tight text-[#0f172a] mb-4">
+            Periode Ditutup
+        </h1>
         <p class="text-slate-500 text-[15px] leading-relaxed">
             Periode pembiayaan yang Anda tuju saat ini tidak menerima pengajuan baru karena rentang waktunya telah lewat atau ditutup oleh administrator.
         </p>
@@ -61,9 +57,7 @@
     </div>
 
     <footer class="mt-16 text-left space-y-3">
-        <p class="text-[12px] font-semibold text-slate-400 tracking-widest uppercase">
-            © {{ date('Y') }} KOPERASI SIMPAN PINJAM PKPP PUPR RIAU
-        </p>
+        <x-guest-footer />
     </footer>
 </main>
 @endsection

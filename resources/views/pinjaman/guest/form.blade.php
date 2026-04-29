@@ -1,6 +1,6 @@
 @extends('layouts.guest')
 
-@section('title', 'Pengajuan Pinjaman - ASSET PUPR PKPP')
+@section('title', 'Pengajuan Pinjaman - Tirta Bina Karya PUPR PKPP')
 
 @section('content')
 <!-- Minimalist Top Navigation Component -->
@@ -21,13 +21,9 @@
     
     <!-- Premium Header Area -->
     <div class="mb-10 text-left max-w-2xl">
-        <div class="flex flex-row items-center justify-start gap-4 mb-6">
-            <h1 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 46px; font-weight: 800; margin: 0; letter-spacing: -2.5px; line-height: 1; color: #0f172a; white-space: nowrap;">ASSET</h1>
-            <div style="width: 2px; height: 38px; background: #cbd5e1;"></div>
-            <p style="color: #475569; font-size: 12px; margin: 0; line-height: 1.4; font-weight: 600;">
-                Accurate Savings, Secure Execution & Transaction
-            </p>
-        </div>
+        <h1 class="font-['Plus_Jakarta_Sans'] text-3xl md:text-4xl font-extrabold tracking-tight text-[#0f172a] mb-4">
+            Portal Pengajuan Pinjaman
+        </h1>
         
         <p class="text-slate-500 text-[14px] leading-relaxed">
             Lengkapi formulir di bawah ini untuk mengajukan pinjaman pada <span class="font-semibold text-slate-700">Periode {{ $periode->nama_periode }}</span>. Sistem akan mensimulasikan rincian angsuran secara real-time.
@@ -89,11 +85,11 @@
                 
                 <div>
                     <x-label for="nip">Nomor Induk Pegawai (NIP)</x-label>
-                    <x-input id="nip" name="nip" x-model="nip" @input="nip = nip.replace(/[^0-9]/g, '')" maxlength="18" required placeholder="Contoh: 19800101...">
+                    <x-nip-input id="nip" name="nip" model="nip" required="true" placeholder="Contoh: 19800101...">
                         <x-slot name="icon">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </x-slot>
-                    </x-input>
+                    </x-nip-input>
                     <p class="mt-2 text-[12px] font-medium" :class="(nip.length > 0 && nip.length !== 18) ? 'text-red-500' : 'text-slate-500'">
                         <span x-show="nip.length === 0 || nip.length === 18">Sistem secara otomatis memvalidasi NIP menggunakan data anggota koperasi.</span>
                         <span x-show="nip.length > 0 && nip.length !== 18">NIP harus tepat 18 digit angka (saat ini <span x-text="nip.length"></span> digit).</span>
@@ -304,9 +300,7 @@
     </form>
 
     <footer class="mt-20 text-center space-y-3">
-        <p class="text-[12px] font-semibold text-slate-400 tracking-widest uppercase">
-            © {{ date('Y') }} KOPERASI SIMPAN PINJAM PKPP PUPR RIAU
-        </p>
+        <x-guest-footer />
         <div class="flex items-center justify-center gap-2 text-slate-400">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
             <span class="text-[11px] font-bold tracking-widest uppercase">Secure Encrypted Portal</span>
