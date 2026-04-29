@@ -44,7 +44,7 @@
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
             <p class="text-slate-500 text-sm font-medium mb-1">Piutang Koperasi</p>
             <p class="text-2xl font-bold font-mono text-amber-600">{{ format_rupiah($ringkasan['piutangBerjalan']) }}</p>
-            <p class="text-slate-400 text-xs mt-2">Sisa tagihan pinjaman berjalan</p>
+            <p class="text-slate-400 text-xs mt-2">Sisa pokok pinjaman berjalan</p>
         </div>
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
             <p class="text-slate-500 text-sm font-medium mb-1">Simpanan Anggota</p>
@@ -84,7 +84,7 @@
                 </div>
                 <div>
                     <div class="flex justify-between text-sm mb-1">
-                        <span class="text-slate-600 font-medium">Piutang Beredar</span>
+                        <span class="text-slate-600 font-medium">Piutang Pokok Beredar</span>
                         <span class="font-mono font-semibold text-amber-600">{{ format_rupiah($ringkasan['piutangBerjalan']) }} <span class="text-slate-400 text-xs">({{ $pctPiutang }}%)</span></span>
                     </div>
                     <div class="w-full bg-slate-100 rounded-full h-3">
@@ -164,6 +164,10 @@
             <div class="text-right">
                 <p class="text-xs text-slate-500">Total Sisa Utang</p>
                 <p class="text-lg font-bold font-mono text-amber-600">{{ format_rupiah($loans->sum('total_belum')) }}</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">
+                    Pokok {{ format_rupiah($loans->sum('total_belum_pokok')) }} + 
+                    Bunga {{ format_rupiah($loans->sum('total_belum_bunga')) }}
+                </p>
             </div>
         </div>
 
@@ -201,9 +205,13 @@
                         <p class="text-[10px] text-emerald-600 uppercase tracking-wider mb-1">Sudah Dibayar</p>
                         <p class="text-sm font-bold font-mono text-emerald-700">{{ format_rupiah($loan->total_dibayar) }}</p>
                     </div>
-                    <div class="p-3 bg-amber-50 rounded-xl">
+                    <div class="p-3 bg-amber-50 rounded-xl relative group">
                         <p class="text-[10px] text-amber-600 uppercase tracking-wider mb-1">Belum Dibayar</p>
                         <p class="text-sm font-bold font-mono text-amber-700">{{ format_rupiah($loan->total_belum) }}</p>
+                        <p class="text-[9px] text-amber-600/70 mt-1 leading-tight">
+                            P: {{ format_rupiah($loan->total_belum_pokok) }}<br>
+                            B: {{ format_rupiah($loan->total_belum_bunga) }}
+                        </p>
                     </div>
                 </div>
             </div>

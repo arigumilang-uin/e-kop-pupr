@@ -21,6 +21,7 @@ class LaporanService
         $totalPenarikan = (float) DB::table('penarikan_simpanan')->sum('nominal');
         $simpananBersih = $totalSimpanan - $totalPenarikan;
 
+        // Piutang = Sisa Pokok saja (cash basis: bunga diakui saat dibayar)
         $totalPokokPinjamanAktif = (float) DB::table('pinjaman')->where('status', 'berjalan')->sum('nominal_pinjaman');
         $angsuranPokokTerbayar = (float) DB::table('angsuran')
             ->join('pinjaman', 'angsuran.pinjaman_id', '=', 'pinjaman.id')
@@ -92,6 +93,8 @@ class LaporanService
                     'total_tagihan' => (float) $p->total_bayar,
                     'total_dibayar' => (float) $lunas->sum('nominal_total'),
                     'total_belum' => (float) $belum->sum('nominal_total'),
+                    'total_belum_pokok' => (float) $belum->sum('nominal_pokok'),
+                    'total_belum_bunga' => (float) $belum->sum('nominal_bunga'),
                     'angsuran_lunas' => $lunas->count(),
                     'angsuran_belum' => $belum->count(),
                     'tenor' => $p->tenor_bulan,

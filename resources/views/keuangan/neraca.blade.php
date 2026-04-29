@@ -48,10 +48,10 @@
                         {{-- Piutang --}}
                         <div class="flex justify-between items-baseline py-1.5 border-b border-dashed border-slate-200">
                             <div class="pl-4">
-                                <span class="text-sm text-slate-700">Piutang Pokok Pinjaman Anggota</span>
+                                <span class="text-sm text-slate-700">Piutang Pinjaman Anggota (Pokok Saja)</span>
                                 <p class="text-[10px] text-slate-400 mt-0.5">
                                     Total Pokok: {{ format_rupiah($neraca['aktiva']['piutang_detail']['total_pokok']) }}
-                                    − Terbayar: {{ format_rupiah($neraca['aktiva']['piutang_detail']['pokok_terbayar']) }}
+                                    − Pokok Terbayar: {{ format_rupiah($neraca['aktiva']['piutang_detail']['pokok_terbayar']) }}
                                 </p>
                             </div>
                             <span class="text-sm font-mono font-semibold text-slate-800 whitespace-nowrap">{{ format_rupiah($neraca['aktiva']['piutang_pinjaman']) }}</span>
@@ -111,11 +111,18 @@
                         </div>
                         @endforeach
 
-                        {{-- SHU --}}
+                        {{-- Laba Ditahan --}}
                         <div class="flex justify-between items-baseline py-1 border-b border-dashed border-slate-200">
-                            <span class="text-sm text-slate-700 pl-4">SHU Tahun Berjalan</span>
-                            <span class="text-sm font-mono font-semibold {{ $neraca['modal']['shu_berjalan'] >= 0 ? 'text-emerald-700' : 'text-red-600' }}">
-                                {{ format_rupiah($neraca['modal']['shu_berjalan']) }}
+                            <div class="pl-4">
+                                <span class="text-sm text-slate-700">Laba Ditahan (Pendapatan − Beban)</span>
+                                <p class="text-[10px] text-slate-400 mt-0.5">
+                                    Bunga: {{ format_rupiah($neraca['modal']['detail_laba']['pendapatan_bunga']) }}
+                                    + Admin: {{ format_rupiah($neraca['modal']['detail_laba']['pendapatan_biaya_admin']) }}
+                                    − Beban: {{ format_rupiah($neraca['modal']['detail_laba']['total_beban']) }}
+                                </p>
+                            </div>
+                            <span class="text-sm font-mono font-semibold {{ $neraca['modal']['laba_ditahan'] >= 0 ? 'text-emerald-700' : 'text-red-600' }}">
+                                {{ format_rupiah($neraca['modal']['laba_ditahan']) }}
                             </span>
                         </div>
 
@@ -185,7 +192,7 @@
             <div class="space-y-2">
                 <p><strong class="text-slate-700">4. Cadangan Dana Resiko</strong> — Potongan 1.5% dari setiap pencairan pinjaman, dicadangkan untuk menutup risiko kredit macet.</p>
                 <p><strong class="text-slate-700">5. Simpanan Pokok, Wajib & SWP</strong> — Dicatat sebagai modal karena bersifat tetap dan tidak dapat ditarik selama anggota masih aktif di koperasi.</p>
-                <p><strong class="text-slate-700">6. SHU Tahun Berjalan</strong> — Selisih antara total pendapatan (bunga pinjaman + biaya admin) dengan total beban operasional koperasi.</p>
+                <p><strong class="text-slate-700">6. Laba Ditahan</strong> — Selisih antara pendapatan terealisasi (bunga pinjaman terbayar + biaya admin) dengan total beban operasional koperasi.</p>
             </div>
         </div>
     </div>

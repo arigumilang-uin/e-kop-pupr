@@ -32,7 +32,7 @@
             </div>
         </div>
         <p class="text-xl lg:text-2xl font-bold text-slate-800">{{ format_rupiah($stats['piutang_berjalan']) }}</p>
-        <p class="text-slate-400 text-xs mt-1">Dana pinjaman + Angsuran bunga belum lunas</p>
+        <p class="text-slate-400 text-xs mt-1">Sisa pokok pinjaman berjalan</p>
     </a>
 
     {{-- Total Simpanan --}}

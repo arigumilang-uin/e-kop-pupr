@@ -8,42 +8,28 @@ use Illuminate\Support\Facades\DB;
 /**
  * Service untuk menyusun Neraca (Laporan Posisi Keuangan) Koperasi Simpan Pinjam.
  *
- * Berdasarkan Standar Akuntansi Koperasi:
- *
  * AKTIVA (Aset):
  *   1. Kas & Setara Kas
  *   2. Piutang Pokok Pinjaman Anggota
  *
  * PASIVA:
  *   I.  Kewajiban (Hutang):
- *       - Simpanan Sukarela (dapat ditarik sewaktu-waktu)
+ *       - Simpanan Sukarela
  *       - Cadangan Dana Resiko
  *
  *   II. Modal / Ekuitas:
- *       - Simpanan Pokok (tetap selama jadi anggota)
- *       - Simpanan Wajib (tetap selama jadi anggota)
- *       - Simpanan Wajib Pinjam / SWP (tetap selama jadi anggota)
- *       - SHU Tahun Berjalan (dari ShuService yang dinamis)
+ *       - Simpanan Pokok, Wajib, SWP
+ *       - Laba Ditahan (Pendapatan Terealisasi - Beban)
  *
- * Persamaan Dasar: AKTIVA = KEWAJIBAN + MODAL
+ * Persamaan: AKTIVA = KEWAJIBAN + MODAL
  */
 class NeracaService
 {
     public function __construct(
         private SaldoService $saldoService,
-        private ShuService $shuService,
     ) {}
 
-    /**
-     * Kode jenis simpanan yang masuk MODAL (bukan hutang).
-     * Simpanan ini tidak bisa ditarik selama masih jadi anggota.
-     */
     private const KODE_MODAL = ['POKOK', 'WAJIB', 'SWP'];
-
-    /**
-     * Kode jenis simpanan yang masuk KEWAJIBAN (hutang).
-     * Simpanan ini secara prinsip bisa ditarik.
-     */
     private const KODE_KEWAJIBAN = ['SUKARELA'];
 
     public function hitung(): array
@@ -54,7 +40,7 @@ class NeracaService
 
         $kas = $this->saldoService->saldoKoperasi();
 
-        // Piutang = sisa POKOK pinjaman berjalan (bunga belum diakui)
+        // Piutang = Sisa Pokok saja (cash basis: bunga diakui saat dibayar)
         $totalPokokBerjalan = (float) DB::table('pinjaman')
             ->where('status', 'berjalan')
             ->sum('nominal_pinjaman');
@@ -93,7 +79,6 @@ class NeracaService
             ->groupBy('jenis_simpanan.kode')
             ->get()->keyBy('kode');
 
-        // Kalkulasi Neto per jenis simpanan
         $simpananNeto = collect();
         foreach ($simpananAll as $kode => $s) {
             $tarik = isset($penarikanAll[$kode]) ? (float) $penarikanAll[$kode]->total : 0;
@@ -101,13 +86,11 @@ class NeracaService
             $simpananNeto->push($s);
         }
 
-        // Simpanan yang masuk KEWAJIBAN (Sukarela)
         $simpananKewajiban = $simpananNeto->filter(
             fn($s) => in_array($s->kode, self::KODE_KEWAJIBAN)
         );
         $totalSimpananKewajiban = (float) $simpananKewajiban->sum('total');
 
-        // Simpanan yang masuk MODAL (Pokok, Wajib, SWP)
         $simpananModal = $simpananNeto->filter(
             fn($s) => in_array($s->kode, self::KODE_MODAL)
         );
@@ -117,7 +100,6 @@ class NeracaService
         //  I. K E W A J I B A N
         // =============================================
 
-        // Dana Resiko = potongan 1.5% yang dicadangkan
         $danaResiko = (float) DB::table('pinjaman')
             ->whereIn('status', ['berjalan', 'lunas'])
             ->sum('potongan_dana_resiko');
@@ -128,19 +110,30 @@ class NeracaService
         //  II. M O D A L / E K U I T A S
         // =============================================
 
-        // a) Simpanan Modal (Pokok + Wajib + SWP)
-        // b) SHU Tahun Berjalan — dari ShuService (dinamis, sesuai konfigurasi pengurus)
-        $shuData = $this->shuService->hitung((int) date('Y'));
-        $shuBerjalan = $shuData['shu_bersih'];
+        // Pendapatan TEREALISASI (sudah masuk kas secara riil):
+        // 1. Bunga angsuran yang sudah dibayar (status lunas)
+        $pendapatanBunga = (float) DB::table('angsuran')
+            ->where('status', 'lunas')
+            ->sum('nominal_bunga');
 
-        $totalModal = $totalSimpananModal + $shuBerjalan;
+        // 2. Biaya admin dari pinjaman yang sudah dicairkan
+        $pendapatanBiayaAdmin = (float) DB::table('pinjaman')
+            ->whereIn('status', ['berjalan', 'lunas'])
+            ->sum('potongan_biaya_admin');
+
+        // Beban (pengeluaran kas manual)
+        $totalBeban = (float) PengeluaranKas::sum('nominal');
+
+        // Laba Ditahan = Pendapatan Terealisasi - Beban
+        $labaDitahan = $pendapatanBunga + $pendapatanBiayaAdmin - $totalBeban;
+
+        $totalModal = $totalSimpananModal + $labaDitahan;
 
         // =============================================
         //  P A S I V A
         // =============================================
         $totalPasiva = $totalKewajiban + $totalModal;
 
-        // Balance check
         $selisih = round($totalAktiva - $totalPasiva, 2);
         $isBalance = abs($selisih) < 0.01;
 
@@ -170,7 +163,12 @@ class NeracaService
             'modal' => [
                 'simpanan_items' => $simpananModal,
                 'total_simpanan_modal' => $totalSimpananModal,
-                'shu_berjalan' => $shuBerjalan,
+                'laba_ditahan' => $labaDitahan,
+                'detail_laba' => [
+                    'pendapatan_bunga' => $pendapatanBunga,
+                    'pendapatan_biaya_admin' => $pendapatanBiayaAdmin,
+                    'total_beban' => $totalBeban,
+                ],
                 'total' => $totalModal,
             ],
 

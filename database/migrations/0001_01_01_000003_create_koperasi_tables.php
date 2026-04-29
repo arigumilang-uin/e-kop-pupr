@@ -34,7 +34,7 @@ return new class extends Migration
             $table->decimal('limit_per_anggota', 15, 2)->comment('Maks pinjaman per anggota');
             $table->string('token', 64)->unique()->comment('Token unik untuk link pengajuan guest');
             $table->text('catatan')->nullable();
-            $table->enum('status', ['buka', 'tutup', 'selesai'])->default('buka');
+            $table->enum('status', ['buka', 'tutup', 'terjadwal'])->default('buka');
             $table->foreignId('dibuka_oleh')->constrained('users')->cascadeOnUpdate();
             $table->timestamps();
         });

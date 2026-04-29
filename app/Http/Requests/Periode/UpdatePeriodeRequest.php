@@ -4,7 +4,7 @@ namespace App\Http\Requests\Periode;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StorePeriodeRequest extends FormRequest
+class UpdatePeriodeRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -13,6 +13,19 @@ class StorePeriodeRequest extends FormRequest
 
     public function rules(): array
     {
+        $periode = $this->route('periode');
+        $adaPengajuan = $periode->pinjaman()->exists();
+
+        // Jika sudah ada pengajuan, hanya field non-kritikal yang boleh diubah
+        if ($adaPengajuan) {
+            return [
+                'nama_periode' => ['required', 'string', 'max:100'],
+                'tanggal_tutup' => ['required', 'date', 'after_or_equal:' . $periode->tanggal_buka->format('Y-m-d')],
+                'catatan' => ['nullable', 'string', 'max:500'],
+            ];
+        }
+
+        // Belum ada pengajuan → full edit
         return [
             'nama_periode' => ['required', 'string', 'max:100'],
             'tahun' => ['required', 'integer', 'min:2020', 'max:2050'],

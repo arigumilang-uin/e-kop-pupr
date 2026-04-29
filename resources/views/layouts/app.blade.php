@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') — e-Koperasi PUPR Riau</title>
+    <title>@yield('title', 'Dashboard') — ASSET PUPR Riau</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -20,7 +20,7 @@
             {{-- Logo --}}
             <div class="p-5 border-b border-slate-700/50">
                 <h1 class="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
-                    e-Koperasi
+                    ASSET
                 </h1>
                 <p class="text-[11px] text-slate-400 mt-0.5">PUPR Provinsi Riau</p>
             </div>

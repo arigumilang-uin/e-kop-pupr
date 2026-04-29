@@ -17,7 +17,7 @@ class UpdateShuKomponenRequest extends FormRequest
             'nama' => 'required|string|max:100',
             'tipe' => 'required|in:pendapatan,beban',
             'sumber_data' => 'required|string',
-            'keterangan' => 'nullable|string',
+            'deskripsi' => 'nullable|string',
         ];
     }
 }

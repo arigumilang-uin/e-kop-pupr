@@ -199,7 +199,7 @@
         </div>
 
         @if($pinjaman->status->value === 'menunggu')
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 line-clamp-4">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
             <h3 class="text-sm font-semibold text-slate-800 mb-4 border-b border-slate-100 pb-2">Validasi Persetujuan</h3>
             
             @if($pinjaman->is_override)

@@ -19,24 +19,62 @@ class PinjamanGuestController extends Controller
     ) {}
 
     /**
+     * Redirect ke periode pinjaman yang relevan berdasarkan tanggal hari ini.
+     *
+     * Prioritas:
+     * 1. Periode aktif hari ini → langsung ke form pengajuan
+     * 2. Ada periode terjadwal di masa depan → tampilkan jadwal
+     * 3. Tidak ada keduanya → tampilkan halaman closed dari periode terakhir
+     */
+    public function formRedirect()
+    {
+        // 1. Ada periode AKTIF hari ini?
+        $periodeAktif = PeriodePinjaman::aktifHariIni()->first();
+
+        if ($periodeAktif) {
+            return redirect()->route('pinjaman.guest.form', $periodeAktif->token);
+        }
+
+        // 2. Ada periode TERJADWAL di masa depan?
+        $periodeMendatang = PeriodePinjaman::mendatang()->get();
+
+        if ($periodeMendatang->isNotEmpty()) {
+            return view('pinjaman.guest.upcoming', compact('periodeMendatang'));
+        }
+
+        // 3. Fallback: periode TUTUP terakhir
+        $periodeTerakhir = PeriodePinjaman::sudahTutup()->first();
+
+        if ($periodeTerakhir) {
+            return redirect()->route('pinjaman.guest.form', $periodeTerakhir->token);
+        }
+
+        // 4. Belum ada periode sama sekali
+        return redirect()->route('pinjaman.guest.status')
+            ->with('error', 'Belum ada periode pengajuan pinjaman yang tersedia. Silakan hubungi pengurus koperasi.');
+    }
+
+    /**
      * Tampilkan form pengajuan pinjaman guest (berdasarkan token).
      */
     public function form(string $token)
     {
         $periode = PeriodePinjaman::where('token', $token)->firstOrFail();
 
-        $now = now()->startOfDay();
-        $pesan_tutup = null;
+        // Gunakan statusEfektif() sebagai single source of truth
+        $statusNow = $periode->statusEfektif();
 
-        if ($periode->status !== \App\Enums\StatusPeriode::Buka) {
-            $pesan_tutup = 'Status periode pinjaman saat ini sedang dinonaktifkan atau ditutup secara manual oleh Pengurus.';
-        } elseif ($now->lessThan($periode->tanggal_buka)) {
-            $pesan_tutup = 'Formulir pengajuan pinjaman belum dibuka. Pelayanan pengajuan pinjaman pada periode ini baru akan diakses secara publik mulai tanggal <strong>' . $periode->tanggal_buka->translatedFormat('d F Y') . '</strong>.';
-        } elseif ($now->greaterThan($periode->tanggal_tutup)) {
-            $pesan_tutup = 'Mohon maaf, batas waktu untuk pengajuan pinjaman pada periode ini telah berakhir sejak tanggal <strong>' . $periode->tanggal_tutup->translatedFormat('d F Y') . '</strong>.';
-        }
+        if ($statusNow !== \App\Enums\StatusPeriode::Buka) {
+            $today = now()->startOfDay();
 
-        if ($pesan_tutup) {
+            if ($statusNow === \App\Enums\StatusPeriode::Terjadwal) {
+                $pesan_tutup = 'Formulir pengajuan pinjaman belum dibuka. Periode ini baru akan aktif mulai tanggal <strong>' . $periode->tanggal_buka->translatedFormat('d F Y') . '</strong>.';
+            } elseif ($periode->status === \App\Enums\StatusPeriode::Tutup && $today->betweenIncluded($periode->tanggal_buka, $periode->tanggal_tutup)) {
+                $pesan_tutup = 'Periode pinjaman ini telah ditutup secara manual oleh Pengurus.';
+            } else {
+                $pesan_tutup = 'Batas waktu pengajuan pinjaman pada periode ini telah berakhir sejak tanggal <strong>' . $periode->tanggal_tutup->translatedFormat('d F Y') . '</strong>.';
+            }
+
             return view('pinjaman.guest.closed', compact('periode', 'pesan_tutup'));
         }
 
@@ -46,6 +84,8 @@ class PinjamanGuestController extends Controller
             'tenor_maks' => max(1, $this->pengaturanService->batasBulanPelunasan() - (int) now()->format('n')),
             'tenor_min' => $this->pengaturanService->tenorMinimal(),
             'limit' => $periode->limit_per_anggota,
+            'nominal_min' => $periode->nominal_min ?? 100000,
+            'kelipatan' => $periode->kelipatan_nominal ?? 100000,
             'swp_persen' => $this->pengaturanService->potonganSwpPersen(),
             'resiko_persen' => $this->pengaturanService->potonganDanaResikoPersen(),
             'admin_persen' => $this->pengaturanService->potonganBiayaAdminPersen(),
@@ -55,26 +95,18 @@ class PinjamanGuestController extends Controller
     }
 
     /**
-     * Proses submit form pinjaman oleh guest.
+     * Tampilkan halaman validasi pengajuan (review).
      */
-    public function submit(GuestPinjamanRequest $request, string $token)
+    public function review(GuestPinjamanRequest $request, string $token)
     {
         $periode = PeriodePinjaman::where('token', $token)->firstOrFail();
 
-        $now = now()->startOfDay();
-
-        if ($periode->status !== \App\Enums\StatusPeriode::Buka) {
-            return back()->with('error', 'Status periode pinjaman saat ini sedang dinonaktifkan atau ditutup secara manual oleh Pengurus.');
-        } elseif ($now->lessThan($periode->tanggal_buka)) {
-            return back()->with('error', 'Formulir pengajuan pinjaman belum dibuka. Pelayanan baru akan dibuka pada tanggal ' . $periode->tanggal_buka->translatedFormat('d F Y') . '.');
-        } elseif ($now->greaterThan($periode->tanggal_tutup)) {
-            return back()->with('error', 'Batasan waktu pengajuan periode ini telah berakhir sejak ' . $periode->tanggal_tutup->translatedFormat('d F Y') . '.');
+        if (!$periode->isBuka()) {
+            return back()->with('error', 'Periode pinjaman ini tidak sedang aktif. Pengajuan tidak dapat diproses.');
         }
 
         // 1. Cari & Validasi Anggota (hanya berdasarkan NIP)
-        $anggota = Anggota::where('nip', $request->nip)
-            ->aktif()
-            ->first();
+        $anggota = Anggota::where('nip', $request->nip)->aktif()->first();
 
         if (!$anggota) {
             return back()->withInput()->with('error', 'NIP tidak terdaftar sebagai anggota koperasi aktif. Pastikan NIP yang Anda masukkan benar.');
@@ -93,9 +125,53 @@ class PinjamanGuestController extends Controller
             return back()->withInput()->withErrors(['nominal_pinjaman' => implode(' ', $kelayakan['pesan'])]);
         }
 
-        // Cek Confirmation Override jika anggota sudah punya pinjaman
-        if ($kelayakan['perlu_override'] && !$request->boolean('confirm_override')) {
-            return back()->withInput()->with('needs_override_confirmation', 'Anda sudah memiliki pinjaman aktif pada tahun ini. Apakah Anda yakin ingin mengajukan pinjaman baru? Pengajuan ini akan membutuhkan persetujuan/override khusus dari pengurus.');
+        // 3. Hitung Keseluruhan Rincian Pinjaman
+        $rincian = $this->pinjamanService->hitungPinjaman($request->nominal_pinjaman, $request->tenor_bulan);
+
+        $pengaturan = [
+            'swp_persen' => $this->pengaturanService->potonganSwpPersen(),
+            'resiko_persen' => $this->pengaturanService->potonganDanaResikoPersen(),
+            'admin_persen' => $this->pengaturanService->potonganBiayaAdminPersen(),
+            'bunga_persen' => $this->pengaturanService->bungaPersen(),
+        ];
+
+        return view('pinjaman.guest.review', compact('periode', 'anggota', 'rincian', 'request', 'kelayakan', 'pengaturan'));
+    }
+
+    /**
+     * Proses final (store) form pinjaman oleh guest.
+     */
+    public function store(GuestPinjamanRequest $request, string $token)
+    {
+        $periode = PeriodePinjaman::where('token', $token)->firstOrFail();
+
+        if (!$periode->isBuka()) {
+            return back()->with('error', 'Periode pinjaman ini tidak sedang aktif. Pengajuan tidak dapat diproses.');
+        }
+
+        // 1. Cari & Validasi Anggota
+        $anggota = Anggota::where('nip', $request->nip)->aktif()->first();
+
+        if (!$anggota) {
+            return back()->withInput()->with('error', 'NIP tidak terdaftar sebagai anggota koperasi aktif.');
+        }
+
+        // 2. Cek Kelayakan
+        $kelayakan = $this->pinjamanService->cekKelayakan(
+            $anggota->id,
+            $request->nominal_pinjaman,
+            $request->tenor_bulan,
+            $periode->limit_per_anggota,
+            $this->pengaturanService->batasBulanPelunasan()
+        );
+
+        if (!$kelayakan['layak']) {
+            return back()->withInput()->withErrors(['nominal_pinjaman' => implode(' ', $kelayakan['pesan'])]);
+        }
+
+        // Pastikan agreement dicheck, ini adalah validasi ekstra di controller sbg pengaman
+        if (!$request->has('agreed')) {
+            return back()->withInput()->with('error', 'Anda harus menyetujui rincian dan mematuhi aturan standar KSP PUPR PKPP Riau sebelum melanjutkan.');
         }
 
         // 3. Hitung Keseluruhan Rincian Pinjaman
@@ -147,18 +223,18 @@ class PinjamanGuestController extends Controller
         if ($request->filled('no_referensi')) {
             $query->where('no_referensi', $request->no_referensi);
         } else {
-            // Ambil pengajuan terakhir di tahun ini
+            // Ambil SEMUA pengajuan di tahun ini
             $tahunSekarang = now()->format('Y');
             $query->whereYear('tanggal_pengajuan', $tahunSekarang);
         }
 
-        $pinjaman = $query->latest('tanggal_pengajuan')->first();
+        $pinjamans = $query->latest('tanggal_pengajuan')->get();
 
-        if (!$pinjaman) {
-            return back()->withInput()->with('error', 'Tidak ada data pengajuan pinjaman untuk tahun ini.');
+        if ($pinjamans->isEmpty()) {
+            return back()->withInput()->with('error', 'Tidak ada data pengajuan pinjaman untuk kriteria tersebut.');
         }
 
-        return view('pinjaman.guest.status-result', compact('anggota', 'pinjaman'));
+        return view('pinjaman.guest.status-result', compact('anggota', 'pinjamans'));
     }
 
     /**

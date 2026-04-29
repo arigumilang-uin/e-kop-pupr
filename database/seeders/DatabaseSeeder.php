@@ -15,8 +15,10 @@ class DatabaseSeeder extends Seeder
         // 1. Seed data master
         $this->call([
             BidangSeeder::class,
+            AnggotaMassSeeder::class,
             JenisSimpananSeeder::class,
             PengaturanSeeder::class,
+            ShuConfigSeeder::class,
         ]);
 
         // 2. Buat akun default admin & pimpinan

@@ -29,11 +29,13 @@ class ShuService
     private function getDataResolvers(): array
     {
         return [
+            // Bunga TEREALISASI: hanya dari angsuran yang sudah lunas di tahun tersebut
             'bunga_pinjaman' => fn(int $tahun) =>
-                (float) DB::table('pinjaman')
-                    ->whereIn('status', ['berjalan', 'lunas'])
-                    ->whereYear('tanggal_approval', $tahun)
-                    ->sum('total_bunga'),
+                (float) DB::table('angsuran')
+                    ->join('pinjaman', 'angsuran.pinjaman_id', '=', 'pinjaman.id')
+                    ->where('angsuran.status', 'lunas')
+                    ->whereYear('angsuran.tanggal_bayar', $tahun)
+                    ->sum('angsuran.nominal_bunga'),
 
             'dana_resiko' => fn(int $tahun) =>
                 (float) DB::table('pinjaman')

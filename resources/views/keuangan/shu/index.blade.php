@@ -298,5 +298,118 @@
         </div>
     </div>
 
+    {{-- ============================================== --}}
+    {{-- PAYOUT STATUS & PRORATA PER ANGGOTA            --}}
+    {{-- ============================================== --}}
+    @if($payoutTahunIni)
+    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-6">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+                <h3 class="font-bold text-emerald-800">SHU Tahun {{ $tahun }} Sudah Didistribusikan</h3>
+                <p class="text-sm text-emerald-700 mt-1">
+                    Dilaksanakan pada {{ $payoutTahunIni->created_at->translatedFormat('d F Y, H:i') }} WIB
+                    oleh {{ $payoutTahunIni->eksekutor->nama ?? 'Sistem' }}.
+                </p>
+                <div class="flex flex-wrap gap-4 mt-3 text-sm">
+                    <div>
+                        <span class="text-emerald-600 font-medium">Total Didistribusikan:</span>
+                        <span class="font-bold font-mono text-emerald-800">{{ format_rupiah($payoutTahunIni->total_terdistribusi) }}</span>
+                    </div>
+                    <div>
+                        <span class="text-emerald-600 font-medium">Penerima:</span>
+                        <span class="font-bold text-emerald-800">{{ $payoutTahunIni->jumlah_penerima }} anggota</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($prorata && $prorata['detail']->isNotEmpty())
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+                <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Distribusi Prorata per Anggota — Tahun {{ $tahun }}
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">
+                    Jasa Modal: <span class="font-mono font-semibold">{{ format_rupiah($danaJasaModal) }}</span> ·
+                    Jasa Usaha: <span class="font-mono font-semibold">{{ format_rupiah($danaJasaUsaha) }}</span> ·
+                    {{ $prorata['ringkasan']['jumlah_penerima'] }} penerima
+                </p>
+            </div>
+
+            {{-- One-Click Payout Button --}}
+            @if(!$payoutTahunIni)
+            <form action="{{ route('shu.payout') }}" method="POST" class="shrink-0"
+                  onsubmit="return confirm('⚠️ PERHATIAN: Anda akan mendistribusikan SHU tahun {{ $tahun }} ke Simpanan Sukarela seluruh anggota.\n\nTotal: {{ format_rupiah($prorata['ringkasan']['total_terdistribusi']) }} untuk {{ $prorata['ringkasan']['jumlah_penerima'] }} anggota.\n\nAksi ini TIDAK BISA DIBATALKAN. Lanjutkan?')">
+                @csrf
+                <input type="hidden" name="tahun" value="{{ $tahun }}">
+                <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/25 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Eksekusi Distribusi SHU {{ $tahun }}
+                </button>
+            </form>
+            @endif
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-100">
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase">#</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase">NIP</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Nama Anggota</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase text-right">Simpanan Neto</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase text-right">Jasa Modal</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase text-right">Bunga Dibayar</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase text-right">Jasa Usaha</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase text-right">Total SHU</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach($prorata['detail'] as $idx => $item)
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-4 py-3 text-slate-400 font-mono">{{ $idx + 1 }}</td>
+                        <td class="px-4 py-3 font-mono text-slate-600 whitespace-nowrap">{{ $item->nip }}</td>
+                        <td class="px-4 py-3 font-medium text-slate-800 whitespace-nowrap">{{ $item->nama }}</td>
+                        <td class="px-4 py-3 font-mono text-slate-700 text-right whitespace-nowrap">{{ format_rupiah($item->simpanan) }}</td>
+                        <td class="px-4 py-3 font-mono text-emerald-600 font-semibold text-right whitespace-nowrap">
+                            {{ format_rupiah($item->jasa_modal) }}
+                            <span class="text-[10px] text-slate-400 ml-1">({{ $item->proporsi_modal }}%)</span>
+                        </td>
+                        <td class="px-4 py-3 font-mono text-slate-700 text-right whitespace-nowrap">{{ format_rupiah($item->bunga_dibayar) }}</td>
+                        <td class="px-4 py-3 font-mono text-blue-600 font-semibold text-right whitespace-nowrap">
+                            {{ format_rupiah($item->jasa_usaha) }}
+                            <span class="text-[10px] text-slate-400 ml-1">({{ $item->proporsi_usaha }}%)</span>
+                        </td>
+                        <td class="px-4 py-3 font-mono font-bold text-slate-900 text-right whitespace-nowrap">{{ format_rupiah($item->total_shu) }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+                <tfoot class="bg-slate-50 border-t-2 border-slate-200">
+                    <tr>
+                        <td colspan="4" class="px-4 py-3 text-xs font-bold text-slate-600 uppercase">Total Distribusi</td>
+                        <td class="px-4 py-3 font-mono font-bold text-emerald-700 text-right">{{ format_rupiah($prorata['detail']->sum('jasa_modal')) }}</td>
+                        <td class="px-4 py-3"></td>
+                        <td class="px-4 py-3 font-mono font-bold text-blue-700 text-right">{{ format_rupiah($prorata['detail']->sum('jasa_usaha')) }}</td>
+                        <td class="px-4 py-3 font-mono font-bold text-slate-900 text-right text-base">{{ format_rupiah($prorata['ringkasan']['total_terdistribusi']) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    @elseif($shu['shu_bersih'] > 0 && !$payoutTahunIni)
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center">
+        <p class="text-sm text-amber-800 font-medium">
+            SHU Bersih {{ format_rupiah($shu['shu_bersih']) }} tersedia, namun tidak ditemukan pos distribusi "Jasa Modal" atau "Jasa Anggota" yang aktif, atau belum ada data simpanan/pinjaman anggota.
+        </p>
+    </div>
+    @endif
+
 </div>
 @endsection

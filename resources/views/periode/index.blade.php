@@ -41,11 +41,12 @@
                 <div class="flex items-center gap-3 mb-2">
                     <h3 class="text-base font-semibold text-slate-800 truncate">{{ $periode->nama_periode }}</h3>
                     <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium
-                        @if($periode->status->value === 'buka') bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20
-                        @elseif($periode->status->value === 'tutup') bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20
+                        @if($periode->statusEfektif()->value === 'buka') bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20
+                        @elseif($periode->statusEfektif()->value === 'terjadwal') bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20
+                        @elseif($periode->statusEfektif()->value === 'tutup') bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20
                         @else bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-500/20 @endif
                     ">
-                        {{ $periode->status->label() }}
+                        {{ $periode->statusEfektif()->label() }}
                     </span>
                 </div>
                 <div class="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-slate-500">

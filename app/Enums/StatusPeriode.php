@@ -6,14 +6,14 @@ enum StatusPeriode: string
 {
     case Buka = 'buka';
     case Tutup = 'tutup';
-    case Selesai = 'selesai';
+    case Terjadwal = 'terjadwal';
 
     public function label(): string
     {
         return match ($this) {
             self::Buka => 'Buka',
             self::Tutup => 'Tutup',
-            self::Selesai => 'Selesai',
+            self::Terjadwal => 'Terjadwal',
         };
     }
 
@@ -22,7 +22,7 @@ enum StatusPeriode: string
         return match ($this) {
             self::Buka => 'emerald',
             self::Tutup => 'red',
-            self::Selesai => 'slate',
+            self::Terjadwal => 'amber',
         };
     }
 }

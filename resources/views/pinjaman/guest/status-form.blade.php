@@ -1,61 +1,96 @@
 @extends('layouts.guest')
-
 @section('title', 'Cek Status Pengajuan')
 
 @section('content')
-<div class="w-full max-w-md">
-    <div class="text-center mb-8">
-        <h1 class="text-2xl font-bold text-white">Cek Status Pinjaman</h1>
-        <p class="text-slate-400 text-sm mt-1">Lacak status pengajuan pinjaman Anda</p>
+<x-guest-nav />
+
+<main class="max-w-xl mx-auto px-4 py-8 md:py-16" x-data="statusChecker()">
+    
+    <!-- Premium Header Area -->
+    <div class="mb-10 text-center">
+        <h1 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -1px; color: #0f172a; margin-bottom: 8px;">
+            Lacak Pengajuan
+        </h1>
+        <p class="text-slate-500 text-[15px] leading-relaxed">
+            Silakan masukkan NIP dan Nomor Referensi untuk mengetahui perkembangan permohonan pinjaman Anda.
+        </p>
     </div>
 
     @if(session('success_ref'))
-    <div class="mb-6 p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 mb-3">
-            <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
+    <div class="mb-8 p-6 rounded-[24px] bg-emerald-50 border border-emerald-100 flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-5 shadow-sm">
+        <div class="bg-white p-3.5 rounded-full shadow-sm shrink-0 border border-emerald-100">
+            <svg class="w-7 h-7 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
-        <h3 class="text-emerald-400 font-bold mb-1">Pengajuan Berhasil Disimpan</h3>
-        <p class="text-slate-300 text-sm mb-3">Nomor referensi pengajuan Anda:</p>
-        <p class="text-2xl font-mono font-bold text-white tracking-widest">{{ session('success_ref') }}</p>
+        <div>
+            <h3 class="text-emerald-800 font-extrabold text-[16px] mb-1.5">Pengajuan Berhasil Dikirim!</h3>
+            <p class="text-emerald-600/90 text-[13.5px] leading-relaxed mb-4">Harap simpan Nomor Referensi berikut. Anda dapat melacak perkembangan persetujuan dana kapan saja dengan nomor ini.</p>
+            <div class="inline-block px-5 py-2.5 bg-white rounded-xl border border-emerald-200 shadow-sm">
+                <span class="font-mono font-bold text-xl text-emerald-700 tracking-wider">{{ session('success_ref') }}</span>
+            </div>
+        </div>
     </div>
     @endif
 
-    <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8 shadow-2xl">
-        <form method="POST" action="{{ route('pinjaman.guest.check') }}" class="space-y-5">
+    <x-card>
+        <form method="POST" action="{{ route('pinjaman.guest.check') }}" class="space-y-6">
             @csrf
-
+            
             @if(session('error'))
-            <div class="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
-                {{ session('error') }}
+            <div class="p-4 rounded-xl bg-red-50 border border-red-100 flex items-center gap-3 mb-6">
+                <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span class="text-[13.5px] font-medium text-red-800">{{ session('error') }}</span>
             </div>
             @endif
 
-            {{-- NIP --}}
             <div>
-                <label for="nip" class="block text-sm font-medium text-slate-300 mb-1.5">NIP Anggota <span class="text-red-400">*</span></label>
-                <input type="text" id="nip" name="nip" value="{{ old('nip') }}" required
-                       class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500
-                              focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-sm">
+                <x-label for="nip">Nomor Induk Pegawai (NIP)</x-label>
+                <x-input id="nip" name="nip" x-model="nip" @input="nip = nip.replace(/[^0-9]/g, '')" maxlength="18" required placeholder="Contoh: 19800101...">
+                    <x-slot name="icon">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </x-slot>
+                </x-input>
+                <p class="mt-2 text-[12px] font-medium" :class="(nip.length > 0 && nip.length !== 18) ? 'text-red-500' : 'text-slate-500'">
+                    <span x-show="nip.length === 0 || nip.length === 18">Masukkan NIP Anda untuk melacak.</span>
+                    <span x-show="nip.length > 0 && nip.length !== 18">NIP harus tepat 18 digit angka (saat ini <span x-text="nip.length"></span> digit).</span>
+                </p>
             </div>
 
-            {{-- No Referensi --}}
             <div>
-                <label for="no_referensi" class="block text-sm font-medium text-slate-300 mb-1.5">No Referensi <span class="text-slate-500 font-normal">(Opsional)</span></label>
-                <input type="text" id="no_referensi" name="no_referensi" value="{{ old('no_referensi') }}"
-                       placeholder="Misal: PJM-2026-0001"
-                       class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500
-                              focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-sm uppercase">
-                <p class="text-xs text-slate-500 mt-2">Kosongkan jika ingin melihat pengajuan terbaru Anda tahun ini.</p>
+                <x-label for="no_referensi">Nomor Referensi <span class="text-slate-400 font-normal ml-1">(Opsional)</span></x-label>
+                <x-input id="no_referensi" name="no_referensi" value="{{ old('no_referensi') }}" placeholder="PJM-2026-..." class="uppercase font-mono font-semibold tracking-wide text-lg text-slate-700">
+                    <x-slot name="icon">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </x-slot>
+                </x-input>
+                <p class="mt-2 text-[12.5px] text-slate-500 font-medium leading-relaxed">Kosongkan kolom ini jika ingin melihat pengajuan terbaru Anda pada tahun ini.</p>
             </div>
 
-            <button type="submit"
-                    class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-medium text-sm
-                           hover:from-blue-500 hover:to-blue-400 transition-all duration-200">
-                Lacak Status
-            </button>
+            <div class="pt-4">
+                <button type="submit" 
+                        :disabled="!isValid"
+                        :class="!isValid ? 'opacity-50 cursor-not-allowed bg-slate-300 text-slate-500' : 'bg-[#0f172a] text-white hover:bg-slate-800 shadow-xl shadow-slate-900/10'"
+                        class="w-full h-14 rounded-xl font-bold text-[15px] transition-all flex items-center justify-center gap-2 group outline-none focus:ring-4 focus:ring-slate-900/20 active:scale-[0.98]">
+                    Konfirmasi & Lacak Status
+                    <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </button>
+            </div>
         </form>
-    </div>
-</div>
+    </x-card>
+
+    <footer class="mt-16 text-center space-y-3">
+        <p class="text-[12px] font-semibold text-slate-400 tracking-widest uppercase">
+            © {{ date('Y') }} KOPERASI SIMPAN PINJAM PKPP PUPR RIAU
+        </p>
+    </footer>
+</main>
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('statusChecker', () => ({
+            nip: '{{ old('nip', '') }}',
+            get isValid() {
+                return this.nip.length === 18;
+            }
+        }));
+    });
+</script>
 @endsection

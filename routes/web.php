@@ -34,6 +34,22 @@ Route::post('/simulasi/hitung', [SimulasiController::class, 'hitung'])->name('si
 
 /*
 |--------------------------------------------------------------------------
+| Guest Routes — Pinjaman (Via Link Token, tanpa login)
+| PENTING: Harus didaftarkan SEBELUM auth routes karena
+| /pinjaman/{pinjaman} wildcard di auth group akan menangkap /pinjaman/ajukan
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/pinjaman/ajukan', [PinjamanGuestController::class, 'formRedirect'])->name('pinjaman.guest.form_redirect');
+Route::get('/pinjaman/ajukan/{token}', [PinjamanGuestController::class, 'form'])->name('pinjaman.guest.form');
+Route::post('/pinjaman/ajukan/{token}/review', [PinjamanGuestController::class, 'review'])->name('pinjaman.guest.review');
+Route::post('/pinjaman/ajukan/{token}/store', [PinjamanGuestController::class, 'store'])->name('pinjaman.guest.store');
+Route::get('/cek-pinjaman', [PinjamanGuestController::class, 'statusForm'])->name('pinjaman.guest.status');
+Route::post('/cek-pinjaman', [PinjamanGuestController::class, 'statusCheck'])->name('pinjaman.guest.check');
+Route::patch('/cek-pinjaman/batal', [PinjamanGuestController::class, 'cancel'])->name('pinjaman.guest.cancel');
+
+/*
+|--------------------------------------------------------------------------
 | Auth Routes (Guest Only — belum login)
 |--------------------------------------------------------------------------
 */
@@ -54,32 +70,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // =============================================
-    // READ-ONLY — Admin & Pimpinan
-    // =============================================
-    Route::middleware('role:admin,pimpinan')->group(function () {
-        // Laporan & Monitor
-        Route::get('/keuangan/laporan', [LaporanKeuanganController::class, 'index'])->name('keuangan.laporan');
-        Route::get('/keuangan/simulasi', [SimulasiKeuanganController::class, 'index'])->name('keuangan.simulasi');
-        Route::get('/keuangan/shu', [ShuController::class, 'index'])->name('keuangan.shu');
-        Route::get('/keuangan/neraca', [NeracaController::class, 'index'])->name('keuangan.neraca');
-        Route::get('/keuangan/arsip', [ArsipTransaksiController::class, 'index'])->name('keuangan.arsip');
-        Route::get('/log', [LogAktivitasController::class, 'index'])->name('log.index');
-
-        // View anggota & pinjaman (read-only)
-        Route::get('/anggota', [AnggotaController::class, 'index'])->name('anggota.index');
-        Route::get('/anggota/{anggotum}', [AnggotaController::class, 'show'])->name('anggota.show');
-        Route::get('/pinjaman', [PinjamanAdminController::class, 'index'])->name('pinjaman.index');
-        Route::get('/pinjaman/{pinjaman}', [PinjamanAdminController::class, 'show'])->name('pinjaman.show');
-        Route::get('/simpanan', [SimpananController::class, 'index'])->name('simpanan.index');
-        Route::get('/pengeluaran', [PengeluaranKasController::class, 'index'])->name('pengeluaran.index');
-        Route::get('/potongan', [PotonganBulananController::class, 'index'])->name('potongan.index');
-        Route::get('/periode', [PeriodeController::class, 'index'])->name('periode.index');
-        Route::get('/periode/{periode}', [PeriodeController::class, 'show'])->name('periode.show');
-        Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan.index');
-    });
-
-    // =============================================
-    // WRITE — Admin Only
+    // WRITE — Admin Only (HARUS didaftarkan SEBELUM
+    // read-only group karena ada wildcard {anggotum})
     // =============================================
     Route::middleware('role:admin')->group(function () {
         // Master Anggota (CRUD)
@@ -117,10 +109,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/keuangan/shu/distribusi', [ShuController::class, 'storeDistribusi'])->name('shu.distribusi.store');
         Route::patch('/keuangan/shu/distribusi/{distribusi}', [ShuController::class, 'updateDistribusi'])->name('shu.distribusi.update');
         Route::delete('/keuangan/shu/distribusi/{distribusi}', [ShuController::class, 'destroyDistribusi'])->name('shu.distribusi.destroy');
+        Route::post('/keuangan/shu/payout', [ShuController::class, 'eksekusiPayout'])->name('shu.payout');
 
         // Periode Pinjaman (CRUD)
         Route::get('/periode/create', [PeriodeController::class, 'create'])->name('periode.create');
         Route::post('/periode', [PeriodeController::class, 'store'])->name('periode.store');
+        Route::get('/periode/{periode}/edit', [PeriodeController::class, 'edit'])->name('periode.edit');
+        Route::put('/periode/{periode}', [PeriodeController::class, 'update'])->name('periode.update');
+        Route::delete('/periode/{periode}', [PeriodeController::class, 'destroy'])->name('periode.destroy');
         Route::patch('/periode/{periode}/tutup', [PeriodeController::class, 'tutup'])->name('periode.tutup');
         Route::patch('/periode/{periode}/buka', [PeriodeController::class, 'buka'])->name('periode.buka');
         Route::patch('/periode/{periode}/reset-token', [PeriodeController::class, 'resetToken'])->name('periode.reset-token');
@@ -128,16 +124,30 @@ Route::middleware('auth')->group(function () {
         // Pengaturan Sistem (Update)
         Route::patch('/pengaturan/{pengaturan}', [PengaturanController::class, 'update'])->name('pengaturan.update');
     });
+
+    // =============================================
+    // READ-ONLY — Admin & Pimpinan
+    // (Wildcard routes SETELAH specific routes)
+    // =============================================
+    Route::middleware('role:admin,pimpinan')->group(function () {
+        // Laporan & Monitor
+        Route::get('/keuangan/laporan', [LaporanKeuanganController::class, 'index'])->name('keuangan.laporan');
+        Route::get('/keuangan/simulasi', [SimulasiKeuanganController::class, 'index'])->name('keuangan.simulasi');
+        Route::get('/keuangan/shu', [ShuController::class, 'index'])->name('keuangan.shu');
+        Route::get('/keuangan/neraca', [NeracaController::class, 'index'])->name('keuangan.neraca');
+        Route::get('/keuangan/arsip', [ArsipTransaksiController::class, 'index'])->name('keuangan.arsip');
+        Route::get('/log', [LogAktivitasController::class, 'index'])->name('log.index');
+
+        // View anggota & pinjaman (read-only)
+        Route::get('/anggota', [AnggotaController::class, 'index'])->name('anggota.index');
+        Route::get('/anggota/{anggotum}', [AnggotaController::class, 'show'])->name('anggota.show');
+        Route::get('/pinjaman', [PinjamanAdminController::class, 'index'])->name('pinjaman.index');
+        Route::get('/pinjaman/{pinjaman}', [PinjamanAdminController::class, 'show'])->name('pinjaman.show');
+        Route::get('/simpanan', [SimpananController::class, 'index'])->name('simpanan.index');
+        Route::get('/pengeluaran', [PengeluaranKasController::class, 'index'])->name('pengeluaran.index');
+        Route::get('/potongan', [PotonganBulananController::class, 'index'])->name('potongan.index');
+        Route::get('/periode', [PeriodeController::class, 'index'])->name('periode.index');
+        Route::get('/periode/{periode}', [PeriodeController::class, 'show'])->name('periode.show');
+        Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan.index');
+    });
 });
-
-/*
-|--------------------------------------------------------------------------
-| Guest Routes — Pinjaman (Via Link Token, tanpa login)
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/pinjaman/ajukan/{token}', [PinjamanGuestController::class, 'form'])->name('pinjaman.guest.form');
-Route::post('/pinjaman/ajukan/{token}', [PinjamanGuestController::class, 'submit'])->name('pinjaman.guest.submit');
-Route::get('/cek-pinjaman', [PinjamanGuestController::class, 'statusForm'])->name('pinjaman.guest.status');
-Route::post('/cek-pinjaman', [PinjamanGuestController::class, 'statusCheck'])->name('pinjaman.guest.check');
-Route::patch('/cek-pinjaman/batal', [PinjamanGuestController::class, 'cancel'])->name('pinjaman.guest.cancel');
