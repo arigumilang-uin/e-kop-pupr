@@ -50,13 +50,18 @@ class JenisSimpanan extends Model
         return static::where('kode', 'WAJIB')->first();
     }
 
-    public static function sukarela(): ?self
+    public static function sim2025(): ?self
     {
-        return static::where('kode', 'SUKARELA')->first();
+        return static::where('kode', 'SIM2025')->first();
     }
 
     public static function swp(): ?self
     {
         return static::where('kode', 'SWP')->first();
+    }
+
+    public static function bonusShu(): ?self
+    {
+        return static::where('kode', 'BONUS_SHU')->first();
     }
 }

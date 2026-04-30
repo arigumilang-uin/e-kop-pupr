@@ -166,11 +166,11 @@ class ShuController extends Controller
     // =============================================
 
     /**
-     * One-Click Payout: Kapitalisasi SHU ke Simpanan Sukarela seluruh anggota.
+     * One-Click Payout: Kapitalisasi SHU ke Bonus SHU seluruh anggota.
      *
      * Skema:
      *   1. Hitung SHU & prorata per anggota
-     *   2. Batch insert ke tabel simpanan (jenis: SUKARELA)
+     *   2. Batch insert ke tabel simpanan (jenis: BONUS_SHU)
      *   3. Catat ke tabel shu_payout agar tidak bisa dieksekusi 2x
      *   4. Log aktivitas
      */
@@ -207,10 +207,10 @@ class ShuController extends Controller
             return back()->with('error', 'Tidak ditemukan pos distribusi "Jasa Modal" atau "Jasa Anggota" yang bernilai > 0.');
         }
 
-        // Guard 4: Pastikan jenis simpanan SUKARELA ada
-        $jenisSukarela = JenisSimpanan::where('kode', 'SUKARELA')->first();
-        if (!$jenisSukarela) {
-            return back()->with('error', 'Jenis simpanan SUKARELA tidak ditemukan di database.');
+        // Guard 4: Pastikan jenis simpanan BONUS_SHU ada
+        $jenisBonusShu = JenisSimpanan::where('kode', 'BONUS_SHU')->first();
+        if (!$jenisBonusShu) {
+            return back()->with('error', 'Jenis simpanan BONUS_SHU tidak ditemukan di database.');
         }
 
         // Hitung prorata
@@ -221,13 +221,13 @@ class ShuController extends Controller
         }
 
         // === EKSEKUSI DALAM TRANSAKSI ===
-        DB::transaction(function () use ($prorata, $shu, $tahun, $jenisSukarela, $danaJasaModal, $danaJasaUsaha) {
+        DB::transaction(function () use ($prorata, $shu, $tahun, $jenisBonusShu, $danaJasaModal, $danaJasaUsaha) {
 
             $today = now()->toDateString();
             $userId = Auth::id();
 
             // Batch insert simpanan — chunks of 100
-            $prorata['detail']->chunk(100)->each(function ($chunk) use ($jenisSukarela, $today, $userId, $tahun) {
+            $prorata['detail']->chunk(100)->each(function ($chunk) use ($jenisBonusShu, $today, $userId, $tahun) {
                 $rows = [];
                 foreach ($chunk as $item) {
                     if ($item->total_shu <= 0) {
@@ -237,7 +237,7 @@ class ShuController extends Controller
                     $rows[] = [
                         'no_referensi'      => Simpanan::generateNoReferensi(),
                         'anggota_id'        => $item->anggota_id,
-                        'jenis_simpanan_id' => $jenisSukarela->id,
+                        'jenis_simpanan_id' => $jenisBonusShu->id,
                         'nominal'           => $item->total_shu,
                         'tanggal'           => $today,
                         'bulan_untuk'       => null,
@@ -273,7 +273,7 @@ class ShuController extends Controller
             "Distribusi SHU tahun {$tahun} berhasil dieksekusi. "
             . "{$prorata['ringkasan']['jumlah_penerima']} anggota menerima total Rp "
             . number_format($prorata['ringkasan']['total_terdistribusi'], 0, ',', '.')
-            . " ke Simpanan Sukarela.",
+            . " ke Bonus SHU.",
             dataBaru: $prorata['ringkasan'],
         );
 
@@ -281,7 +281,7 @@ class ShuController extends Controller
             "Distribusi SHU tahun {$tahun} berhasil! "
             . "{$prorata['ringkasan']['jumlah_penerima']} anggota menerima total Rp "
             . number_format($prorata['ringkasan']['total_terdistribusi'], 0, ',', '.')
-            . " ke Simpanan Sukarela mereka."
+            . " ke Bonus SHU mereka."
         );
     }
 }

@@ -27,12 +27,12 @@ class JenisSimpananSeeder extends Seeder
                 'keterangan' => 'Wajib dibayar setiap bulan melalui potongan TPP. Tidak bisa ditarik selama masih aktif.',
             ],
             [
-                'kode' => 'SUKARELA',
-                'nama' => 'Simpanan Sukarela',
+                'kode' => 'SIM2025',
+                'nama' => 'Simpanan Tahun 2025',
                 'nominal_default' => 0,
                 'is_wajib' => false,
                 'frekuensi' => 'bebas',
-                'keterangan' => 'Nominal bebas, kapan saja. Tidak bisa ditarik selama masih aktif.',
+                'keterangan' => 'Akumulasi seluruh simpanan anggota sebelum sistem dirilis (tahun 2025 ke bawah). Hanya dapat ditarik saat keluar koperasi.',
             ],
             [
                 'kode' => 'SWP',
@@ -41,6 +41,14 @@ class JenisSimpananSeeder extends Seeder
                 'is_wajib' => false,
                 'frekuensi' => 'per_pinjaman',
                 'keterangan' => 'Otomatis 3% dari nominal pinjaman saat disetujui. Tidak bisa ditarik selama masih aktif. Dikembalikan saat keluar koperasi.',
+            ],
+            [
+                'kode' => 'BONUS_SHU',
+                'nama' => 'Bonus SHU',
+                'nominal_default' => 0,
+                'is_wajib' => false,
+                'frekuensi' => 'bebas',
+                'keterangan' => 'Hasil distribusi SHU tahunan yang dikapitalisasi kembali sebagai simpanan anggota. Hanya dapat ditarik saat keluar koperasi.',
             ],
         ];
 

@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\DB;
  *
  * PASIVA:
  *   I.  Kewajiban (Hutang):
- *       - Simpanan Sukarela
+ *       - Simpanan Tahun 2025 (Pra-rilis)
+ *       - Bonus SHU (Hasil distribusi SHU)
  *       - Cadangan Dana Resiko
  *
  *   II. Modal / Ekuitas:
@@ -30,7 +31,7 @@ class NeracaService
     ) {}
 
     private const KODE_MODAL = ['POKOK', 'WAJIB', 'SWP'];
-    private const KODE_KEWAJIBAN = ['SUKARELA'];
+    private const KODE_KEWAJIBAN = ['SIM2025', 'BONUS_SHU'];
 
     public function hitung(): array
     {

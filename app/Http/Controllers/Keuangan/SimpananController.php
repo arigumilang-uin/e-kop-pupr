@@ -55,8 +55,9 @@ class SimpananController extends Controller
 
         $jenisPokokId = JenisSimpanan::where('kode', 'POKOK')->value('id');
         $jenisWajibId = JenisSimpanan::where('kode', 'WAJIB')->value('id');
-        $jenisSukarelaId = JenisSimpanan::where('kode', 'SUKARELA')->value('id');
+        $jenisSim2025Id = JenisSimpanan::where('kode', 'SIM2025')->value('id');
         $jenisSwpId = JenisSimpanan::where('kode', 'SWP')->value('id');
+        $jenisBonusShuId = JenisSimpanan::where('kode', 'BONUS_SHU')->value('id');
 
         $query->withSum(['simpanan as sum_pokok' => $sumSetor($jenisPokokId)], 'nominal')
               ->withSum(['penarikanSimpanan as tarik_pokok' => $sumTarik($jenisPokokId)], 'nominal')
@@ -64,51 +65,78 @@ class SimpananController extends Controller
               ->withSum(['simpanan as sum_wajib' => $sumSetor($jenisWajibId)], 'nominal')
               ->withSum(['penarikanSimpanan as tarik_wajib' => $sumTarik($jenisWajibId)], 'nominal')
 
-              ->withSum(['simpanan as sum_sukarela' => $sumSetor($jenisSukarelaId)], 'nominal')
-              ->withSum(['penarikanSimpanan as tarik_sukarela' => $sumTarik($jenisSukarelaId)], 'nominal')
+              ->withSum(['simpanan as sum_sim2025' => $sumSetor($jenisSim2025Id)], 'nominal')
+              ->withSum(['penarikanSimpanan as tarik_sim2025' => $sumTarik($jenisSim2025Id)], 'nominal')
 
               ->withSum(['simpanan as sum_swp' => $sumSetor($jenisSwpId)], 'nominal')
-              ->withSum(['penarikanSimpanan as tarik_swp' => $sumTarik($jenisSwpId)], 'nominal');
+              ->withSum(['penarikanSimpanan as tarik_swp' => $sumTarik($jenisSwpId)], 'nominal')
+
+              ->withSum(['simpanan as sum_bonus_shu' => $sumSetor($jenisBonusShuId)], 'nominal')
+              ->withSum(['penarikanSimpanan as tarik_bonus_shu' => $sumTarik($jenisBonusShuId)], 'nominal');
 
         $anggotas = $query->paginate(15)->withQueryString();
 
         foreach ($anggotas as $anggota) {
             $pokok = ($anggota->sum_pokok ?? 0) - ($anggota->tarik_pokok ?? 0);
             $wajib = ($anggota->sum_wajib ?? 0) - ($anggota->tarik_wajib ?? 0);
-            $sukarela = ($anggota->sum_sukarela ?? 0) - ($anggota->tarik_sukarela ?? 0);
+            $sim2025 = ($anggota->sum_sim2025 ?? 0) - ($anggota->tarik_sim2025 ?? 0);
             $swp = ($anggota->sum_swp ?? 0) - ($anggota->tarik_swp ?? 0);
+            $bonusShu = ($anggota->sum_bonus_shu ?? 0) - ($anggota->tarik_bonus_shu ?? 0);
 
             $anggota->neto_pokok = max(0, $pokok);
             $anggota->neto_wajib = max(0, $wajib);
-            $anggota->neto_sukarela = max(0, $sukarela);
+            $anggota->neto_sim2025 = max(0, $sim2025);
             $anggota->neto_swp = max(0, $swp);
-            $anggota->neto_total = $anggota->neto_pokok + $anggota->neto_wajib + $anggota->neto_sukarela + $anggota->neto_swp;
+            $anggota->neto_bonus_shu = max(0, $bonusShu);
+            $anggota->neto_total = $anggota->neto_pokok + $anggota->neto_wajib + $anggota->neto_sim2025 + $anggota->neto_swp + $anggota->neto_bonus_shu;
         }
 
-        // Calculate Grand Total for the filtered result
-        $grandGross = \App\Models\Simpanan::whereHas('anggota', $anggotaFilters)
+        // Calculate Grand Total for the filtered result per tab
+        $baseSimpananQuery = \App\Models\Simpanan::whereHas('anggota', $anggotaFilters)
             ->when($dariTanggal, fn($q) => $q->where('tanggal', '>=', $dariTanggal))
-            ->when($sampaiTanggal, fn($q) => $q->where('tanggal', '<=', $sampaiTanggal))
-            ->sum('nominal');
+            ->when($sampaiTanggal, fn($q) => $q->where('tanggal', '<=', $sampaiTanggal));
 
-        $grandTarik = \App\Models\PenarikanSimpanan::whereHas('anggota', $anggotaFilters)
+        $basePenarikanQuery = \App\Models\PenarikanSimpanan::whereHas('anggota', $anggotaFilters)
             ->when($dariTanggal, fn($q) => $q->where('tanggal', '>=', $dariTanggal))
-            ->when($sampaiTanggal, fn($q) => $q->where('tanggal', '<=', $sampaiTanggal))
-            ->sum('nominal');
+            ->when($sampaiTanggal, fn($q) => $q->where('tanggal', '<=', $sampaiTanggal));
 
-        $grandTotal = $grandGross - $grandTarik;
+        $simpananGrouped = (clone $baseSimpananQuery)
+            ->selectRaw('jenis_simpanan_id, SUM(nominal) as total')
+            ->groupBy('jenis_simpanan_id')
+            ->pluck('total', 'jenis_simpanan_id');
+
+        $penarikanGrouped = (clone $basePenarikanQuery)
+            ->selectRaw('jenis_simpanan_id, SUM(nominal) as total')
+            ->groupBy('jenis_simpanan_id')
+            ->pluck('total', 'jenis_simpanan_id');
+
+        $grandTotalPokok = max(0, ($simpananGrouped[$jenisPokokId] ?? 0) - ($penarikanGrouped[$jenisPokokId] ?? 0));
+        $grandTotalWajib = max(0, ($simpananGrouped[$jenisWajibId] ?? 0) - ($penarikanGrouped[$jenisWajibId] ?? 0));
+        $grandTotalSim2025 = max(0, ($simpananGrouped[$jenisSim2025Id] ?? 0) - ($penarikanGrouped[$jenisSim2025Id] ?? 0));
+        $grandTotalSwp = max(0, ($simpananGrouped[$jenisSwpId] ?? 0) - ($penarikanGrouped[$jenisSwpId] ?? 0));
+        $grandTotalBonusShu = max(0, ($simpananGrouped[$jenisBonusShuId] ?? 0) - ($penarikanGrouped[$jenisBonusShuId] ?? 0));
+
+        $grandTotal = $grandTotalPokok + $grandTotalWajib + $grandTotalSim2025 + $grandTotalSwp + $grandTotalBonusShu;
+        
+        $grandTotals = [
+            'pokok' => $grandTotalPokok,
+            'wajib' => $grandTotalWajib,
+            'sim2025' => $grandTotalSim2025,
+            'swp' => $grandTotalSwp,
+            'bonus_shu' => $grandTotalBonusShu,
+        ];
 
         $bidangs = Bidang::orderBy('nama_bidang')->get();
         $jenisSimpananList = JenisSimpanan::orderBy('nama')->get();
 
         if ($request->ajax()) {
             return response()->json([
-                'html' => view('simpanan.partials.table', compact('anggotas'))->render(),
+                'html' => view('simpanan.partials.table', compact('anggotas', 'grandTotals', 'grandTotal'))->render(),
                 'grandTotal' => format_rupiah($grandTotal),
             ]);
         }
 
-        return view('simpanan.index', compact('anggotas', 'bidangs', 'grandTotal', 'jenisSimpananList'));
+        return view('simpanan.index', compact('anggotas', 'bidangs', 'grandTotal', 'grandTotals', 'jenisSimpananList'));
     }
 
     public function riwayat(Request $request)

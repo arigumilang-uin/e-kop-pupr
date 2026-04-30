@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Buku Simpanan Anggota')
-@section('subtitle', 'Rincian akumulasi simpanan pokok, wajib, sukarela, dan SWP')
+@section('subtitle', 'Rincian akumulasi simpanan pokok, wajib, Thn. 2025, SWP, dan Bonus SHU. Dana hanya dapat ditarik penuh saat anggota keluar.')
 
 @section('actions')
 <div class="flex items-center gap-3">

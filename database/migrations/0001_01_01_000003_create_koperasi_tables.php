@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 4. Jenis Simpanan — Pokok, Wajib, Sukarela, SWP
+        // 4. Jenis Simpanan — Pokok, Wajib, SIM2025, SWP, BONUS_SHU
         Schema::create('jenis_simpanan', function (Blueprint $table) {
             $table->id();
-            $table->string('kode', 10)->unique()->comment('POKOK, WAJIB, SUKARELA, SWP');
+            $table->string('kode', 10)->unique()->comment('POKOK, WAJIB, SIM2025, SWP, BONUS_SHU');
             $table->string('nama', 50);
             $table->decimal('nominal_default', 15, 2)->default(0);
             $table->boolean('is_wajib')->default(false);
