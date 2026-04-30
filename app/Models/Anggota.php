@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\GolonganAsn;
 use App\Enums\StatusAnggota;
 use App\Enums\StatusPinjaman;
 use App\Traits\HasRupiahFormat;
@@ -20,6 +21,7 @@ class Anggota extends Model
         'nip',
         'nama',
         'bidang_id',
+        'golongan_asn',
         'no_hp',
         'tanggal_masuk',
         'tanggal_keluar',
@@ -34,6 +36,7 @@ class Anggota extends Model
             'tanggal_keluar' => 'date',
             'is_pendaftar_ulang' => 'boolean',
             'status' => StatusAnggota::class,
+            'golongan_asn' => GolonganAsn::class,
         ];
     }
 

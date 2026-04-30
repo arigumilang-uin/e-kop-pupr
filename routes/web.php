@@ -68,6 +68,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/simpanan-data', [DashboardController::class, 'simpananData'])->name('dashboard.simpanan-data');
 
     // =============================================
     // WRITE — Admin Only (HARUS didaftarkan SEBELUM
@@ -144,6 +145,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pinjaman', [PinjamanAdminController::class, 'index'])->name('pinjaman.index');
         Route::get('/pinjaman/{pinjaman}', [PinjamanAdminController::class, 'show'])->name('pinjaman.show');
         Route::get('/simpanan', [SimpananController::class, 'index'])->name('simpanan.index');
+        Route::get('/simpanan/riwayat', [SimpananController::class, 'riwayat'])->name('simpanan.riwayat');
         Route::get('/pengeluaran', [PengeluaranKasController::class, 'index'])->name('pengeluaran.index');
         Route::get('/potongan', [PotonganBulananController::class, 'index'])->name('potongan.index');
         Route::get('/periode', [PeriodeController::class, 'index'])->name('periode.index');

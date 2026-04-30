@@ -19,6 +19,7 @@ class UpdateAnggotaRequest extends FormRequest
             'nip' => ['required', 'string', 'max:50', 'unique:anggota,nip,' . $anggotaId],
             'nama' => ['required', 'string', 'max:150'],
             'bidang_id' => ['required', 'exists:bidang,id'],
+            'golongan_asn' => ['required', 'in:pns,pppk'],
             'no_hp' => ['nullable', 'string', 'max:20'],
         ];
     }

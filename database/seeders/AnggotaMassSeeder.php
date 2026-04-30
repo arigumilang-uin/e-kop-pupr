@@ -71,6 +71,7 @@ class AnggotaMassSeeder extends Seeder
                 'nip'                => $nip,
                 'nama'               => $nama,
                 'bidang_id'          => $bidangIds[array_rand($bidangIds)],
+                'golongan_asn'       => 'pns',
                 'no_hp'              => $noHp,
                 'tanggal_masuk'      => $tanggalMasuk,
                 'status'             => 'aktif',

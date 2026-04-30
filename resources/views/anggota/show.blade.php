@@ -4,7 +4,7 @@
 @section('subtitle', 'Detail Informasi & Finansial Anggota Koperasi')
 
 @section('actions')
-<a href="{{ route('anggota.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
+<a href="{{ route('anggota.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-stone-200 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors shadow-sm">
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
     </svg>
@@ -13,65 +13,69 @@
 @endsection
 
 @section('content')
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl">
 
     {{-- KIRI: Biodata Profil --}}
     <div class="lg:col-span-1 space-y-6">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-8 text-center relative overflow-hidden">
-                <div class="absolute inset-0 bg-white/10 opacity-20"></div>
-                <div class="w-20 h-20 mx-auto bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-3xl font-bold text-white border-2 border-white/50 mb-4 shadow-lg">
+        <div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden flex flex-col">
+            <div class="bg-gradient-to-br from-[#043d2e] to-emerald-900 px-6 py-8 text-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-black/10 opacity-20"></div>
+                <div class="w-20 h-20 mx-auto bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-3xl font-bold text-white border border-white/40 mb-4 shadow-xl">
                     {{ strtoupper(substr($anggota->nama, 0, 1)) }}
                 </div>
-                <h2 class="text-xl font-bold text-white relative z-10">{{ $anggota->nama }}</h2>
-                <p class="text-blue-100 text-sm mt-1 relative z-10">NIP: {{ $anggota->nip }}</p>
+                <h2 class="text-xl font-bold text-white relative z-0">{{ $anggota->nama }}</h2>
+                <div class="text-emerald-100 text-sm mt-1.5 relative z-0 font-mono tracking-wide">
+                    NIP. <x-nip-display :value="$anggota->nip" />
+                </div>
                 
-                <div class="mt-4 relative z-10">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $anggota->status->value === 'aktif' ? 'bg-emerald-400 text-emerald-900' : 'bg-red-400 text-red-900' }} border border-white/20 capitalize shadow-sm">
+                <div class="mt-4 relative z-0">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold {{ $anggota->status->value === 'aktif' ? 'bg-emerald-400 text-emerald-950' : 'bg-stone-400 text-stone-900' }} border border-white/20 uppercase tracking-widest shadow-sm">
                         {{ $anggota->status->value }}
                     </span>
                 </div>
             </div>
             
-            <div class="p-6">
-                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Informasi Jabatan</h3>
-                <dl class="space-y-4 text-sm">
+            <div class="p-6 flex-1 flex flex-col">
+                <h3 class="text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-4 border-b border-stone-100 pb-2">Informasi Jabatan</h3>
+                <dl class="space-y-4 text-sm flex-1">
                     <div>
-                        <dt class="text-slate-500 text-xs mb-1">Golongan</dt>
-                        <dd class="font-medium text-slate-800">{{ $anggota->golongan ?? '-' }}</dd>
+                        <dt class="text-stone-500 text-xs mb-1">Golongan ASN</dt>
+                        <dd class="font-medium text-stone-800">
+                            @if($anggota->golongan_asn)
+                                @php $golColor = $anggota->golongan_asn->color(); @endphp
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-{{ $golColor }}-50 text-{{ $golColor }}-700 text-xs font-bold border border-{{ $golColor }}-200 uppercase tracking-wider shadow-sm">
+                                    {{ $anggota->golongan_asn->label() }}
+                                </span>
+                            @else
+                                <span class="text-stone-400 italic">Belum diset</span>
+                            @endif
+                        </dd>
                     </div>
                     <div>
-                        <dt class="text-slate-500 text-xs mb-1">Jabatan / Pekerjaan</dt>
-                        <dd class="font-medium text-slate-800">{{ $anggota->jabatan ?? '-' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-slate-500 text-xs mb-1">Bidang / Unit Kerja</dt>
-                        <dd class="font-medium text-slate-800">
+                        <dt class="text-stone-500 text-xs mb-1">Bidang / Unit Kerja</dt>
+                        <dd class="font-medium text-stone-800">
                             @if($anggota->bidang)
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-stone-100 text-stone-700 text-xs font-bold uppercase tracking-wider border border-stone-200">
                                     {{ $anggota->bidang->nama_bidang }}
                                 </span>
                             @else
-                                <span class="text-slate-400 italic">Belum diet</span>
+                                <span class="text-stone-400 italic">Belum diset</span>
                             @endif
                         </dd>
                     </div>
                 </dl>
 
-                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-6 mb-4 border-b border-slate-100 pb-2">Kontak & Alamat</h3>
+                <h3 class="text-[11px] font-bold text-stone-400 uppercase tracking-wider mt-6 mb-4 border-b border-stone-100 pb-2">Kontak Internal</h3>
                 <dl class="space-y-4 text-sm">
                     <div>
-                        <dt class="text-slate-500 text-xs mb-1">No. Handphone</dt>
-                        <dd class="font-medium text-slate-800">{{ $anggota->no_hp ?? '-' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-slate-500 text-xs mb-1">Alamat Domisili</dt>
-                        <dd class="font-medium text-slate-800 leading-relaxed">{{ $anggota->alamat ?? '-' }}</dd>
+                        <dt class="text-stone-500 text-xs mb-1">No. Handphone (WA)</dt>
+                        <dd class="font-medium text-stone-800">{{ $anggota->no_hp ?? '-' }}</dd>
                     </div>
                 </dl>
                 
-                <div class="mt-8">
-                    <a href="{{ route('anggota.edit', $anggota->id) }}" class="w-full text-center inline-block bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors focus:ring-2 focus:ring-slate-200">
+                <div class="mt-8 pt-2">
+                    <a href="{{ route('anggota.edit', $anggota->id) }}" class="w-full text-center flex items-center justify-center gap-2 bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-bold text-stone-600 hover:bg-stone-100 hover:text-stone-900 transition-colors shadow-sm active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                         Edit Data Anggota
                     </a>
                 </div>
@@ -83,28 +87,28 @@
     <div class="lg:col-span-2 space-y-6">
         
         {{-- Card: Total Simpanan --}}
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden relative group hover:shadow-md transition-shadow">
-            <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-violet-50 opacity-50 group-hover:bg-violet-100 transition-colors z-0"></div>
+        <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 overflow-hidden relative group hover:border-[#043d2e]/30 transition-colors">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full opacity-50 -z-0"></div>
             <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-5">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center text-violet-600">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100/50 border border-emerald-200 flex items-center justify-center text-[#043d2e]">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         </div>
-                        <h3 class="font-bold text-slate-800">Total Simpanan Keseluruhan</h3>
+                        <h3 class="font-bold text-stone-800 tracking-tight">Total Simpanan Keseluruhan</h3>
                     </div>
-                    <span class="text-2xl font-bold font-mono text-violet-700">{{ format_rupiah($totalSimpanan) }}</span>
+                    <span class="text-2xl font-black font-mono text-[#043d2e]">{{ format_rupiah($totalSimpanan) }}</span>
                 </div>
                 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                     @forelse($simpananPerJenis as $nama_jenis => $nominal)
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 flex flex-col justify-between h-full">
-                        <span class="text-xs text-slate-500 font-medium mb-1 line-clamp-1">{{ $nama_jenis }}</span>
-                        <span class="font-mono font-bold text-slate-800 text-sm shadow-sm">{{ format_rupiah($nominal) }}</span>
+                    <div class="bg-stone-50 p-4 rounded-xl border border-stone-100 flex flex-col justify-between h-full">
+                        <span class="text-xs text-stone-500 font-bold uppercase tracking-wider mb-2 line-clamp-1">{{ $nama_jenis }}</span>
+                        <span class="font-mono font-bold text-stone-800 text-sm shadow-sm">{{ format_rupiah($nominal) }}</span>
                     </div>
                     @empty
-                    <div class="col-span-full py-4 text-center text-sm text-slate-500 bg-slate-50 rounded-lg border border-slate-100 border-dashed">
-                        Belum ada riwayat simpanan.
+                    <div class="col-span-full py-8 text-center text-sm font-medium text-stone-500 bg-stone-50 rounded-xl border border-stone-200 border-dashed">
+                        Belum ada riwayat simpanan tercatat.
                     </div>
                     @endforelse
                 </div>
@@ -112,17 +116,17 @@
         </div>
 
         {{-- Card: Sisa Hutang & Pinjaman --}}
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden relative group hover:shadow-md transition-shadow">
-            <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-amber-50 opacity-50 group-hover:bg-amber-100 transition-colors z-0"></div>
+        <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 overflow-hidden relative group hover:border-[#043d2e]/30 transition-colors">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-stone-100 rounded-bl-full opacity-50 -z-0"></div>
             <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-5">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+                        <div class="w-10 h-10 rounded-xl bg-stone-100 border border-stone-200 flex items-center justify-center text-stone-700">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                         </div>
-                        <h3 class="font-bold text-slate-800">Sisa Utang Aktif (Piutang)</h3>
+                        <h3 class="font-bold text-stone-800 tracking-tight">Sisa Utang Aktif (Piutang)</h3>
                     </div>
-                    <span class="text-2xl font-bold font-mono text-amber-600">{{ format_rupiah($sisaUtang) }}</span>
+                    <span class="text-2xl font-black font-mono text-stone-700">{{ format_rupiah($sisaUtang) }}</span>
                 </div>
                 
                 @if($pinjamanAktif->count() > 0)
@@ -133,38 +137,40 @@
                         $progress = $pinj->total_bayar > 0 ? ($sudahDibayar / $pinj->total_bayar) * 100 : 0;
                         $sisa = $pinj->total_bayar - $sudahDibayar;
                     @endphp
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <div class="flex justify-between items-start mb-2">
+                    <div class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm">
+                        <div class="flex justify-between items-start mb-3">
                             <div>
-                                <h4 class="text-sm font-bold text-slate-700 flex items-center gap-2">
-                                    Ref: {{ $pinj->no_referensi }}
-                                    <a href="{{ route('pinjaman.show', $pinj->id) }}" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors" title="Lihat Detail Pinjaman">
-                                        [Detail]
+                                <h4 class="text-sm font-bold text-stone-800 flex items-center gap-2">
+                                    Ref: <span class="font-mono text-stone-600 font-medium">{{ $pinj->no_referensi }}</span>
+                                    <a href="{{ route('pinjaman.show', $pinj->id) }}" class="text-xs font-bold text-[#043d2e] hover:text-[#043d2e]/80 transition-colors" title="Lihat Detail Pinjaman">
+                                        Lihat Detail
                                     </a>
                                 </h4>
-                                <p class="text-xs text-slate-500 mt-1">Status: <span class="uppercase tracking-wider font-semibold text-amber-600">{{ $pinj->status->value }}</span></p>
+                                <div class="mt-1.5 flex items-center gap-2">
+                                    <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded {{ $pinj->status->value === 'berjalan' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-stone-100 text-stone-600 border border-stone-200' }}">{{ $pinj->status->value }}</span>
+                                </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Tersisa</p>
-                                <p class="font-mono text-sm font-bold text-slate-800">{{ format_rupiah($sisa) }}</p>
+                                <p class="text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-0.5">Sisa Tagihan</p>
+                                <p class="font-mono text-base font-black text-stone-800">{{ format_rupiah($sisa) }}</p>
                             </div>
                         </div>
                         
                         {{-- Progress Bar --}}
-                        <div class="mt-3">
-                            <div class="flex justify-between text-[11px] mb-1 font-medium text-slate-500">
-                                <span>Dibayar: {{ format_rupiah($sudahDibayar) }}</span>
-                                <span>Total Tagihan: {{ format_rupiah($pinj->total_bayar) }}</span>
+                        <div class="mt-4 pt-4 border-t border-stone-100">
+                            <div class="flex justify-between text-xs font-medium text-stone-500 mb-2">
+                                <span>Dibayar: <span class="font-mono text-stone-700">{{ format_rupiah($sudahDibayar) }}</span></span>
+                                <span>Total Tagihan: <span class="font-mono text-stone-700">{{ format_rupiah($pinj->total_bayar) }}</span></span>
                             </div>
-                            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden ring-1 ring-inset ring-slate-200/50">
-                                <div class="bg-gradient-to-r from-amber-400 to-amber-500 h-2.5 rounded-full transition-all duration-500" style="width: {{ $progress }}%"></div>
+                            <div class="w-full bg-stone-100 rounded-full h-2 overflow-hidden">
+                                <div class="bg-[#043d2e] h-2 rounded-full transition-all duration-500" style="width: {{ $progress }}%"></div>
                             </div>
                         </div>
                     </div>
                     @endforeach
                 </div>
                 @else
-                <div class="w-full py-6 text-center text-sm text-slate-500 bg-slate-50 rounded-xl border border-slate-100 border-dashed">
+                <div class="w-full py-8 text-center text-sm font-medium text-stone-500 bg-stone-50 rounded-xl border border-stone-200 border-dashed">
                     Tidak ada tunggakan atau pinjaman aktif.
                 </div>
                 @endif
@@ -173,13 +179,13 @@
 
         {{-- Button Proses Keluar --}}
         @if($anggota->status->value === 'aktif')
-        <div class="bg-white rounded-2xl border border-red-200 shadow-sm p-6">
-            <div class="flex items-center justify-between">
+        <div class="bg-white rounded-2xl border border-red-200 shadow-sm p-6 overflow-hidden relative">
+            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h3 class="font-bold text-red-700 text-sm">Proses Keluarkan Anggota</h3>
-                    <p class="text-xs text-slate-400 mt-1">Analisis kelayakan & pengembalian simpanan sebelum proses keluar</p>
+                    <h3 class="font-bold text-red-700 text-sm tracking-tight">Proses Keluarkan Anggota</h3>
+                    <p class="text-[13px] text-stone-500 mt-1">Analisis kelayakan & pengembalian simpanan sebelum proses keluar</p>
                 </div>
-                <a href="{{ route('anggota.keluar', $anggota) }}" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
+                <a href="{{ route('anggota.keluar', $anggota) }}" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95 text-center flex-shrink-0 whitespace-nowrap">
                     Proses Keluar →
                 </a>
             </div>
@@ -189,42 +195,45 @@
         {{-- Arsip Keluar Sebelumnya --}}
         @if(isset($arsipKeluar) && $arsipKeluar->isNotEmpty())
         <div class="bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
-            <div class="px-6 py-4 bg-amber-50 border-b border-amber-200">
-                <h3 class="text-sm font-bold text-amber-700">📋 Riwayat Keluar dari Koperasi</h3>
+            <div class="px-6 py-4 bg-amber-50 border-b border-amber-200 flex items-center gap-2">
+                <h3 class="text-sm font-bold text-amber-800 tracking-tight">Riwayat Keluar dari Koperasi</h3>
             </div>
-            <div class="p-6 space-y-3">
+            <div class="p-6 space-y-4">
                 @foreach($arsipKeluar as $arsip)
-                <div class="bg-amber-50/50 border border-amber-100 rounded-xl p-4">
-                    <div class="grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                            <span class="text-slate-500 text-xs">Tanggal Keluar</span>
-                            <p class="font-semibold text-slate-800">{{ $arsip->tanggal_keluar->translatedFormat('d F Y') }}</p>
+                <div class="bg-white border border-stone-200 rounded-xl p-5 shadow-sm">
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="bg-stone-50 p-3 rounded-lg border border-stone-100">
+                            <span class="text-stone-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Tanggal Keluar</span>
+                            <p class="font-semibold text-stone-800">{{ $arsip->tanggal_keluar->translatedFormat('d F Y') }}</p>
                         </div>
-                        <div>
-                            <span class="text-slate-500 text-xs">Total Dikembalikan</span>
-                            <p class="font-mono font-bold text-slate-800">{{ format_rupiah($arsip->total_simpanan_dikembalikan) }}</p>
+                        <div class="bg-stone-50 p-3 rounded-lg border border-stone-100">
+                            <span class="text-stone-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Total Dikembalikan</span>
+                            <p class="font-mono font-bold text-stone-800">{{ format_rupiah($arsip->total_simpanan_dikembalikan) }}</p>
                         </div>
-                        <div class="col-span-2">
-                            <span class="text-slate-500 text-xs">Wajib Setor Jika Daftar Ulang</span>
-                            <p class="font-mono font-bold text-amber-700">{{ format_rupiah($arsip->nominal_wajib_setor_ulang) }}</p>
+                        
+                        <div class="col-span-2 border-t border-stone-100 pt-3">
+                            <span class="text-amber-800 text-[11px] font-bold uppercase tracking-wider block mb-1">Wajib Setor Jika Daftar Ulang</span>
+                            <p class="font-mono font-black text-amber-600 text-lg">{{ format_rupiah($arsip->nominal_wajib_setor_ulang) }}</p>
                         </div>
+                        
                         @if($arsip->rincian_simpanan)
-                        <div class="col-span-2">
-                            <span class="text-slate-500 text-xs block mb-1">Rincian Simpanan Dikembalikan</span>
+                        <div class="col-span-2 pt-2">
+                            <span class="text-stone-500 text-[11px] font-bold uppercase tracking-wider block mb-2">Rincian Pengembalian</span>
                             <div class="flex flex-wrap gap-2">
                                 @foreach($arsip->rincian_simpanan as $r)
-                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-white border border-amber-200 rounded-lg text-xs">
-                                    <span class="text-slate-600">{{ $r['nama'] }}:</span>
-                                    <span class="font-mono font-semibold">{{ format_rupiah($r['nominal']) }}</span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs">
+                                    <span class="text-stone-600 font-medium">{{ $r['nama'] }}:</span>
+                                    <span class="font-mono font-bold text-stone-800">{{ format_rupiah($r['nominal']) }}</span>
                                 </span>
                                 @endforeach
                             </div>
                         </div>
                         @endif
+                        
                         @if($arsip->catatan)
-                        <div class="col-span-2">
-                            <span class="text-slate-500 text-xs">Catatan</span>
-                            <p class="text-slate-700 text-xs mt-0.5">{{ $arsip->catatan }}</p>
+                        <div class="col-span-2 pt-2">
+                            <span class="text-stone-500 text-[11px] font-bold uppercase tracking-wider block mb-1">Catatan</span>
+                            <p class="text-stone-700 text-sm leading-relaxed p-3 bg-stone-50 border border-stone-100 rounded-lg">{{ $arsip->catatan }}</p>
                         </div>
                         @endif
                     </div>

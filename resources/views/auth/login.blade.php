@@ -129,7 +129,7 @@
                                         :readonly="isLoading"
                                         :class="{ 'opacity-50 cursor-not-allowed': isLoading }">
                                     <label for="username" 
-                                        class="absolute left-[48px] text-slate-400 peer-placeholder-shown:top-[18px] peer-placeholder-shown:text-[14px] top-[8px] text-[10px] font-bold uppercase peer-focus:top-[8px] peer-focus:text-[10px] peer-focus:font-bold peer-focus:uppercase peer-focus:text-blue-400 transition-all pointer-events-none">
+                                        class="absolute left-[48px] text-slate-400 peer-placeholder-shown:top-[18px] peer-placeholder-shown:text-[14px] top-[8px] text-[10px] font-bold uppercase peer-focus:top-[8px] peer-focus:text-[10px] peer-focus:font-bold peer-focus:uppercase peer-focus:text-emerald-400 transition-all pointer-events-none">
                                         Username
                                     </label>
                                 </div>
@@ -146,7 +146,7 @@
                                         :readonly="isLoading"
                                         :class="{ 'opacity-50 cursor-not-allowed': isLoading }">
                                     <label for="password" 
-                                        class="absolute left-[48px] text-slate-400 peer-placeholder-shown:top-[18px] peer-placeholder-shown:text-[14px] top-[8px] text-[10px] font-bold uppercase peer-focus:top-[8px] peer-focus:text-[10px] peer-focus:font-bold peer-focus:uppercase peer-focus:text-blue-400 transition-all pointer-events-none">
+                                        class="absolute left-[48px] text-slate-400 peer-placeholder-shown:top-[18px] peer-placeholder-shown:text-[14px] top-[8px] text-[10px] font-bold uppercase peer-focus:top-[8px] peer-focus:text-[10px] peer-focus:font-bold peer-focus:uppercase peer-focus:text-emerald-400 transition-all pointer-events-none">
                                         Password
                                     </label>
                                     <button type="button" @click="showPassword = !showPassword" tabindex="-1"

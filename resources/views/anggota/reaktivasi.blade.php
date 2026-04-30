@@ -4,96 +4,99 @@
 @section('subtitle', 'Konfirmasi pengaktifan kembali keanggotaan koperasi')
 
 @section('actions')
-<a href="{{ route('anggota.index') }}" class="py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-colors">
-    ← Kembali
+<a href="{{ route('anggota.index') }}" class="py-2.5 px-4 rounded-xl bg-white border border-stone-200 text-stone-600 hover:bg-stone-50 text-sm font-medium transition-colors shadow-sm">
+    <span class="hidden sm:inline">← Kembali</span>
+    <span class="sm:hidden">Batal</span>
 </a>
 @endsection
 
 @section('content')
-<div class="max-w-2xl mx-auto space-y-6">
+<div class="max-w-3xl mx-auto space-y-6">
 
     {{-- Header Anggota --}}
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-        <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white text-xl font-bold shadow-lg">
+    <div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden relative p-6">
+        <div class="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-stone-50 to-transparent pointer-events-none"></div>
+        <div class="flex items-center gap-5 relative z-0">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#043d2e] to-emerald-900 flex items-center justify-center text-white text-2xl font-bold shadow-lg ring-4 ring-[#043d2e]/10 shrink-0">
                 {{ strtoupper(substr($anggota->nama, 0, 1)) }}
             </div>
             <div>
-                <h3 class="text-lg font-bold text-slate-800">{{ $anggota->nama }}</h3>
-                <div class="flex items-center gap-3 text-sm text-slate-500">
-                    <span>NIP: {{ $anggota->nip }}</span>
-                    <span>•</span>
-                    <span>{{ $anggota->bidang->nama_bidang ?? '-' }}</span>
+                <h3 class="text-xl font-bold text-stone-800 tracking-tight">{{ $anggota->nama }}</h3>
+                <div class="flex items-center gap-3 mt-1.5 text-sm text-stone-500">
+                    <span class="font-mono text-stone-600 font-medium tracking-wide">NIP. <x-nip-display :value="$anggota->nip" /></span>
+                    <span class="text-stone-300">•</span>
+                    <span class="font-medium px-2.5 py-0.5 rounded bg-stone-100 text-stone-600 border border-stone-200 text-[11px] uppercase tracking-wider">{{ $anggota->bidang->nama_bidang ?? 'Belum diset' }}</span>
                 </div>
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200 mt-1">
-                    {{ $anggota->status->label() }}
-                </span>
             </div>
         </div>
     </div>
 
     @if($arsipKeluar)
     {{-- Arsip Keluar — Detail rincian --}}
-    <div class="bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 bg-amber-50 border-b border-amber-200">
-            <h4 class="text-sm font-bold text-amber-700 flex items-center gap-2">
-                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                Arsip Keluar Terakhir — {{ $arsipKeluar->tanggal_keluar->translatedFormat('d F Y') }}
+    <div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 bg-stone-50 border-b border-stone-200">
+            <h4 class="text-sm font-bold text-stone-700 flex items-center gap-2.5 tracking-tight">
+                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-amber-100/50 text-amber-600 border border-amber-200/50">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                </span>
+                Arsip Keluar Terakhir — <span class="text-amber-700">{{ $arsipKeluar->tanggal_keluar->translatedFormat('d F Y') }}</span>
             </h4>
         </div>
         <div class="p-6">
-            <p class="text-sm text-slate-600 mb-4">Anggota ini keluar dari koperasi pada <strong>{{ $arsipKeluar->tanggal_keluar->translatedFormat('d F Y') }}</strong> dan telah menerima pengembalian simpanan berikut:</p>
+            <p class="text-sm text-stone-600 mb-5 leading-relaxed">Anggota ini statusnya keluar dari koperasi pada <strong class="text-stone-800">{{ $arsipKeluar->tanggal_keluar->translatedFormat('d F Y') }}</strong> dan telah menerima restrukturisasi / pengembalian dana penuh dengan rincian berikut:</p>
 
-            <div class="space-y-2 mb-4">
+            <div class="space-y-3 mb-6">
                 @foreach($arsipKeluar->rincian_simpanan as $r)
-                <div class="flex justify-between items-center text-sm border-b border-dashed border-slate-200 pb-2">
-                    <span class="text-slate-600 font-medium">{{ $r['nama'] }}</span>
-                    <span class="font-mono font-bold text-slate-800">{{ format_rupiah($r['nominal']) }}</span>
+                <div class="flex justify-between items-center text-[13px] border-b border-dashed border-stone-200 pb-3">
+                    <span class="text-stone-600 font-bold uppercase tracking-wider text-[11px]">{{ $r['nama'] }}</span>
+                    <span class="font-mono font-bold text-stone-800 bg-stone-50 px-2 py-0.5 rounded border border-stone-100">{{ format_rupiah($r['nominal']) }}</span>
                 </div>
                 @endforeach
             </div>
 
-            <div class="bg-amber-100 rounded-xl p-4 flex justify-between items-center">
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 flex justify-between items-center">
                 <div>
-                    <span class="text-sm font-bold text-amber-800 uppercase">Wajib Setor Ulang</span>
-                    <p class="text-[10px] text-amber-600">Harus disetor agar bisa aktif kembali</p>
+                    <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Kewajiban Setor Daftar Ulang</span>
+                    <p class="text-[11px] text-amber-600 mt-1 font-medium">Dana simpanan harus dipulihkan (disetor) kembali agar aktif</p>
                 </div>
-                <span class="text-2xl font-black text-amber-900 font-mono">{{ format_rupiah($arsipKeluar->nominal_wajib_setor_ulang) }}</span>
+                <span class="text-2xl font-black text-amber-700 font-mono tracking-tight bg-white px-3 py-1.5 rounded-lg border border-amber-200/50 shadow-sm">{{ format_rupiah($arsipKeluar->nominal_wajib_setor_ulang) }}</span>
             </div>
         </div>
     </div>
 
     {{-- Konfirmasi --}}
-    <div class="bg-white rounded-2xl border border-emerald-200 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 bg-emerald-50 border-b border-emerald-200">
-            <h4 class="text-sm font-bold text-emerald-700 flex items-center gap-2">
-                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Konfirmasi Reaktivasi
+    <div class="bg-white rounded-2xl border border-stone-200 border-t-4 border-t-[#043d2e] shadow-sm overflow-hidden mt-6">
+        <div class="px-6 py-4 bg-white border-b border-stone-100">
+            <h4 class="text-sm font-bold text-stone-800 flex items-center gap-2">
+                <svg class="w-5 h-5 text-[#043d2e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Konfirmasi Reaktivasi & Mutasi Keuangan
             </h4>
         </div>
         <div class="p-6">
-            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-sm text-blue-700 space-y-2">
-                <p class="font-bold">ℹ️ Apa yang terjadi saat dikonfirmasi:</p>
-                <ul class="list-disc pl-4 text-xs space-y-1">
-                    <li>Status anggota diubah kembali menjadi <strong>Aktif</strong>.</li>
-                    <li>Sistem <strong>otomatis mencatat simpanan</strong> sesuai rincian di atas sebagai setoran wajib pendaftar ulang — <strong>tanpa perlu input manual</strong>.</li>
-                    <li>Saldo kas koperasi <strong>bertambah</strong> sebesar {{ format_rupiah($arsipKeluar->nominal_wajib_setor_ulang) }}.</li>
-                    <li>Anggota ditandai sebagai <strong>Pendaftar Ulang</strong> di sistem.</li>
+            <div class="bg-[#043d2e]/5 border border-[#043d2e]/10 rounded-xl p-5 mb-6 text-sm text-[#043d2e] space-y-2.5">
+                <p class="font-bold">Skema Pencatatan Otomatis:</p>
+                <ul class="list-disc pl-4 text-xs space-y-1.5 font-medium opacity-90">
+                    <li>Status keanggotaan akan dipulihkan sepenuhnya menjadi <strong class="font-bold">Aktif</strong>.</li>
+                    <li>Sistem akan <strong class="font-bold">menyetorkan nominal simpanan</strong> secara proporsional sesuai saldo simpanan secara otomatis (Tanpa input log manual).</li>
+                    <li>Saldo kas koperasi riil akan <strong class="font-bold">meningkat</strong> sebesar {{ format_rupiah($arsipKeluar->nominal_wajib_setor_ulang) }}.</li>
                 </ul>
             </div>
 
-            <form action="{{ route('anggota.reaktivasi.proses', $anggota) }}" method="POST" onsubmit="return confirm('Konfirmasi reaktivasi {{ $anggota->nama }}? Simpanan akan otomatis dicatat.')">
+            <form action="{{ route('anggota.reaktivasi.proses', $anggota) }}" method="POST" onsubmit="return confirm('SAH DAN VALID: Konfirmasi reaktivasi {{ $anggota->nama }}? Kas koperasi akan ditambahkan sesuai dengan kewajiban setor.')">
                 @csrf
-                <div class="space-y-4">
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" name="konfirmasi" id="konfirmasi" value="1" required class="w-4 h-4 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500">
-                        <label for="konfirmasi" class="text-sm text-slate-700 font-medium">
-                            Saya mengkonfirmasi bahwa anggota <strong>{{ $anggota->nama }}</strong> telah menyetor {{ format_rupiah($arsipKeluar->nominal_wajib_setor_ulang) }}
+                <div class="space-y-6">
+                    <div class="flex items-start gap-3 bg-stone-50 border border-stone-200 p-4 rounded-xl">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" name="konfirmasi" id="konfirmasi" value="1" required class="w-4 h-4 rounded border-stone-300 text-[#043d2e] focus:ring-[#043d2e] cursor-pointer">
+                        </div>
+                        <label for="konfirmasi" class="text-[13px] text-stone-700 font-medium pt-0.5 cursor-pointer leading-tight">
+                            Saya menjamin bahwa anggota <strong>{{ $anggota->nama }}</strong> telah lunas menyetorkan kewajiban daftar ulang sebesar {{ format_rupiah($arsipKeluar->nominal_wajib_setor_ulang) }} dan mutasi keanggotaan bisa diaktifkan.
                         </label>
                     </div>
 
-                    <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-emerald-600/20">
-                        ✓ Aktifkan Kembali & Catat Simpanan Otomatis
+                    <button type="submit" class="w-full py-3.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white font-bold rounded-xl text-sm transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        AKTIFKAN KEMBALI & TERIMA SETORAN
                     </button>
                 </div>
             </form>
@@ -102,15 +105,18 @@
 
     @else
     {{-- Tidak ada arsip keluar (anggota di-nonaktifkan tanpa proses keuangan) --}}
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-sm text-slate-600">
-            <p>Tidak ditemukan arsip keluar untuk anggota ini. Anggota kemungkinan di-nonaktifkan secara manual tanpa proses pengembalian simpanan.</p>
+    <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 text-center">
+        <div class="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
-        <form action="{{ route('anggota.reaktivasi.proses', $anggota) }}" method="POST" onsubmit="return confirm('Aktifkan kembali {{ $anggota->nama }}?')">
+        <div class="text-sm text-stone-600 mb-6 max-w-md mx-auto">
+            <p class="font-medium">Tidak ditemukan arsip keluar/keuangan untuk anggota ini. Anggota diturunkan ke status <strong>Nonaktif</strong> secara manual.</p>
+        </div>
+        <form action="{{ route('anggota.reaktivasi.proses', $anggota) }}" method="POST" onsubmit="return confirm('Peringatan: Aktifkan kembali {{ $anggota->nama }} tanpa mutasi keuangan?')">
             @csrf
             <input type="hidden" name="konfirmasi" value="1">
-            <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-colors">
-                Aktifkan Kembali Anggota
+            <button type="submit" class="w-full sm:w-auto px-8 mx-auto py-3 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white font-bold rounded-xl text-sm transition-colors shadow-sm">
+                Aktifkan Kembali Anggota (Override)
             </button>
         </form>
     </div>

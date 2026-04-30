@@ -25,13 +25,28 @@ class AnggotaController extends Controller
         $query = Anggota::with('bidang')->latest();
 
         if ($request->filled('q')) {
-            $query->where('nama', 'like', "%{$request->q}%")
+            $query->where(function($q) use ($request) {
+                $q->where('nama', 'like', "%{$request->q}%")
                   ->orWhere('nip', 'like', "%{$request->q}%");
+            });
+        }
+
+        if ($request->filled('bidang')) {
+            $query->where('bidang_id', $request->bidang);
+        }
+
+        if ($request->filled('golongan')) {
+            $query->where('golongan_asn', $request->golongan);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
         $anggotas = $query->paginate(10)->withQueryString();
+        $bidangs = Bidang::orderBy('nama_bidang')->get();
 
-        return view('anggota.index', compact('anggotas'));
+        return view('anggota.index', compact('anggotas', 'bidangs'));
     }
 
     public function create()
