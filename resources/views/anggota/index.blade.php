@@ -79,7 +79,7 @@
     </x-filter-bar>
 
     {{-- Main Table Area --}}
-    <div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
+    <div class="bg-white rounded-2xl border border-stone-200 shadow-sm flex flex-col">
         {{-- Loading Overlay and Table Container --}}
     <div class="relative flex-1 flex flex-col">
         <div x-show="loading" 

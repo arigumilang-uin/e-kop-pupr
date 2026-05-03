@@ -22,7 +22,7 @@ class AnggotaController extends Controller
 
     public function index(Request $request)
     {
-        $query = Anggota::with('bidang')->latest();
+        $query = Anggota::with('bidang')->orderBy('nama');
 
         if ($request->filled('q')) {
             $query->where(function($q) use ($request) {

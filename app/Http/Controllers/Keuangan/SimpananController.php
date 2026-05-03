@@ -31,7 +31,7 @@ class SimpananController extends Controller
             }
         };
 
-        $query = Anggota::with('bidang')->where($anggotaFilters)->latest();
+        $query = Anggota::with('bidang')->where($anggotaFilters)->orderBy('nama');
 
         $sampaiTanggal = $request->input('sampai_tanggal');
         $dariTanggal = $request->input('dari_tanggal');
@@ -129,6 +129,10 @@ class SimpananController extends Controller
         $bidangs = Bidang::orderBy('nama_bidang')->get();
         $jenisSimpananList = JenisSimpanan::orderBy('nama')->get();
 
+        $pengaturan = resolve(\App\Services\PengaturanService::class);
+        $nominalPokok = $pengaturan->simpananPokok();
+        $nominalWajib = $pengaturan->simpananWajib();
+
         if ($request->ajax()) {
             return response()->json([
                 'html' => view('simpanan.partials.table', compact('anggotas', 'grandTotals', 'grandTotal'))->render(),
@@ -136,7 +140,7 @@ class SimpananController extends Controller
             ]);
         }
 
-        return view('simpanan.index', compact('anggotas', 'bidangs', 'grandTotal', 'grandTotals', 'jenisSimpananList'));
+        return view('simpanan.index', compact('anggotas', 'bidangs', 'grandTotal', 'grandTotals', 'jenisSimpananList', 'nominalPokok', 'nominalWajib'));
     }
 
     public function riwayat(Request $request)
@@ -202,5 +206,65 @@ class SimpananController extends Controller
         }
 
         return view('simpanan.riwayat', compact('simpanans', 'totalTransaksi', 'bidangs', 'jenisSimpananList', 'pencatatList'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'anggota_id' => 'required|exists:anggota,id',
+            'jenis_simpanan_id' => 'required|exists:jenis_simpanan,id',
+            'nominal' => 'required|numeric|min:1',
+            'tanggal' => 'required|date',
+            'bulan_untuk' => 'nullable|integer|min:1|max:12',
+            'tahun_untuk' => 'nullable|integer|min:2000',
+            'keterangan' => 'nullable|string'
+        ]);
+
+        $jenisSimpanan = \App\Models\JenisSimpanan::find($request->jenis_simpanan_id);
+        
+        $nominal = $request->nominal;
+        if ($jenisSimpanan->kode === 'POKOK') {
+            $nominal = resolve(\App\Services\PengaturanService::class)->simpananPokok();
+        } elseif ($jenisSimpanan->kode === 'WAJIB') {
+            $nominal = resolve(\App\Services\PengaturanService::class)->simpananWajib();
+        }
+
+        try {
+            \App\Models\Simpanan::create([
+                'anggota_id' => $request->anggota_id,
+                'jenis_simpanan_id' => $request->jenis_simpanan_id,
+                'nominal' => $nominal,
+                'tanggal' => $request->tanggal,
+                'bulan_untuk' => $request->bulan_untuk,
+                'tahun_untuk' => $request->tahun_untuk,
+                'keterangan' => $request->keterangan,
+                'dicatat_oleh' => auth()->id()
+            ]);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            return back()->with('error', 'Setoran gagal. Anggota ini sudah tercatat membayar kategori simpanan bulanan pada bulan dan tahun tersebut.');
+        }
+
+        return back()->with('success', 'Setoran simpanan berhasil dicatat!');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $export = new \App\Exports\SimpananExport($request);
+        return $export->download();
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $export = new \App\Exports\SimpananExport($request);
+        $data = $export->getData();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.simpanan-pdf', [
+            'rows' => $data['rows'],
+            'grandTotals' => $data['grandTotals'],
+            'filterInfo' => $data['filterInfo'],
+        ])->setPaper('a4', 'landscape');
+
+        $filename = 'Laporan_Simpanan_Anggota_' . now()->format('Y-m-d_His') . '.pdf';
+        return $pdf->download($filename);
     }
 }

@@ -19,6 +19,7 @@ class StorePeriodeRequest extends FormRequest
             'tanggal_buka' => ['required', 'date'],
             'tanggal_tutup' => ['required', 'date', 'after_or_equal:tanggal_buka'],
             'batas_bulan_pelunasan' => ['required', 'integer', 'min:1', 'max:12'],
+            'angsuran_bulan_berjalan' => ['nullable', 'boolean'],
             'limit_per_anggota' => ['required', 'numeric', 'min:100000'],
             'nominal_min' => ['required', 'numeric', 'min:100000', 'lte:limit_per_anggota'],
             'kelipatan_nominal' => ['required', 'numeric', 'min:50000'],

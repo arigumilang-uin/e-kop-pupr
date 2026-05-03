@@ -5,6 +5,43 @@
 
 @section('actions')
 <div class="flex items-center gap-3">
+    {{-- Export Dropdown --}}
+    <div x-data="{ openExport: false }" class="relative">
+        <button @click="openExport = !openExport" type="button" class="py-2.5 px-4 rounded-xl bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Unduh Laporan
+            <svg class="w-3.5 h-3.5 transition-transform" :class="openExport && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div x-show="openExport" @click.away="openExport = false" x-transition x-cloak
+             class="absolute right-0 mt-2 w-56 rounded-xl bg-white border border-stone-200 shadow-lg z-50 overflow-hidden">
+            <div class="px-4 py-2.5 bg-stone-50 border-b border-stone-100">
+                <p class="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Format Laporan</p>
+            </div>
+            <a id="export-excel-link" href="{{ route('simpanan.export.excel') }}" 
+               class="flex items-center gap-3 px-4 py-3 text-sm text-stone-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
+                <span class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </span>
+                <div>
+                    <p class="font-bold">Excel (.xlsx)</p>
+                    <p class="text-[11px] text-stone-400">Spreadsheet lengkap + styling</p>
+                </div>
+            </a>
+            <a id="export-pdf-link" href="{{ route('simpanan.export.pdf') }}" 
+               class="flex items-center gap-3 px-4 py-3 text-sm text-stone-700 hover:bg-amber-50 hover:text-amber-700 transition-colors border-t border-stone-100">
+                <span class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                </span>
+                <div>
+                    <p class="font-bold">PDF (.pdf)</p>
+                    <p class="text-[11px] text-stone-400">Siap cetak dengan kop surat</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
     <div class="hidden sm:flex items-center gap-2.5 px-3 py-2 bg-stone-100 rounded-xl border border-stone-200/80 shadow-sm relative overflow-hidden">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
         <div class="relative z-10 flex min-h-[1.5rem] items-center gap-2">
@@ -50,11 +87,15 @@
 
             {{-- Filter Waktu --}}
             <div class="flex flex-col gap-1.5 md:col-span-2">
-                <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Rentang Waktu</label>
-                <div class="flex flex-col sm:flex-row items-center gap-2">
-                    <input type="date" x-model="dari_tanggal" class="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 font-medium">
-                    <span class="text-stone-400 font-medium text-xs hidden sm:block">s/d</span>
-                    <input type="date" x-model="sampai_tanggal" class="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 font-medium">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-[11px] font-bold text-stone-500 uppercase mb-1.5 px-1">Dari Tanggal</p>
+                        <x-datepicker x-model="dari_tanggal" placeholder="Tidak dibatasi" />
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-bold text-stone-500 uppercase mb-1.5 px-1">Sampai Tanggal</p>
+                        <x-datepicker x-model="sampai_tanggal" placeholder="Tidak dibatasi" />
+                    </div>
                 </div>
             </div>
             
@@ -119,26 +160,60 @@
 
                     <div class="p-6 space-y-5 overflow-y-auto custom-scrollbar">
                         <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Kategori Simpanan</label>
-                            <select name="jenis_simpanan_id" required class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-stone-700 font-semibold cursor-pointer outline-none transition-all shadow-sm">
+                            <select name="jenis_simpanan_id" required 
+                                    @change="selectedKode = $event.target.options[$event.target.selectedIndex].dataset.kode || ''; nominal = $event.target.options[$event.target.selectedIndex].dataset.nominal || ''"
+                                    class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-stone-700 font-semibold cursor-pointer outline-none transition-all shadow-sm">
                                 <option value="" disabled selected>Pilih Kategori...</option>
-                                @foreach($jenisSimpananList as $j)
-                                    <option value="{{ $j->id }}">{{ $j->nama }}</option>
+                                @foreach($jenisSimpananList->where('kode', '!=', 'SWP') as $j)
+                                    <option value="{{ $j->id }}" data-kode="{{ $j->kode }}" data-nominal="{{ $j->kode == 'POKOK' ? $nominalPokok : ($j->kode == 'WAJIB' ? $nominalWajib : '') }}">{{ $j->nama }}</option>
                                 @endforeach
                             </select>
+                        </div>
+
+                        <div class="space-y-1.5" x-show="selectedKode === 'WAJIB'" x-cloak style="display: none;">
+                            <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Untuk Bulan & Tahun</label>
+                            <div class="flex items-center gap-3">
+                                <select name="bulan_untuk" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 font-semibold shadow-sm" :required="selectedKode === 'WAJIB'">
+                                    <option value="">-- Bulan --</option>
+                                    @for($m=1; $m<=12; $m++)
+                                        <option value="{{ $m }}">{{ date('F', mktime(0,0,0,$m,1)) }}</option>
+                                    @endfor
+                                </select>
+                                <select name="tahun_untuk" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 font-semibold shadow-sm" :required="selectedKode === 'WAJIB'">
+                                    <option value="">-- Tahun --</option>
+                                    @for($y=date('Y')-2; $y<=date('Y')+2; $y++)
+                                        <option value="{{ $y }}">{{ $y }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                        </div>
+
+                        <div x-show="selectedKode === 'POKOK'" x-cloak style="display: none;">
+                            <template x-if="selectedAnggotaPokokPaid">
+                                <div class="px-4 py-3 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 text-sm font-medium flex gap-2">
+                                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span class="leading-relaxed">Anggota ini <span class="font-bold uppercase tracking-wider">sudah melunasi</span> Simpanan Pokok. Sistem tidak menyarankan setoran tambahan kecuali kondisi anomali.</span>
+                                </div>
+                            </template>
+                            <template x-if="!selectedAnggotaPokokPaid">
+                                <div class="px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium flex gap-2">
+                                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span>Wajib dibayarkan sekali di awal oleh anggota. Nilai ketetapan saat ini: <span class="font-bold">Rp</span><span class="font-bold font-mono" x-text="new Intl.NumberFormat('id-ID').format(nominal || 0)"></span>.</span>
+                                </div>
+                            </template>
                         </div>
 
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Nominal Rupiah (Rp)</label>
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold">Rp</span>
-                                <input type="number" name="nominal" required min="1000" class="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-black font-mono focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm" placeholder="0">
+                                <input type="number" name="nominal" x-model="nominal" required min="1000" :readonly="selectedKode === 'POKOK' || selectedKode === 'WAJIB'" class="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-black font-mono focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm read-only:bg-stone-100 read-only:text-stone-500 read-only:border-stone-200 read-only:cursor-not-allowed" placeholder="0">
                             </div>
                         </div>
                         
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tanggal Transaksi</label>
-                            <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm font-semibold text-stone-700 focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm">
+                            <x-datepicker name="tanggal" :value="date('Y-m-d')" :required="true" />
                         </div>
 
                         <div class="space-y-1.5">
@@ -174,10 +249,16 @@ document.addEventListener('alpine:init', () => {
         modalOpen: false,
         selectedAnggotaId: '',
         selectedAnggotaNama: '',
+        selectedAnggotaPokokPaid: false,
+        selectedKode: '',
+        nominal: '',
 
-        openModal(id, nama) {
+        openModal(id, nama, pokokPaid = false) {
             this.selectedAnggotaId = id;
             this.selectedAnggotaNama = nama;
+            this.selectedAnggotaPokokPaid = pokokPaid;
+            this.selectedKode = '';
+            this.nominal = '';
             this.modalOpen = true;
         },
         closeModal() {
@@ -213,6 +294,25 @@ document.addEventListener('alpine:init', () => {
             }, 400);
         },
 
+        getFilterParams() {
+            const params = new URLSearchParams();
+            if (this.q !== '') params.append('q', this.q);
+            if (this.bidang !== '') params.append('bidang', this.bidang);
+            if (this.golongan !== '') params.append('golongan', this.golongan);
+            if (this.dari_tanggal !== '') params.append('dari_tanggal', this.dari_tanggal);
+            if (this.sampai_tanggal !== '') params.append('sampai_tanggal', this.sampai_tanggal);
+            return params;
+        },
+
+        updateExportLinks() {
+            const params = this.getFilterParams();
+            const qs = params.toString();
+            const excelLink = document.getElementById('export-excel-link');
+            const pdfLink = document.getElementById('export-pdf-link');
+            if (excelLink) excelLink.href = `{{ route('simpanan.export.excel') }}${qs ? '?' + qs : ''}`;
+            if (pdfLink) pdfLink.href = `{{ route('simpanan.export.pdf') }}${qs ? '?' + qs : ''}`;
+        },
+
         async fetchData(targetUrl = null) {
             this.loading = true;
             
@@ -223,13 +323,7 @@ document.addEventListener('alpine:init', () => {
             
             let url = targetUrl;
             if (!url) {
-                const params = new URLSearchParams();
-                if (this.q !== '') params.append('q', this.q);
-                if (this.bidang !== '') params.append('bidang', this.bidang);
-                if (this.golongan !== '') params.append('golongan', this.golongan);
-                if (this.dari_tanggal !== '') params.append('dari_tanggal', this.dari_tanggal);
-                if (this.sampai_tanggal !== '') params.append('sampai_tanggal', this.sampai_tanggal);
-                
+                const params = this.getFilterParams();
                 url = `${window.location.pathname}?${params.toString()}`;
             }
 
@@ -249,6 +343,7 @@ document.addEventListener('alpine:init', () => {
                     if (badge) {
                         badge.innerText = data.grandTotal;
                     }
+                    this.updateExportLinks();
                 } else {
                     const html = await response.text();
                     const parser = new DOMParser();

@@ -77,11 +77,15 @@
 
             {{-- Filter Waktu --}}
             <div class="flex flex-col gap-1.5 md:col-span-2">
-                <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Rentang Waktu</label>
-                <div class="flex flex-col sm:flex-row items-center gap-2">
-                    <input type="date" x-model="dari_tanggal" class="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 font-medium">
-                    <span class="text-stone-400 font-medium text-xs hidden sm:block">s/d</span>
-                    <input type="date" x-model="sampai_tanggal" class="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 font-medium">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-[11px] font-bold text-stone-500 uppercase mb-1.5 px-1">Dari Tanggal</p>
+                        <x-datepicker x-model="dari_tanggal" placeholder="Tidak dibatasi" />
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-bold text-stone-500 uppercase mb-1.5 px-1">Sampai Tanggal</p>
+                        <x-datepicker x-model="sampai_tanggal" placeholder="Tidak dibatasi" />
+                    </div>
                 </div>
             </div>
             

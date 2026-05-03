@@ -94,6 +94,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/potongan/proses', [PotonganBulananController::class, 'proses'])->name('potongan.proses');
 
         // Pinjaman (Approve/Reject/Bayar)
+        Route::post('/pinjaman/mass-approve', [PinjamanAdminController::class, 'massApprove'])->name('pinjaman.massApprove');
+        Route::post('/pinjaman/mass-reject', [PinjamanAdminController::class, 'massReject'])->name('pinjaman.massReject');
         Route::patch('/pinjaman/{pinjaman}/approve', [PinjamanAdminController::class, 'approve'])->name('pinjaman.approve');
         Route::patch('/pinjaman/{pinjaman}/reject', [PinjamanAdminController::class, 'reject'])->name('pinjaman.reject');
         Route::patch('/pinjaman/{pinjaman}/angsuran/{angsuran}/bayar', [PinjamanAdminController::class, 'bayarAngsuran'])->name('pinjaman.angsuran.bayar');
@@ -146,6 +148,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/pinjaman/{pinjaman}', [PinjamanAdminController::class, 'show'])->name('pinjaman.show');
         Route::get('/simpanan', [SimpananController::class, 'index'])->name('simpanan.index');
         Route::get('/simpanan/riwayat', [SimpananController::class, 'riwayat'])->name('simpanan.riwayat');
+        Route::get('/simpanan/export/excel', [SimpananController::class, 'exportExcel'])->name('simpanan.export.excel');
+        Route::get('/simpanan/export/pdf', [SimpananController::class, 'exportPdf'])->name('simpanan.export.pdf');
         Route::get('/pengeluaran', [PengeluaranKasController::class, 'index'])->name('pengeluaran.index');
         Route::get('/potongan', [PotonganBulananController::class, 'index'])->name('potongan.index');
         Route::get('/periode', [PeriodeController::class, 'index'])->name('periode.index');

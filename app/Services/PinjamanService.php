@@ -62,14 +62,27 @@ class PinjamanService
 
     /**
      * Hitung tenor maksimal dari bulan saat ini.
-     * Rumus: batas_bulan_pelunasan - bulan_saat_ini
+     * 
+     * Jika angsuranBulanBerjalan = false (default):
+     *   tenor_maks = batas_bulan - bulan_sekarang
+     *   Contoh: batas Nov (11), bulan April (4) → 11 - 4 = 7 bulan (Mei s/d Nov)
+     * 
+     * Jika angsuranBulanBerjalan = true:
+     *   tenor_maks = batas_bulan - bulan_sekarang + 1
+     *   Contoh: batas Nov (11), bulan April (4) → 11 - 4 + 1 = 8 bulan (Apr s/d Nov)
      */
-    public function tenorMaksimal(?int $batasBulan = null): int
+    public function tenorMaksimal(?int $batasBulan = null, bool $angsuranBulanBerjalan = false): int
     {
         $batas = $batasBulan ?? $this->pengaturan->batasBulanPelunasan();
         $bulanSekarang = (int) now()->format('n');
 
-        return max(0, $batas - $bulanSekarang);
+        $tenor = $batas - $bulanSekarang;
+
+        if ($angsuranBulanBerjalan) {
+            $tenor += 1; // +1 karena angsuran pertama di bulan berjalan
+        }
+
+        return max(0, $tenor);
     }
 
     /**
@@ -82,6 +95,7 @@ class PinjamanService
         int $tenor,
         float $limitPerAnggota,
         int $batasBulanPelunasan,
+        bool $angsuranBulanBerjalan = false,
     ): array {
         $pesan = [];
         $perluOverride = false;
@@ -112,7 +126,7 @@ class PinjamanService
         }
 
         // 4. Cek tenor
-        $tenorMaks = $batasBulanPelunasan - $bulanSekarang;
+        $tenorMaks = $this->tenorMaksimal($batasBulanPelunasan, $angsuranBulanBerjalan);
         $tenorMin = $this->pengaturan->tenorMinimal();
         if ($tenor < $tenorMin || $tenor > $tenorMaks) {
             $pesan[] = "Tenor harus antara {$tenorMin} sampai {$tenorMaks} bulan.";
@@ -126,3 +140,4 @@ class PinjamanService
         ];
     }
 }
+

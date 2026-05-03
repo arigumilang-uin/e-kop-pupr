@@ -22,6 +22,9 @@ class PotonganBulananController extends Controller
     {
         $month = $request->input('month', now()->month);
         $year = $request->input('year', now()->year);
+        $search = $request->input('q');
+        $bidangId = $request->input('bidang');
+        $jenisFilter = $request->input('jenis');
 
         $jenisPokok = JenisSimpanan::pokok();
         $jenisWajib = JenisSimpanan::wajib();
@@ -29,61 +32,157 @@ class PotonganBulananController extends Controller
         $nominalPokok = $this->pengaturan->simpananPokok();
         $nominalWajib = $this->pengaturan->simpananWajib();
 
-        $anggotas = Anggota::aktif()
-            ->with(['bidang'])
-            ->orderBy('nama')
-            ->get();
+        $query = Anggota::aktif()->with(['bidang'])->orderBy('nama');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('nip', 'like', "%{$search}%");
+            });
+        }
+
+        if ($bidangId) {
+            $query->where('bidang_id', $bidangId);
+        }
+
+        $anggotas = $query->get();
 
         $dataPotongan = collect();
         $totalKeseluruhan = 0;
+        $totalPokok = 0;
+        $totalWajib = 0;
+        $totalPinjaman = 0;
 
+        // --- OPTIMIZATION BATCH QUERIES ---
+        // 1. Ambil array ID anggota yang sudah bayar pokok
+        $paidPokokIds = [];
+        if (!$jenisFilter || $jenisFilter === 'pokok') {
+            $paidPokokIds = DB::table('simpanan')
+                ->where('jenis_simpanan_id', $jenisPokok->id ?? 0)
+                ->pluck('anggota_id')
+                ->toArray();
+        }
+
+        // 2. Ambil array ID anggota yang sudah bayar wajib bulan & tahun ini
+        $paidWajibIds = [];
+        if (!$jenisFilter || $jenisFilter === 'wajib') {
+            $paidWajibIds = DB::table('simpanan')
+                ->where('jenis_simpanan_id', $jenisWajib->id ?? 0)
+                ->where('bulan_untuk', $month)
+                ->where('tahun_untuk', $year)
+                ->pluck('anggota_id')
+                ->toArray();
+        }
+
+        // 3. Ambil seluruh data angsuran belum bayar untuk bulan & tahun ini, grouped by anggota_id
+        $allPinjamanData = collect();
+        if (!$jenisFilter || $jenisFilter === 'pinjaman') {
+            $allPinjamanData = DB::table('angsuran')
+                ->join('pinjaman', 'angsuran.pinjaman_id', '=', 'pinjaman.id')
+                ->where('angsuran.status', 'belum')
+                ->whereMonth('angsuran.tanggal_jatuh_tempo', $month)
+                ->whereYear('angsuran.tanggal_jatuh_tempo', $year)
+                ->select(
+                    'pinjaman.anggota_id',
+                    'angsuran.angsuran_ke as urutan_angsuran',
+                    'pinjaman.tenor_bulan as lama_angsuran',
+                    'angsuran.nominal_pokok',
+                    'angsuran.nominal_bunga',
+                    'angsuran.nominal_total',
+                    DB::raw('"Pinjaman" as nama_pinjaman')
+                )
+                ->get()
+                ->groupBy('anggota_id');
+        }
+
+        // PERHITUNGAN RAM LOKAL
         foreach ($anggotas as $anggota) {
             $tanggalMasuk = $anggota->tanggal_masuk;
             $bulanMulaiPotongan = $tanggalMasuk ? $tanggalMasuk->copy()->addMonth()->startOfMonth() : null;
             $periodeFilter = Carbon::createFromDate($year, $month, 1);
             $belumWaktunyaDipotong = $bulanMulaiPotongan && $periodeFilter->lt($bulanMulaiPotongan);
 
-            $sudahBayarPokok = DB::table('simpanan')
-                ->where('anggota_id', $anggota->id)
-                ->where('jenis_simpanan_id', $jenisPokok->id ?? 0)
-                ->exists();
-            $potonganPokok = ($sudahBayarPokok || $belumWaktunyaDipotong) ? 0 : $nominalPokok;
+            $potonganPokok = 0;
+            if (!$jenisFilter || $jenisFilter === 'pokok') {
+                $sudahBayarPokok = in_array($anggota->id, $paidPokokIds);
+                $potonganPokok = ($sudahBayarPokok || $belumWaktunyaDipotong) ? 0 : $nominalPokok;
+            }
 
-            $sudahBayarWajib = DB::table('simpanan')
-                ->where('anggota_id', $anggota->id)
-                ->where('jenis_simpanan_id', $jenisWajib->id ?? 0)
-                ->where('bulan_untuk', $month)
-                ->where('tahun_untuk', $year)
-                ->exists();
-            $potonganWajib = ($sudahBayarWajib || $belumWaktunyaDipotong) ? 0 : $nominalWajib;
+            $potonganWajib = 0;
+            if (!$jenisFilter || $jenisFilter === 'wajib') {
+                $sudahBayarWajib = in_array($anggota->id, $paidWajibIds);
+                $potonganWajib = ($sudahBayarWajib || $belumWaktunyaDipotong) ? 0 : $nominalWajib;
+            }
 
-            $potonganPinjaman = DB::table('angsuran')
-                ->join('pinjaman', 'angsuran.pinjaman_id', '=', 'pinjaman.id')
-                ->where('pinjaman.anggota_id', $anggota->id)
-                ->where('angsuran.status', 'belum')
-                ->whereMonth('angsuran.tanggal_jatuh_tempo', $month)
-                ->whereYear('angsuran.tanggal_jatuh_tempo', $year)
-                ->sum('angsuran.nominal_total');
+            $potonganPinjaman = 0;
+            $pinjamanPokok = 0;
+            $pinjamanBunga = 0;
+            $detailPinjaman = collect();
+
+            if (!$jenisFilter || $jenisFilter === 'pinjaman') {
+                if ($allPinjamanData->has($anggota->id)) {
+                    $pinjamanData = $allPinjamanData->get($anggota->id);
+                    $pinjamanPokok = $pinjamanData->sum('nominal_pokok');
+                    $pinjamanBunga = $pinjamanData->sum('nominal_bunga');
+                    $potonganPinjaman = $pinjamanData->sum('nominal_total');
+                    $detailPinjaman = $pinjamanData;
+                }
+            }
 
             $totalPotongan = $potonganPokok + $potonganWajib + $potonganPinjaman;
-            $totalKeseluruhan += $totalPotongan;
+            
+            if ($totalPotongan > 0 || !$jenisFilter) {
+                if ($jenisFilter && $totalPotongan <= 0) continue;
 
-            $dataPotongan->push((object)[
-                'anggota' => $anggota,
-                'potongan_pokok' => $potonganPokok,
-                'potongan_wajib' => $potonganWajib,
-                'potongan_pinjaman' => $potonganPinjaman,
-                'total_potongan' => $totalPotongan,
-            ]);
+                $totalKeseluruhan += $totalPotongan;
+                $totalPokok += $potonganPokok;
+                $totalWajib += $potonganWajib;
+                $totalPinjaman += $potonganPinjaman;
+
+                $dataPotongan->push((object)[
+                    'anggota' => $anggota,
+                    'potongan_pokok' => $potonganPokok,
+                    'potongan_wajib' => $potonganWajib,
+                    'potongan_pinjaman' => $potonganPinjaman,
+                    'pinjaman_pokok' => $pinjamanPokok,
+                    'pinjaman_bunga' => $pinjamanBunga,
+                    'detail_pinjaman' => $detailPinjaman,
+                    'total_potongan' => $totalPotongan,
+                ]);
+            }
         }
+
+        // Menambahkan pagination statis dari collection untuk tampilan efektif
+        $page = $request->input('page', 1);
+        $perPage = 15;
+        $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator(
+            $dataPotongan->forPage($page, $perPage),
+            $dataPotongan->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         $months = [];
         for ($m = 1; $m <= 12; $m++) {
             $months[$m] = date('F', mktime(0, 0, 0, $m, 1));
         }
         $years = range(now()->year - 2, now()->year + 2);
+        $bidangs = \App\Models\Bidang::orderBy('nama_bidang')->get();
 
-        return view('potongan.index', compact('dataPotongan', 'month', 'year', 'months', 'years', 'totalKeseluruhan'));
+        return view('potongan.index', compact(
+            'paginatedData',
+            'dataPotongan',
+            'totalKeseluruhan',
+            'totalPokok',
+            'totalWajib',
+            'totalPinjaman',
+            'months',
+            'years',
+            'bidangs',
+            'month',
+            'year'
+        ));
     }
 
     public function proses(Request $request)

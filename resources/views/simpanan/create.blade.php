@@ -68,8 +68,7 @@
                 
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1.5">Tanggal Setor <span class="text-red-500">*</span></label>
-                    <input type="date" name="tanggal" value="{{ old('tanggal', date('Y-m-d')) }}" required
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm">
+                    <x-datepicker name="tanggal" :value="old('tanggal', date('Y-m-d'))" :required="true" />
                     @error('tanggal') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
 

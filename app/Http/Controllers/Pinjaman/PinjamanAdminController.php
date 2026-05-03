@@ -54,64 +54,14 @@ class PinjamanAdminController extends Controller
             return back()->with('error', 'Status pengajuan bukan "Menunggu" sehingga tidak bisa di-Approve.');
         }
 
-        $saldoSekarang = $this->saldoService->saldoKoperasi();
-
-        if ($saldoSekarang < $pinjaman->nominal_pinjaman) {
-            return back()->with('error', 'Persetujuan ditolak oleh sistem! Saldo/Kas Koperasi saat ini (Rp ' . number_format($saldoSekarang, 0, ',', '.') . ') tidak mencukupi untuk mendanai pinjaman ini (Rp ' . number_format($pinjaman->nominal_pinjaman, 0, ',', '.') . '). Tambah kas via Simpanan terlebih dahulu.');
-        }
-
         try {
             DB::beginTransaction();
-
-            $pinjaman->update([
-                'status' => StatusPinjaman::Berjalan,
-                'tanggal_approval' => now(), 
-                'approved_by' => auth()->id(),
-            ]);
-
-            // Potongan SWP Otomatis masuk ke Simpanan (3%)
-            if ($pinjaman->potongan_swp > 0) {
-                $jenisSwp = \App\Models\JenisSimpanan::swp();
-                if ($jenisSwp) {
-                    \App\Models\Simpanan::create([
-                        'anggota_id' => $pinjaman->anggota_id,
-                        'jenis_simpanan_id' => $jenisSwp->id,
-                        'nominal' => $pinjaman->potongan_swp,
-                        'tanggal' => now()->format('Y-m-d'),
-                        'keterangan' => 'Potongan SWP Otomatis dari Pencairan Pinjaman Ref: ' . $pinjaman->no_referensi,
-                        'dicatat_oleh' => auth()->id(),
-                        'pinjaman_id' => $pinjaman->id,
-                    ]);
-                }
-            }
-
-            // Pembentukan Jadwal Angsuran Otomatis
-            $tanggalMulai = now();
-            // Optional: Tanggal mulai penagihan 1 bulan dari sekarang
-            for ($i = 1; $i <= $pinjaman->tenor_bulan; $i++) {
-                \App\Models\Angsuran::create([
-                    'pinjaman_id' => $pinjaman->id,
-                    'angsuran_ke' => $i,
-                    'tanggal_jatuh_tempo' => $tanggalMulai->copy()->addMonths($i)->format('Y-m-d'),
-                    'nominal_pokok' => $pinjaman->angsuran_pokok,
-                    'nominal_bunga' => $pinjaman->angsuran_bunga,
-                    'nominal_total' => $pinjaman->total_angsuran,
-                    'status' => \App\Enums\StatusAngsuran::Belum,
-                ]);
-            }
-
-            $this->logger->log(
-                'pinjaman_approved',
-                "Pinjaman disetujui untuk {$pinjaman->anggota->nama} senilai Rp " . number_format($pinjaman->nominal_pinjaman, 0, ',', '.'),
-                ['no_referensi' => $pinjaman->no_referensi]
-            );
-
+            $this->_processApproval($pinjaman);
             DB::commit();
-
             return redirect()->route('pinjaman.index')->with('success', 'Pinjaman berhasil disetujui (Berjalan) dan kas secara logis terpotong.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan sistem saat memproses persetujuan.');
+            return back()->with('error', $e->getMessage() !== '' ? $e->getMessage() : 'Terjadi kesalahan sistem saat memproses persetujuan.');
         }
     }
 
@@ -136,6 +86,117 @@ class PinjamanAdminController extends Controller
         );
 
         return redirect()->route('pinjaman.index')->with('success', 'Pengajuan pinjaman berhasil ditolak.');
+    }
+
+    private function _processApproval(Pinjaman $pinjaman)
+    {
+        $saldoSekarang = $this->saldoService->saldoKoperasi();
+
+        if ($saldoSekarang < $pinjaman->nominal_pinjaman) {
+            throw new \Exception('Saldo/Kas Koperasi tidak mencukupi.');
+        }
+
+        $pinjaman->update([
+            'status' => StatusPinjaman::Berjalan,
+            'tanggal_approval' => now(), 
+            'approved_by' => auth()->id(),
+        ]);
+
+        if ($pinjaman->potongan_swp > 0) {
+            $jenisSwp = \App\Models\JenisSimpanan::swp();
+            if ($jenisSwp) {
+                \App\Models\Simpanan::create([
+                    'anggota_id' => $pinjaman->anggota_id,
+                    'jenis_simpanan_id' => $jenisSwp->id,
+                    'nominal' => $pinjaman->potongan_swp,
+                    'tanggal' => now()->format('Y-m-d'),
+                    'keterangan' => 'Potongan SWP Otomatis dari Pencairan Pinjaman Ref: ' . $pinjaman->no_referensi,
+                    'dicatat_oleh' => auth()->id(),
+                    'pinjaman_id' => $pinjaman->id,
+                ]);
+            }
+        }
+
+        $tanggalMulai = now();
+        $angsuranBulanBerjalan = (bool) ($pinjaman->periodePinjaman->angsuran_bulan_berjalan ?? false);
+
+        for ($i = 1; $i <= $pinjaman->tenor_bulan; $i++) {
+            $offsetBulan = $angsuranBulanBerjalan ? ($i - 1) : $i;
+
+            \App\Models\Angsuran::create([
+                'pinjaman_id' => $pinjaman->id,
+                'angsuran_ke' => $i,
+                'tanggal_jatuh_tempo' => $tanggalMulai->copy()->addMonths($offsetBulan)->format('Y-m-d'),
+                'nominal_pokok' => $pinjaman->angsuran_pokok,
+                'nominal_bunga' => $pinjaman->angsuran_bunga,
+                'nominal_total' => $pinjaman->total_angsuran,
+                'status' => \App\Enums\StatusAngsuran::Belum,
+            ]);
+        }
+
+        $this->logger->log(
+            'pinjaman_approved',
+            "Pinjaman disetujui untuk {$pinjaman->anggota->nama} senilai Rp " . number_format($pinjaman->nominal_pinjaman, 0, ',', '.'),
+            ['no_referensi' => $pinjaman->no_referensi]
+        );
+    }
+
+    public function massApprove(Request $request)
+    {
+        $request->validate(['pinjaman_ids' => 'required|array']);
+        
+        $sukses = 0;
+        $gagal = 0;
+
+        foreach ($request->pinjaman_ids as $id) {
+            $pinjaman = Pinjaman::find($id);
+            if (!$pinjaman || $pinjaman->status !== StatusPinjaman::Menunggu) continue;
+
+            try {
+                DB::beginTransaction();
+                $this->_processApproval($pinjaman);
+                DB::commit();
+                $sukses++;
+            } catch (\Exception $e) {
+                DB::rollBack();
+                $gagal++;
+            }
+        }
+
+        $pesan = "Berhasil menyetujui $sukses pengajuan.";
+        if ($gagal > 0) $pesan .= " Gagal menyetujui $gagal pengajuan (kemungkinan saldo tidak cukup).";
+
+        return back()->with($gagal > 0 ? 'warning' : 'success', $pesan);
+    }
+
+    public function massReject(Request $request)
+    {
+        $request->validate([
+            'pinjaman_ids' => 'required|array',
+            'alasan_penolakan' => 'required|string|max:500'
+        ]);
+
+        $sukses = 0;
+        foreach ($request->pinjaman_ids as $id) {
+            $pinjaman = Pinjaman::find($id);
+            if (!$pinjaman || $pinjaman->status !== StatusPinjaman::Menunggu) continue;
+
+            $pinjaman->update([
+                'status' => StatusPinjaman::Ditolak,
+                'catatan' => $request->alasan_penolakan,
+                'tanggal_approval' => now(),
+                'approved_by' => auth()->id(),
+            ]);
+
+            $this->logger->log(
+                'pinjaman_rejected',
+                "Pinjaman ditolak untuk {$pinjaman->anggota->nama}. Alasan: {$request->alasan_penolakan}",
+                ['no_referensi' => $pinjaman->no_referensi]
+            );
+            $sukses++;
+        }
+
+        return back()->with('success', "Berhasil menolak $sukses pengajuan.");
     }
 
     public function bayarAngsuran(Request $request, Pinjaman $pinjaman, \App\Models\Angsuran $angsuran)

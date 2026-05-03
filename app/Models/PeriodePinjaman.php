@@ -20,6 +20,7 @@ class PeriodePinjaman extends Model
         'tanggal_buka',
         'tanggal_tutup',
         'batas_bulan_pelunasan',
+        'angsuran_bulan_berjalan',
         'limit_per_anggota',
         'nominal_min',
         'kelipatan_nominal',
@@ -37,6 +38,7 @@ class PeriodePinjaman extends Model
             'limit_per_anggota' => 'decimal:2',
             'nominal_min' => 'decimal:2',
             'kelipatan_nominal' => 'decimal:2',
+            'angsuran_bulan_berjalan' => 'boolean',
             'status' => StatusPeriode::class,
         ];
     }

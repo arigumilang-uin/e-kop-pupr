@@ -80,7 +80,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-500 mb-1">Tanggal Keluar</label>
-                            <input type="date" name="tanggal" required value="{{ old('tanggal', date('Y-m-d')) }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm">
+                            <x-datepicker name="tanggal" :value="old('tanggal', date('Y-m-d'))" :required="true" />
                             @error('tanggal') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div>

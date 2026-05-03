@@ -16,7 +16,7 @@ trait HasNoReferensi
     {
         static::creating(function ($model) {
             if (empty($model->no_referensi)) {
-                $model->no_referensi = static::generateNoReferensi();
+                $model->no_referensi = static::generateNoReferensi($model);
             }
         });
     }
@@ -24,10 +24,20 @@ trait HasNoReferensi
     /**
      * Generate nomor referensi unik: PREFIX-YYYY-NNNN
      */
-    public static function generateNoReferensi(): string
+    public static function generateNoReferensi($model = null): string
     {
         $prefix = static::$refPrefix;
+        
         $tahun = now()->format('Y');
+        
+        if ($model) {
+            if (!empty($model->tanggal)) {
+                $tahun = \Carbon\Carbon::parse($model->tanggal)->format('Y');
+            } elseif (!empty($model->tanggal_pengajuan)) {
+                $tahun = \Carbon\Carbon::parse($model->tanggal_pengajuan)->format('Y');
+            }
+        }
+
         $pattern = "{$prefix}-{$tahun}-";
 
         $lastNumber = static::where('no_referensi', 'like', "{$pattern}%")

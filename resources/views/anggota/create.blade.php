@@ -70,8 +70,7 @@
 
                 <div>
                     <label class="block text-sm font-bold text-stone-700 mb-1.5">Tanggal Masuk Koperasi</label>
-                    <input type="date" name="tanggal_masuk" value="{{ old('tanggal_masuk', now()->format('Y-m-d')) }}"
-                           class="w-full h-12 px-4 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] transition-colors text-sm text-stone-800 outline-none cursor-pointer">
+                    <x-datepicker name="tanggal_masuk" :value="old('tanggal_masuk', now()->format('Y-m-d'))" />
                     <p class="mt-1.5 text-[11px] font-medium text-stone-500 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Potongan TPP berlaku di bulan berikutnya.</p>
                     @error('tanggal_masuk') <p class="mt-1.5 text-xs text-red-500 font-medium">{{ $message }}</p> @enderror
                 </div>
