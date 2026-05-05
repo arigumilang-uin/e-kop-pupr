@@ -3,36 +3,98 @@
 @section('title', 'Manajemen Persetujuan Pinjaman')
 @section('subtitle', 'Daftar pengajuan pinjaman anggota menunggu validasi kas dan approval')
 
+@section('actions')
+    <div class="hidden sm:flex items-center gap-2.5 px-3 py-2 bg-stone-100 rounded-xl border border-stone-200/80 shadow-sm">
+        <div class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-40"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </div>
+        <span class="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
+            Total Kas: <span class="font-mono text-[13px] font-black text-[#043d2e] ml-1">Rp {{ number_format($totalSaldoKoperasi, 0, ',', '.') }}</span>
+        </span>
+    </div>
+@endsection
+
 @section('content')
 
-{{-- Statistik Persetujuan --}}
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white rounded-2xl p-6 border border-stone-200 flex items-center justify-between shadow-sm">
-        <div>
-            <p class="text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">Total Kas Tersedia</p>
-            <h3 class="text-2xl font-bold font-mono text-[#043d2e]">Rp {{ number_format($totalSaldoKoperasi, 0, ',', '.') }}</h3>
-        </div>
-        <div class="w-12 h-12 rounded-full bg-[#043d2e]/5 flex items-center justify-center text-[#043d2e] border border-[#043d2e]/10">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-        </div>
-    </div>
+<div x-data="pinjamanFilter()" class="flex flex-col gap-5">
+    {{-- Filter Sticky Bar Component --}}
+    <x-filter-bar searchPlaceholder="Cari NIP atau Nama..." x-model="q">
+        <x-slot name="indicator">
+            <template x-if="activeFiltersCount > 0">
+                <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 border-2 border-white rounded-full shadow-sm"></span>
+            </template>
+        </x-slot>
 
-    {{-- Tombol Copy Link Cek Status --}}
-    <div class="bg-white rounded-2xl p-5 border border-stone-200 shadow-sm md:col-span-2">
-        <p class="text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-2">Link Cek Status Pinjaman</p>
-        <div class="flex flex-col sm:flex-row items-center gap-3">
-            <input type="text" id="linkCekStatus" value="{{ route('pinjaman.guest.status') }}" readonly
-                   class="w-full px-4 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-sm font-mono font-semibold text-stone-600 truncate focus:outline-none">
-            <button onclick="navigator.clipboard.writeText(document.getElementById('linkCekStatus').value); this.innerHTML='<svg class=\'w-4 h-4\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M5 13l4 4L19 7\'/></svg> Tersalin!'; this.classList.add('bg-emerald-600'); this.classList.remove('bg-[#043d2e]', 'hover:bg-[#043d2e]/90'); setTimeout(() => { this.innerHTML='Copy Link'; this.classList.remove('bg-emerald-600'); this.classList.add('bg-[#043d2e]', 'hover:bg-[#043d2e]/90'); }, 2000);"
-                    class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold transition-all shadow-md active:scale-95 whitespace-nowrap flex items-center justify-center gap-2">
-                Copy Link
-            </button>
+        <x-slot name="filters">
+            {{-- Filter Bidang --}}
+            <div class="flex flex-col gap-1.5">
+                <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Bidang Kerja</label>
+                <select x-model="bidang_id" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm">
+                    <option value="">Semua Bidang</option>
+                    @foreach($bidangs ?? [] as $b)
+                        <option value="{{ $b->id }}">{{ $b->nama_bidang }}</option>
+                    @endforeach
+                </select>
+            </div>
+            
+            {{-- Filter Periode --}}
+            <div class="flex flex-col gap-1.5">
+                <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Periode Pinjaman</label>
+                <select x-model="periode_id" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm">
+                    <option value="">Semua Periode</option>
+                    @foreach($periodes ?? [] as $p)
+                        <option value="{{ $p->id }}">{{ $p->nama_periode }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Filter Status --}}
+            <div class="flex flex-col gap-1.5">
+                <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Status Pinjaman</label>
+                <select x-model="status" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm">
+                    <option value="">Semua Status</option>
+                    @foreach(\App\Enums\StatusPinjaman::cases() as $s)
+                        <option value="{{ $s->value }}">{{ ucfirst($s->value) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            
+            {{-- Filter Indikator Khusus --}}
+            <div class="flex flex-col gap-1.5">
+                <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Indikator Khusus</label>
+                <select x-model="indikator" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm">
+                    <option value="">Semua Pengajuan</option>
+                    <option value="ganda">Terdapat Pengajuan Ganda</option>
+                    <option value="aktif">Terdapat Pinjaman Aktif (Tahun ini)</option>
+                </select>
+            </div>
+            
+            {{-- Tombol Reset Filter --}}
+            <template x-if="activeFiltersCount > 0">
+                <button type="button" @click="bidang_id = ''; periode_id = ''; status = ''; indikator = ''; q = ''" class="mt-2 w-full py-2.5 px-4 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 text-sm font-bold transition-colors">
+                    Reset Semua Filter
+                </button>
+            </template>
+        </x-slot>
+    </x-filter-bar>
+
+    <div class="relative flex-1 flex flex-col">
+        {{-- Loading Overlay --}}
+        <div x-show="loading" 
+             x-transition.opacity.duration.200ms
+             class="absolute inset-0 bg-white/70 backdrop-blur-[2px] z-10 flex items-start justify-center pt-24" 
+             style="display: none;">
+            <div class="flex items-center gap-3 px-5 py-3 bg-white border border-stone-200 rounded-2xl shadow-xl text-sm font-bold text-stone-700">
+                <svg class="animate-spin h-5 w-5 text-[#043d2e]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Memuat data...
+            </div>
         </div>
-        <p class="text-[10px] text-stone-400 mt-2 font-medium">Bagikan link URL ini kepada anggota via WhatsApp agar mereka dapat mengecek status pinjaman secara mandiri.</p>
-    </div>
-</div>
+
+        <div id="table-content-container" class="flex-1 flex flex-col justify-between">
 
 <div x-data="{
     selected: [],
@@ -70,113 +132,146 @@
         </div>
     </div>
 
-<div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden relative">
+<div class="bg-white rounded-2xl border border-stone-200 shadow-sm flex flex-col">
+    
+    {{-- Legend Keterangan Status --}}
+    <div class="bg-stone-50 border-b border-stone-200 px-6 py-3 flex items-center gap-5 text-[10px] font-bold uppercase tracking-widest text-stone-500 overflow-x-auto rounded-t-2xl">
+        <div class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Menunggu</div>
+        <div class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span> Berjalan</div>
+        <div class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Lunas</div>
+        <div class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Ditolak</div>
+        <div class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-stone-300"></span> Batal</div>
+    </div>
+
     {{-- Table --}}
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-stone-600">
-            <thead class="bg-stone-50/80 text-stone-500 border-b border-stone-200 text-[11px] uppercase tracking-wider font-bold">
-                <tr>
-                    <th scope="col" class="px-5 py-4 w-12 text-center">
-                        <input type="checkbox" @click="toggleAll()" :checked="allSelected" :disabled="menungguIds.length === 0" class="w-4 h-4 rounded text-[#043d2e] focus:ring-[#043d2e]/20 border-stone-300 disabled:opacity-50 cursor-pointer">
-                    </th>
-                    <th scope="col" class="px-6 py-4">Referensi / Tgl</th>
-                    <th scope="col" class="px-6 py-4">Peminjam</th>
-                    <th scope="col" class="px-6 py-4">Informasi Pencairan (Bank & Rekening)</th>
-                    <th scope="col" class="px-6 py-4">Nominal / Tenor</th>
-                    <th scope="col" class="px-6 py-4">Status</th>
-                    <th scope="col" class="px-6 py-4 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-stone-100">
+    <div class="relative flex-1 flex flex-col">
+        <x-table>
+            <x-table.thead :sticky="true" class="top-[168px]">
+                <x-table.th class="w-12 text-center border-r border-stone-100">
+                    <input type="checkbox" @click="toggleAll()" :checked="allSelected" :disabled="menungguIds.length === 0" class="w-4 h-4 rounded text-[#043d2e] focus:ring-[#043d2e]/20 border-stone-300 disabled:opacity-50 cursor-pointer">
+                </x-table.th>
+                <x-table.th>Referensi / Periode</x-table.th>
+                <x-table.th>Anggota / Bidang</x-table.th>
+                <x-table.th>Dana Cair & Potongan</x-table.th>
+                <x-table.th>Plafon / Tenor</x-table.th>
+                <x-table.th class="text-center">Status</x-table.th>
+                <x-table.th class="text-right">Aksi</x-table.th>
+            </x-table.thead>
+            <x-table.tbody>
                 @forelse($pinjamans as $pinjaman)
-                <tr class="hover:bg-stone-50/50 transition-colors" :class="{ 'bg-stone-50': selected.includes({{ $pinjaman->id }}) }">
-                    <td class="px-5 py-4 text-center">
+                <x-table.tr class="hover:bg-stone-50/50 transition-colors" x-bind:class="{ 'bg-stone-50': selected.includes({{ $pinjaman->id }}) }">
+                    <x-table.td class="text-center border-r border-stone-100">
                         @if($pinjaman->status->value === 'menunggu')
                         <input type="checkbox" x-model="selected" value="{{ $pinjaman->id }}" class="w-4 h-4 rounded text-[#043d2e] focus:ring-[#043d2e]/20 border-stone-300 cursor-pointer">
                         @else
                         <div class="w-4 h-4 rounded border border-stone-200 bg-stone-100 opacity-50 inline-block"></div>
                         @endif
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex flex-col gap-0.5">
+                    </x-table.td>
+                    <x-table.td class="align-top">
+                        <div class="flex flex-col gap-1">
                             <span class="font-mono text-[#043d2e] font-bold text-[13px]">{{ $pinjaman->no_referensi }}</span>
-                            <span class="text-[11px] font-medium text-stone-500">{{ $pinjaman->tanggal_pengajuan->format('d M Y - H:i') }}</span>
+                            <span class="text-[11px] font-bold text-stone-500 uppercase tracking-wider">{{ optional($pinjaman->periodePinjaman)->nama_periode ?? '-' }}</span>
+                            <span class="text-[10px] font-medium text-stone-400">{{ $pinjaman->tanggal_pengajuan->format('d/m/Y') }}</span>
                         </div>
-                    </td>
-                    <td class="px-6 py-4">
+                    </x-table.td>
+                    <x-table.td class="align-top">
                         <div class="flex flex-col gap-0.5">
                             <span class="text-stone-800 font-bold text-[13px]">{{ $pinjaman->anggota->nama }}</span>
-                            <span class="text-[11px] font-medium text-stone-500">NIP: {{ $pinjaman->anggota->nip }}</span>
+                            <span class="text-[11px] font-medium text-stone-500">NIP: <x-nip-display :value="$pinjaman->anggota->nip" /></span>
+                            <span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">{{ optional($pinjaman->anggota->bidang)->nama_bidang ?? '-' }}</span>
+
+                            @if($pinjaman->status->value === 'menunggu')
+                                <div class="flex flex-col gap-1.5 mt-2.5">
+                                    @if($pinjaman->anggota->pinjaman_aktif_tahun_ini > 0)
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded text-[9px] font-bold uppercase tracking-wider w-max" title="Anggota ini memiliki pinjaman yang sedang berjalan di tahun ini">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        Ada Pinjaman Aktif
+                                    </span>
+                                    @endif
+                                    
+                                    @if($pinjaman->anggota->pinjaman_menunggu > 1)
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded text-[9px] font-bold uppercase tracking-wider w-max" title="Anggota ini mengajukan pinjaman lebih dari 1 kali (menunggu approval)">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Pengajuan Ganda ({{ $pinjaman->anggota->pinjaman_menunggu }})
+                                    </span>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex flex-col gap-1">
-                            <div class="flex items-center gap-2">
-                                <span class="px-2 py-0.5 rounded bg-stone-100 text-stone-600 font-bold text-[10px] uppercase tracking-wider border border-stone-200">{{ $pinjaman->nama_bank }}</span>
-                                <span class="font-mono text-stone-800 font-bold text-[12px]">{{ $pinjaman->no_rekening }}</span>
+                    </x-table.td>
+                    <x-table.td class="align-top">
+                        <div class="flex flex-col gap-1.5">
+                            <div class="flex items-center justify-between border-b border-stone-100 pb-1">
+                                <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Cair</span>
+                                <span class="font-mono text-emerald-700 font-black text-[13px]">Rp {{ number_format($pinjaman->dana_diterima, 0, ',', '.') }}</span>
                             </div>
-                            <span class="text-[11px] font-medium text-stone-500">A.N: {{ $pinjaman->nama_rekening }}</span>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold text-red-500 uppercase tracking-widest">Potongan Awal</span>
+                                <span class="font-mono text-red-600 font-medium text-[11px]">-Rp {{ number_format($pinjaman->total_potongan, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 mt-1">
+                                <span class="px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 font-bold text-[9px] uppercase tracking-wider border border-stone-200">{{ $pinjaman->nama_bank }}</span>
+                                <span class="font-mono text-stone-500 text-[11px] truncate w-24" title="{{ $pinjaman->no_rekening }} - {{ $pinjaman->nama_rekening }}">{{ $pinjaman->no_rekening }}</span>
+                            </div>
                         </div>
-                    </td>
-                    <td class="px-6 py-4">
+                    </x-table.td>
+                    <x-table.td class="align-top whitespace-nowrap">
                         <div class="flex flex-col gap-0.5">
                             <span class="font-black text-stone-800 font-mono text-[13px]">Rp {{ number_format($pinjaman->nominal_pinjaman, 0, ',', '.') }}</span>
-                            <span class="text-[11px] font-medium text-stone-500">{{ $pinjaman->tenor_bulan }} Bulan @ {{ number_format($pinjaman->bunga_persen, 1) }}% Flat</span>
+                            <span class="text-[11px] font-bold text-stone-500">{{ $pinjaman->tenor_bulan }} Bulan @ {{ number_format($pinjaman->bunga_persen, 1) }}%</span>
                         </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        @if($pinjaman->status->value === 'menunggu')
-                        <span class="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase tracking-wide">
-                            Menunggu Approval
-                        </span>
-                        @elseif($pinjaman->status->value === 'berjalan')
-                        <span class="inline-flex items-center px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase tracking-wide">
-                            Aktif / Berjalan
-                        </span>
-                        @elseif($pinjaman->status->value === 'lunas')
-                        <span class="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold uppercase tracking-wide">
-                            Lunas
-                        </span>
-                        @elseif($pinjaman->status->value === 'ditolak')
-                        <span class="inline-flex items-center px-2 py-1 rounded-md bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold uppercase tracking-wide">
-                            Ditolak
-                        </span>
-                        @elseif($pinjaman->status->value === 'dibatalkan')
-                        <span class="inline-flex items-center px-2 py-1 rounded-md bg-stone-100 text-stone-600 border border-stone-200 text-[10px] font-bold uppercase tracking-wide">
-                            Dibatalkan
-                        </span>
-                        @else
-                        <span class="inline-flex items-center px-2 py-1 rounded-md bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-bold uppercase tracking-wide">
-                            {{ $pinjaman->status->label() }}
-                        </span>
-                        @endif
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <a href="{{ route('pinjaman.show', $pinjaman->id) }}" 
-                           class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-white text-[#043d2e] hover:bg-stone-50 font-bold transition-colors border border-stone-200 hover:border-stone-300 shadow-sm text-[11px] uppercase tracking-wide">
-                            Tinjau
-                        </a>
-                    </td>
-                </tr>
+                    </x-table.td>
+                    <x-table.td class="text-center align-top">
+                        @php
+                            $bgStatus = match($pinjaman->status->value) {
+                                'menunggu' => 'bg-amber-400',
+                                'berjalan' => 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]',
+                                'lunas' => 'bg-blue-500',
+                                'ditolak' => 'bg-red-500',
+                                'dibatalkan' => 'bg-stone-300',
+                                default => 'bg-stone-300'
+                            };
+                        @endphp
+                        <div class="flex items-center justify-center p-2">
+                            <span class="w-3 h-3 rounded-full {{ $bgStatus }}" title="{{ ucfirst($pinjaman->status->value) }}"></span>
+                        </div>
+                    </x-table.td>
+                    <x-table.td class="text-right align-top">
+                        <div class="flex items-center justify-end gap-1">
+                            <x-action-dropdown>
+                                <x-action-dropdown-item href="{{ route('pinjaman.show', $pinjaman->id) }}" icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>'>
+                                    Tinjau Pengajuan
+                                </x-action-dropdown-item>
+                            </x-action-dropdown>
+                        </div>
+                    </x-table.td>
+                </x-table.tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-12 text-center text-stone-500 font-medium text-sm">
-                        <div class="flex flex-col items-center gap-2">
-                            <svg class="w-8 h-8 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            Belum ada riwayat pengajuan pinjaman.
+                    <td colspan="7" class="px-6 py-16 text-center">
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="w-16 h-16 rounded-2xl bg-stone-50 border border-stone-200 flex items-center justify-center mb-4">
+                                <svg class="w-8 h-8 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-stone-800 font-bold mb-1">Data Tidak Ditemukan</h4>
+                            <p class="text-sm text-stone-500">Belum ada riwayat pengajuan pinjaman yang cocok.</p>
                         </div>
                     </td>
                 </tr>
                 @endforelse
-            </tbody>
-        </table>
+            </x-table.tbody>
+        </x-table>
+        
+        @if($pinjamans->hasPages())
+        <div class="px-6 py-4 border-t border-stone-200 bg-stone-50/30">
+            <div class="alpine-pagination" @click.prevent="if($event.target.tagName === 'A' || $event.target.closest('a')) { let link = $event.target.tagName === 'A' ? $event.target : $event.target.closest('a'); if(link.href) { $dispatch('pinjaman-paginate', { url: link.href }) } }">
+                {{ $pinjamans->links() }}
+            </div>
+        </div>
+        @endif
     </div>
-    
-    @if($pinjamans->hasPages())
-    <div class="px-6 py-4 border-t border-stone-200 bg-stone-50/50">
-        {{ $pinjamans->links() }}
-    </div>
-    @endif
 </div>
 
     {{-- Modal Mass Reject --}}
@@ -212,5 +307,101 @@
         </div>
     </div>
 
-</div>
+        </div> {{-- End of table-content-container --}}
+    </div> {{-- End of flex flex-col --}}
+</div> {{-- End of pinjamanFilter x-data --}}
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('pinjamanFilter', () => ({
+        q: new URLSearchParams(location.search).get('q') || '',
+        bidang_id: new URLSearchParams(location.search).get('bidang_id') || '',
+        periode_id: new URLSearchParams(location.search).get('periode_id') || '',
+        status: new URLSearchParams(location.search).get('status') || '',
+        indikator: new URLSearchParams(location.search).get('indikator') || '',
+        loading: false,
+        timeout: null,
+        abortController: null,
+
+        init() {
+            this.$watch('q', () => this.debouncedFetch());
+            this.$watch('bidang_id', () => this.fetchData());
+            this.$watch('periode_id', () => this.fetchData());
+            this.$watch('status', () => this.fetchData());
+            this.$watch('indikator', () => this.fetchData());
+
+            // Listen for Alpine dispatch from pagination links (if applicable)
+            window.addEventListener('pinjaman-paginate', (e) => {
+                this.fetchData(e.detail.url);
+            });
+        },
+
+        get activeFiltersCount() {
+            let count = 0;
+            if (this.bidang_id !== '') count++;
+            if (this.periode_id !== '') count++;
+            if (this.status !== '') count++;
+            if (this.indikator !== '') count++;
+            return count;
+        },
+
+        debouncedFetch() {
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.fetchData();
+            }, 400); // 400ms debounce
+        },
+
+        async fetchData(targetUrl = null) {
+            this.loading = true;
+            
+            if (this.abortController) {
+                this.abortController.abort();
+            }
+            this.abortController = new AbortController();
+            
+            let url = targetUrl;
+            if (!url) {
+                const params = new URLSearchParams();
+                if (this.q !== '') params.append('q', this.q);
+                if (this.bidang_id !== '') params.append('bidang_id', this.bidang_id);
+                if (this.periode_id !== '') params.append('periode_id', this.periode_id);
+                if (this.status !== '') params.append('status', this.status);
+                if (this.indikator !== '') params.append('indikator', this.indikator);
+                
+                url = `${window.location.pathname}?${params.toString()}`;
+            }
+
+            try {
+                window.history.pushState({}, '', url);
+
+                const response = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    signal: this.abortController.signal
+                });
+                
+                const html = await response.text();
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.getElementById('table-content-container');
+                
+                if (newContent) {
+                    document.getElementById('table-content-container').innerHTML = newContent.innerHTML;
+                }
+                
+                // If there's a dynamic badge or counter you can update it here
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('Failed to fetch data', error);
+                }
+            } finally {
+                this.loading = false;
+            }
+        }
+    }));
+});
+</script>
+@endpush

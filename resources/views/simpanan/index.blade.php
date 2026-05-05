@@ -4,52 +4,10 @@
 @section('subtitle', 'Rincian akumulasi simpanan pokok, wajib, Thn. 2025, SWP, dan Bonus SHU. Dana hanya dapat ditarik penuh saat anggota keluar.')
 
 @section('actions')
-<div class="flex items-center gap-3">
-    {{-- Export Dropdown --}}
-    <div x-data="{ openExport: false }" class="relative">
-        <button @click="openExport = !openExport" type="button" class="py-2.5 px-4 rounded-xl bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
-            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            Unduh Laporan
-            <svg class="w-3.5 h-3.5 transition-transform" :class="openExport && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </button>
-        <div x-show="openExport" @click.away="openExport = false" x-transition x-cloak
-             class="absolute right-0 mt-2 w-56 rounded-xl bg-white border border-stone-200 shadow-lg z-50 overflow-hidden">
-            <div class="px-4 py-2.5 bg-stone-50 border-b border-stone-100">
-                <p class="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Format Laporan</p>
-            </div>
-            <a id="export-excel-link" href="{{ route('simpanan.export.excel') }}" 
-               class="flex items-center gap-3 px-4 py-3 text-sm text-stone-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
-                <span class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                </span>
-                <div>
-                    <p class="font-bold">Excel (.xlsx)</p>
-                    <p class="text-[11px] text-stone-400">Spreadsheet lengkap + styling</p>
-                </div>
-            </a>
-            <a id="export-pdf-link" href="{{ route('simpanan.export.pdf') }}" 
-               class="flex items-center gap-3 px-4 py-3 text-sm text-stone-700 hover:bg-amber-50 hover:text-amber-700 transition-colors border-t border-stone-100">
-                <span class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                </span>
-                <div>
-                    <p class="font-bold">PDF (.pdf)</p>
-                    <p class="text-[11px] text-stone-400">Siap cetak dengan kop surat</p>
-                </div>
-            </a>
-        </div>
-    </div>
-
-    <div class="hidden sm:flex items-center gap-2.5 px-3 py-2 bg-stone-100 rounded-xl border border-stone-200/80 shadow-sm relative overflow-hidden">
-        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
-        <div class="relative z-10 flex min-h-[1.5rem] items-center gap-2">
-            <span class="text-[11px] font-bold text-stone-500 uppercase tracking-wider hidden lg:inline pt-0.5">Total Simpanan Tampil</span>
-            <span id="grand-total-badge" class="text-base font-black font-mono text-[#043d2e] tracking-tight bg-[#043d2e]/5 px-2 py-0.5 rounded shadow-sm border border-[#043d2e]/10">{{ format_rupiah($grandTotal) }}</span>
-        </div>
-    </div>
-</div>
+    <x-export-dropdown 
+        excelRoute="{{ route('simpanan.export.excel') }}" 
+        pdfRoute="{{ route('simpanan.export.pdf') }}" 
+    />
 @endsection
 
 @section('content')

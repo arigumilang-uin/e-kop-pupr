@@ -94,6 +94,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/potongan/proses', [PotonganBulananController::class, 'proses'])->name('potongan.proses');
 
         // Pinjaman (Approve/Reject/Bayar)
+        Route::get('/pinjaman/aktif', [PinjamanAdminController::class, 'aktif'])->name('pinjaman.aktif');
         Route::post('/pinjaman/mass-approve', [PinjamanAdminController::class, 'massApprove'])->name('pinjaman.massApprove');
         Route::post('/pinjaman/mass-reject', [PinjamanAdminController::class, 'massReject'])->name('pinjaman.massReject');
         Route::patch('/pinjaman/{pinjaman}/approve', [PinjamanAdminController::class, 'approve'])->name('pinjaman.approve');
@@ -152,6 +153,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/simpanan/export/pdf', [SimpananController::class, 'exportPdf'])->name('simpanan.export.pdf');
         Route::get('/pengeluaran', [PengeluaranKasController::class, 'index'])->name('pengeluaran.index');
         Route::get('/potongan', [PotonganBulananController::class, 'index'])->name('potongan.index');
+        Route::get('/potongan/export/excel', [PotonganBulananController::class, 'exportExcel'])->name('potongan.export.excel');
+        Route::get('/potongan/export/pdf', [PotonganBulananController::class, 'exportPdf'])->name('potongan.export.pdf');
         Route::get('/periode', [PeriodeController::class, 'index'])->name('periode.index');
         Route::get('/periode/{periode}', [PeriodeController::class, 'show'])->name('periode.show');
         Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan.index');

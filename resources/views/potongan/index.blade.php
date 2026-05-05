@@ -4,13 +4,17 @@
 @section('subtitle', 'Rekapitulasi beban potongan per anggota sesuai parameter bulan dan jenis.')
 
 @section('actions')
-<div class="flex items-center gap-3">
+    <x-export-dropdown 
+        excelRoute="{{ route('potongan.export.excel', request()->all()) }}" 
+        pdfRoute="{{ route('potongan.export.pdf', request()->all()) }}" 
+    />
+
     @if($totalKeseluruhan > 0)
     <form action="{{ route('potongan.proses') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membukukan seluruh potongan TPP periode ini? Tindakan ini tidak dapat dibatalkan.')">
         @csrf
         <input type="hidden" name="month" value="{{ $month }}">
         <input type="hidden" name="year" value="{{ $year }}">
-        <button type="submit" class="py-2.5 px-4 rounded-xl bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold transition-all flex items-center gap-2 shadow-sm shadow-[#043d2e]/20">
+        <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold transition-all flex items-center gap-2 shadow-sm shadow-[#043d2e]/20">
             <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
@@ -18,9 +22,6 @@
         </button>
     </form>
     @endif
-
-
-</div>
 @endsection
 
 @section('content')

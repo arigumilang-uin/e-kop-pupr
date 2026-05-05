@@ -80,7 +80,8 @@
         </button>
         <div x-show="open" x-collapse class="pl-11 pr-2 mt-1 space-y-0.5">
             <a href="{{ route('periode.index') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('periode.*') }}">Periode Pinjaman</a>
-            <a href="{{ route('pinjaman.index') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('pinjaman.*') }}">Approval Pencairan</a>
+            <a href="{{ route('pinjaman.index') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ request()->routeIs('pinjaman.index', 'pinjaman.show') ? 'text-[#043d2e] font-semibold bg-[#043d2e]/5' : 'text-stone-500 font-normal hover:text-[#043d2e] hover:bg-stone-100/50' }}">Approval Pencairan</a>
+            <a href="{{ route('pinjaman.aktif') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('pinjaman.aktif') }}">Pinjaman Aktif</a>
         </div>
     </div>
 

@@ -14,8 +14,35 @@
                 @endif
             </div>
         </div>
-        <div class="flex items-center gap-3 shrink-0">
-            @yield('actions')
+        <div class="shrink-0" id="topbar-actions-wrapper">
+            @hasSection('actions')
+                {{-- Desktop View: Horizontal Buttons --}}
+                <div class="hidden md:flex items-center gap-2.5">
+                    @yield('actions')
+                </div>
+
+                {{-- Mobile View: Three Dots Dropdown --}}
+                <div class="md:hidden relative inline-block text-left" x-data="{ open: false }" @click.away="open = false" @keydown.escape.window="open = false">
+                    <button type="button" @click="open = !open" class="p-2.5 bg-white border border-stone-200 text-stone-600 hover:text-stone-900 hover:bg-stone-50 rounded-xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#043d2e]/20">
+                        <span class="sr-only">Buka menu aksi</span>
+                        <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                        </svg>
+                    </button>
+                    
+                    <div x-show="open" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 scale-95 translate-y-2"
+                         class="absolute right-0 top-full mt-2 w-56 rounded-2xl shadow-xl bg-white border border-stone-100 ring-1 ring-black/5 p-2 z-50 origin-top-right flex flex-col gap-1.5 [&>a]:w-full [&>a]:justify-start [&>form]:w-full [&>form>button]:w-full [&>form>button]:justify-start [&_button]:w-full [&_button]:justify-start"
+                         style="display: none;">
+                        @yield('actions')
+                    </div>
+                </div>
+            @endif
         </div>
 
         {{-- Garis Pemisah Presisi Tebal (Tepotong di Ujung) --}}

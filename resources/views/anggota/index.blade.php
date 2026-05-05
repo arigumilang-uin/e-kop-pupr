@@ -4,7 +4,6 @@
 @section('subtitle', 'Daftar keseluruhan anggota Koperasi Tirta Bina Karya')
 
 @section('actions')
-<div class="flex items-center gap-3">
     <div class="hidden sm:flex items-center gap-2.5 px-3 py-2 bg-stone-100 rounded-xl border border-stone-200/80 shadow-sm">
         <div class="relative flex h-2 w-2">
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#043d2e] opacity-40"></span>
@@ -19,10 +18,8 @@
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
         </svg>
-        <span class="hidden sm:inline">Tambah Anggota</span>
-        <span class="sm:hidden">Tambah</span>
+        <span>Tambah Anggota</span>
     </a>
-</div>
 @endsection
 
 @section('content')

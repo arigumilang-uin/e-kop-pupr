@@ -42,7 +42,7 @@
                 </div>
             </div>
             <p class="text-[13px] text-slate-500 leading-relaxed">
-                <span class="font-semibold text-slate-700">Tindakan Selanjutnya:</span> Silahkan hubungi pihak internal koperasi Dinas PUPR Provinsi Riau untuk informasi lebih mendetail terkait jadwal relist/pembukaan pinjaman selanjutnya.
+                <span class="font-semibold text-slate-700">Tindakan Selanjutnya:</span> Silahkan hubungi pihak internal koperasi Tirta Bina KaryaDinas PUPRPKPP Provinsi Riau untuk informasi lebih mendetail terkait jadwal relist/pembukaan pinjaman selanjutnya.
             </p>
         </div>
     </x-card>

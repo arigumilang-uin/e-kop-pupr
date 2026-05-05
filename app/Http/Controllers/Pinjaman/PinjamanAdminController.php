@@ -20,24 +20,142 @@ class PinjamanAdminController extends Controller
 
     public function index(Request $request)
     {
-        $query = Pinjaman::with('anggota')->latest('tanggal_pengajuan');
+        $query = Pinjaman::with(['anggota' => function ($q) {
+            $q->with('bidang')
+              ->withCount([
+                  'pinjaman as pinjaman_aktif_tahun_ini' => function ($q2) {
+                      $q2->where('status', \App\Enums\StatusPinjaman::Berjalan)
+                         ->whereYear('tanggal_pengajuan', now()->year);
+                  },
+                  'pinjaman as pinjaman_menunggu' => function ($q3) {
+                      $q3->where('status', \App\Enums\StatusPinjaman::Menunggu);
+                  }
+              ]);
+        }, 'periodePinjaman'])->latest('tanggal_pengajuan');
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        if ($request->filled('q')) {
+        if ($request->filled('bidang_id')) {
             $query->whereHas('anggota', function ($q) use ($request) {
-                $q->where('nama', 'like', "%{$request->q}%")
-                  ->orWhere('nip', 'like', "%{$request->q}%");
-            })->orWhere('no_referensi', 'like', "%{$request->q}%");
+                $q->where('bidang_id', $request->bidang_id);
+            });
+        }
+
+        if ($request->filled('periode_id')) {
+            $query->where('periode_pinjaman_id', $request->periode_id);
+        }
+
+        if ($request->filled('indikator')) {
+            if ($request->indikator === 'ganda') {
+                $query->where('status', \App\Enums\StatusPinjaman::Menunggu)
+                      ->whereHas('anggota', function ($q) {
+                          $q->whereHas('pinjaman', function ($q2) {
+                              $q2->where('status', \App\Enums\StatusPinjaman::Menunggu);
+                          }, '>', 1);
+                      });
+            } elseif ($request->indikator === 'aktif') {
+                $query->where('status', \App\Enums\StatusPinjaman::Menunggu)
+                      ->whereHas('anggota', function ($q) {
+                          $q->whereHas('pinjaman', function ($q2) {
+                              $q2->where('status', \App\Enums\StatusPinjaman::Berjalan)
+                                 ->whereYear('tanggal_pengajuan', now()->year);
+                          });
+                      });
+            }
+        }
+
+        if ($request->filled('q')) {
+            $query->where(function($qq) use ($request) {
+                $qq->whereHas('anggota', function ($q) use ($request) {
+                    $q->where('nama', 'like', "%{$request->q}%")
+                      ->orWhere('nip', 'like', "%{$request->q}%");
+                })->orWhere('no_referensi', 'like', "%{$request->q}%");
+            });
         }
 
         $pinjamans = $query->paginate(15)->withQueryString();
-        
         $totalSaldoKoperasi = $this->saldoService->saldoKoperasi();
+        
+        $bidangs = \App\Models\Bidang::orderBy('nama_bidang')->get();
+        $periodes = \App\Models\PeriodePinjaman::latest('tanggal_buka')->get();
 
-        return view('pinjaman.admin.index', compact('pinjamans', 'totalSaldoKoperasi'));
+        return view('pinjaman.admin.index', compact('pinjamans', 'totalSaldoKoperasi', 'bidangs', 'periodes'));
+    }
+
+    public function aktif(Request $request)
+    {
+        $query = \App\Models\Anggota::with([
+            'bidang',
+            'pinjaman' => function($q) use ($request) {
+                $q->where('status', \App\Enums\StatusPinjaman::Berjalan)
+                  ->latest('tanggal_approval')
+                  ->with('angsuran');
+                  
+                if ($request->filled('bulan_awal')) {
+                    $parts = explode('-', $request->bulan_awal);
+                    if (count($parts) == 2) {
+                        $q->whereYear('tanggal_approval', $parts[0])
+                          ->whereMonth('tanggal_approval', $parts[1]);
+                    }
+                }
+                if ($request->filled('tenor')) {
+                    $q->where('tenor_bulan', $request->tenor);
+                }
+                if ($request->filled('nominal')) {
+                    $q->where('nominal_pinjaman', $request->nominal);
+                }
+                if ($request->filled('periode_id')) {
+                    $q->where('periode_pinjaman_id', $request->periode_id);
+                }
+            }
+        ])->whereHas('pinjaman', function($q) use ($request) {
+            $q->where('status', \App\Enums\StatusPinjaman::Berjalan);
+            
+            if ($request->filled('bulan_awal')) {
+                $parts = explode('-', $request->bulan_awal);
+                if (count($parts) == 2) {
+                    $q->whereYear('tanggal_approval', $parts[0])
+                      ->whereMonth('tanggal_approval', $parts[1]);
+                }
+            }
+            if ($request->filled('tenor')) {
+                $q->where('tenor_bulan', $request->tenor);
+            }
+            if ($request->filled('nominal')) {
+                $q->where('nominal_pinjaman', $request->nominal);
+            }
+            if ($request->filled('periode_id')) {
+                $q->where('periode_pinjaman_id', $request->periode_id);
+            }
+        });
+
+        if ($request->filled('bidang_id')) {
+            $query->where('bidang_id', $request->bidang_id);
+        }
+
+        if ($request->filled('q')) {
+            $query->where(function($q) use ($request) {
+                $q->where('nama', 'like', "%{$request->q}%")
+                  ->orWhere('nip', 'like', "%{$request->q}%");
+            });
+        }
+
+        $anggotas = $query->paginate(15)->withQueryString();
+
+        $bidangs = \App\Models\Bidang::orderBy('nama_bidang')->get();
+        $periodes = \App\Models\PeriodePinjaman::latest('tanggal_buka')->get();
+        
+        $tenors = \App\Models\Pinjaman::where('status', \App\Enums\StatusPinjaman::Berjalan)
+                                      ->distinct()->orderBy('tenor_bulan')->pluck('tenor_bulan');
+        $nominals = \App\Models\Pinjaman::where('status', \App\Enums\StatusPinjaman::Berjalan)
+                                        ->distinct()->orderBy('nominal_pinjaman')->pluck('nominal_pinjaman');
+        $bulans = \App\Models\Pinjaman::where('status', \App\Enums\StatusPinjaman::Berjalan)
+                                      ->selectRaw("DATE_FORMAT(tanggal_approval, '%Y-%m') as bulan")
+                                      ->distinct()->orderBy('bulan', 'desc')->pluck('bulan');
+
+        return view('pinjaman.admin.aktif', compact('anggotas', 'bidangs', 'periodes', 'tenors', 'nominals', 'bulans'));
     }
 
     public function show(Pinjaman $pinjaman)

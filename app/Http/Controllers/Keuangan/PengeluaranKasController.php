@@ -19,23 +19,35 @@ class PengeluaranKasController extends Controller
     public function index(Request $request)
     {
         $kategori = KategoriPengeluaran::withCount('pengeluaranKas')->get();
+        $nominals = PengeluaranKas::select('nominal')->distinct()->orderBy('nominal')->pluck('nominal');
         
         $pengeluaranQuery = PengeluaranKas::with(['kategori', 'pencatat'])->orderByDesc('tanggal')->orderByDesc('id');
         
+        if ($request->filled('q')) {
+            $pengeluaranQuery->where('keterangan', 'like', '%' . $request->q . '%');
+        }
+
         if ($request->filled('kategori_id')) {
             $pengeluaranQuery->where('kategori_pengeluaran_id', $request->kategori_id);
         }
 
-        if ($request->filled('bulan') && $request->filled('tahun')) {
-            $pengeluaranQuery->whereMonth('tanggal', $request->bulan)
-                             ->whereYear('tanggal', $request->tahun);
+        if ($request->filled('nominal')) {
+            $pengeluaranQuery->where('nominal', $request->nominal);
+        }
+
+        if ($request->filled('bulan')) {
+            $pengeluaranQuery->whereMonth('tanggal', $request->bulan);
+        }
+
+        if ($request->filled('tahun')) {
+            $pengeluaranQuery->whereYear('tanggal', $request->tahun);
         }
 
         $pengeluaran = $pengeluaranQuery->paginate(20)->withQueryString();
 
         $totalPengeluaran = PengeluaranKas::sum('nominal');
 
-        return view('keuangan.pengeluaran.index', compact('kategori', 'pengeluaran', 'totalPengeluaran'));
+        return view('keuangan.pengeluaran.index', compact('kategori', 'pengeluaran', 'totalPengeluaran', 'nominals'));
     }
 
     public function storeKategori(StoreKategoriPengeluaranRequest $request)
@@ -47,21 +59,22 @@ class PengeluaranKasController extends Controller
 
     public function store(StorePengeluaranRequest $request)
     {
-
         DB::transaction(function () use ($request) {
-            $pengeluaran = PengeluaranKas::create([
-                'kategori_pengeluaran_id' => $request->kategori_pengeluaran_id,
-                'nominal' => $request->nominal,
-                'tanggal' => $request->tanggal,
-                'keterangan' => $request->keterangan,
-                'dicatat_oleh' => auth()->id(),
-            ]);
+            foreach ($request->pengeluaran as $item) {
+                $pengeluaran = PengeluaranKas::create([
+                    'kategori_pengeluaran_id' => $item['kategori_pengeluaran_id'],
+                    'nominal' => $item['nominal'],
+                    'tanggal' => $request->tanggal,
+                    'keterangan' => $item['keterangan'],
+                    'dicatat_oleh' => auth()->id(),
+                ]);
 
-            $this->logger->logPengeluaran(
-                $pengeluaran->kategori->nama ?? '-',
-                $pengeluaran->nominal,
-                $pengeluaran->no_referensi,
-            );
+                $this->logger->logPengeluaran(
+                    $pengeluaran->kategori->nama ?? '-',
+                    $pengeluaran->nominal,
+                    $pengeluaran->no_referensi,
+                );
+            }
         });
 
         return back()->with('success', 'Data pengeluaran kas berhasil dicatat.');

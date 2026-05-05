@@ -202,4 +202,26 @@ class PotonganBulananController extends Controller
             return back()->with('error', 'Gagal memproses TPP: ' . $e->getMessage());
         }
     }
+
+    public function exportExcel(Request $request)
+    {
+        $export = new \App\Exports\PotonganExport($request);
+        return $export->download();
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $export = new \App\Exports\PotonganExport($request);
+        $data = $export->getData();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.potongan-pdf', [
+            'rows' => $data['rows'],
+            'grandTotals' => $data['grandTotals'],
+            'filterYear' => $data['filterYear'],
+            'filterInfo' => $data['filterInfo'],
+        ])->setPaper('a4', 'landscape');
+
+        $filename = 'Laporan_Potongan_TPP_' . now()->format('Y-m-d_His') . '.pdf';
+        return $pdf->download($filename);
+    }
 }

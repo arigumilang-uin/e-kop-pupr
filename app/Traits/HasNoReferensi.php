@@ -40,9 +40,13 @@ trait HasNoReferensi
 
         $pattern = "{$prefix}-{$tahun}-";
 
-        $lastNumber = static::where('no_referensi', 'like', "{$pattern}%")
-            ->orderByDesc('no_referensi')
-            ->value('no_referensi');
+        $query = static::where('no_referensi', 'like', "{$pattern}%");
+        
+        if (in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive(static::class))) {
+            $query->withTrashed();
+        }
+
+        $lastNumber = $query->orderByDesc('no_referensi')->value('no_referensi');
 
         if ($lastNumber) {
             $lastSeq = (int) substr($lastNumber, -4);

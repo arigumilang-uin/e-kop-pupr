@@ -14,18 +14,20 @@ class StorePengeluaranRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kategori_pengeluaran_id' => 'required|exists:kategori_pengeluaran,id',
-            'nominal' => 'required|numeric|min:1',
             'tanggal' => 'required|date',
-            'keterangan' => 'required|string',
+            'pengeluaran' => 'required|array|min:1',
+            'pengeluaran.*.kategori_pengeluaran_id' => 'required|exists:kategori_pengeluaran,id',
+            'pengeluaran.*.nominal' => 'required|numeric|min:1',
+            'pengeluaran.*.keterangan' => 'required|string',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'nominal.min' => 'Nominal harus minimal Rp 1.',
-            'keterangan.required' => 'Keterangan pengeluaran wajib diisi.',
+            'pengeluaran.*.nominal.min' => 'Nominal harus minimal Rp 1.',
+            'pengeluaran.*.keterangan.required' => 'Keterangan pengeluaran wajib diisi.',
+            'pengeluaran.*.kategori_pengeluaran_id.required' => 'Kategori wajib dipilih.',
         ];
     }
 }
