@@ -1,9 +1,11 @@
 @props(['searchPlaceholder' => 'Cari...'])
 
 <div class="sticky top-[92px] z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-[#f7f7f5]/95 backdrop-blur-xl border-b border-stone-200/60 transition-all duration-200">
-    <div class="flex items-center lg:justify-end gap-3">
-        {{-- Search Box --}}
-        <div class="flex-1 lg:flex-none lg:w-80 xl:w-96 relative">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {{-- Search and filters wrapper (Left Aligned) --}}
+        <div class="flex items-center gap-3 w-full lg:w-auto lg:flex-1">
+            {{-- Search Box --}}
+            <div class="flex-1 lg:flex-none lg:w-80 xl:w-96 relative">
             <input type="text" {{ $attributes }} placeholder="{{ $searchPlaceholder }}"
                    class="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] transition-all outline-none shadow-sm placeholder:text-stone-400 text-stone-700">
             <svg class="w-5 h-5 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,6 +51,14 @@
                 </div>
 
             </div>
+        </div>
+        @endif
+        </div>
+
+        {{-- Slot Trailing (e.g., Stats/Badges inline with filter but aligned right) --}}
+        @if(isset($trailing))
+        <div class="shrink-0 w-full lg:w-auto flex lg:justify-end">
+            {{ $trailing }}
         </div>
         @endif
     </div>

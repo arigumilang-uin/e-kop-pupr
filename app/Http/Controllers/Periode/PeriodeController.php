@@ -26,12 +26,17 @@ class PeriodeController extends Controller
     public function index()
     {
         $periodes = PeriodePinjaman::with('pembuka')
+            ->when(request('q'), function ($query, $q) {
+                $query->where('nama_periode', 'like', "%{$q}%");
+            })
             ->withCount('pinjaman')
             ->latest('tahun')
             ->latest('created_at')
             ->paginate(10);
 
-        return view('periode.index', compact('periodes'));
+        $totalPengajuan = \App\Models\Pinjaman::count();
+
+        return view('periode.index', compact('periodes', 'totalPengajuan'));
     }
 
     /**

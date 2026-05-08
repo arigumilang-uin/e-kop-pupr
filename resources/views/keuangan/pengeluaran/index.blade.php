@@ -3,39 +3,35 @@
 @section('title', 'Pengeluaran Kas Manual')
 @section('subtitle', 'Catat beban operasional, belanja, dan pengeluaran lain di luar pinjaman anggota')
 
+@section('actions')
+    <button onclick="document.getElementById('modal-kategori').classList.remove('hidden')" class="px-4 py-2.5 bg-white border border-stone-200 text-stone-700 rounded-xl text-sm font-bold hover:bg-stone-50 transition-colors shadow-sm flex items-center justify-center gap-2">
+        <svg class="w-4 h-4 text-stone-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+        <span>Master Kategori</span>
+    </button>
+    <button onclick="document.getElementById('modal-pengeluaran').classList.remove('hidden')" class="px-4 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white rounded-xl text-sm font-bold transition-colors shadow-sm flex items-center justify-center gap-2">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>Catat Pengeluaran</span>
+    </button>
+@endsection
+
 @section('content')
 <div class="space-y-6">
-
-    {{-- Top Stats & Actions --}}
-    <div class="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        {{-- Total Stat Box --}}
-        <div class="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 min-w-[300px]">
-            <div class="w-12 h-12 rounded-xl bg-[#043d2e]/10 flex items-center justify-center text-[#043d2e]">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-            </div>
-            <div>
-                <p class="text-xs font-bold text-stone-500 uppercase tracking-wider mb-0.5">Total Pengeluaran Kas</p>
-                <p class="text-xl font-black font-mono text-[#043d2e]">{{ format_rupiah($totalPengeluaran) }}</p>
-            </div>
-        </div>
-
-        {{-- Actions --}}
-        <div class="flex items-center gap-3 w-full sm:w-auto">
-            <button onclick="document.getElementById('modal-kategori').classList.remove('hidden')" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-stone-200 text-stone-700 rounded-xl text-sm font-bold hover:bg-stone-50 transition-colors shadow-sm">
-                <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-                Master Kategori
-            </button>
-            <button onclick="document.getElementById('modal-pengeluaran').classList.remove('hidden')" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white rounded-xl text-sm font-bold transition-colors shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Catat Pengeluaran
-            </button>
-        </div>
-    </div>
 
     {{-- Filter & Table Container --}}
     <div x-data="pengeluaranFilter()" class="flex flex-col gap-5">
         {{-- Filter Sticky Bar Component --}}
         <x-filter-bar searchPlaceholder="Cari keterangan pengeluaran..." x-model="q">
+            <x-slot name="trailing">
+                <div class="flex items-center gap-2.5 px-4 py-2.5 bg-white border border-stone-200 rounded-xl shadow-sm">
+                    <div class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#043d2e] opacity-40"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-[#043d2e]"></span>
+                    </div>
+                    <span class="text-sm font-medium text-stone-600">
+                        Total Pengeluaran Kas: <span class="font-bold text-stone-900 ml-0.5">{{ format_rupiah($totalPengeluaran) }}</span>
+                    </span>
+                </div>
+            </x-slot>
             <x-slot name="indicator">
                 <template x-if="activeFiltersCount > 0">
                     <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 border-2 border-white rounded-full shadow-sm"></span>
@@ -174,12 +170,14 @@
         <div class="fixed inset-0 transition-opacity backdrop-blur-sm bg-stone-900/60" aria-hidden="true" onclick="document.getElementById('modal-pengeluaran').classList.add('hidden')"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl w-full border border-stone-100 relative z-10">
-            <div class="bg-gradient-to-r from-[#043d2e] to-[#032e22] px-6 py-4 flex items-center justify-between">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                    Catat Pengeluaran Baru
-                </h3>
-                <button type="button" class="text-white/70 hover:text-white transition-colors" onclick="document.getElementById('modal-pengeluaran').classList.add('hidden')">
+            <div class="px-6 py-5 border-b border-stone-100 bg-stone-50 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-stone-800 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-[#043d2e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        Catat Pengeluaran Baru
+                    </h3>
+                </div>
+                <button type="button" class="text-stone-400 hover:bg-stone-200 hover:text-stone-600 p-2 rounded-xl transition-colors" onclick="document.getElementById('modal-pengeluaran').classList.add('hidden')">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -231,13 +229,13 @@
                     </div>
                     @endif
                 </div>
-                <div class="bg-stone-50 px-6 py-4 border-t border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="px-6 py-5 border-t border-stone-100 bg-stone-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="text-sm font-bold text-stone-600 flex items-center gap-2">
                         Total Nominal: <span class="font-mono text-lg text-[#043d2e]" x-text="new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(totalNominal)"></span>
                     </div>
                     <div class="flex gap-3 w-full sm:w-auto">
-                        <button type="button" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl border border-stone-300 bg-white text-sm font-bold text-stone-700 hover:bg-stone-50 transition-colors shadow-sm" onclick="document.getElementById('modal-pengeluaran').classList.add('hidden')">Batal</button>
-                        <button type="submit" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl border border-transparent shadow-sm bg-[#043d2e] hover:bg-[#043d2e]/90 text-sm font-bold text-white transition-colors">Simpan Semua</button>
+                        <button type="button" class="flex-1 sm:flex-none px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all" onclick="document.getElementById('modal-pengeluaran').classList.add('hidden')">Batal</button>
+                        <button type="submit" class="flex-1 sm:flex-none px-6 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95">Simpan Semua</button>
                     </div>
                 </div>
             </form>
@@ -251,25 +249,23 @@
         <div class="fixed inset-0 transition-opacity backdrop-blur-sm bg-stone-900/60" aria-hidden="true" onclick="document.getElementById('modal-kategori').classList.add('hidden')"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full border border-stone-100 relative z-10">
-            <div class="bg-gradient-to-r from-[#043d2e] to-[#032e22] px-6 py-4 flex items-center justify-between">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    Tambah Master Kategori
-                </h3>
-                <button type="button" class="text-white/70 hover:text-white transition-colors" onclick="document.getElementById('modal-kategori').classList.add('hidden')">
+            <div class="px-6 py-5 border-b border-stone-100 bg-stone-50 flex items-center justify-between">
+                <h3 class="text-base font-bold text-stone-800">Tambah Master Kategori</h3>
+                <button type="button" class="text-stone-400 hover:bg-stone-200 hover:text-stone-600 p-2 rounded-xl transition-colors" onclick="document.getElementById('modal-kategori').classList.add('hidden')">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
             <form action="{{ route('pengeluaran.kategori.store') }}" method="POST">
                 @csrf
-                <div class="px-6 py-5 bg-stone-50/50 space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-stone-600 mb-1.5">Nama Kategori</label>
-                        <input type="text" name="nama" required class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-sm text-stone-700 bg-white outline-none transition-all" placeholder="Contoh: ATK">
+                <div class="p-6 space-y-5">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Nama Kategori</label>
+                        <input type="text" name="nama" required class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-stone-700 outline-none transition-all shadow-sm" placeholder="Contoh: ATK">
                     </div>
                 </div>
-                <div class="bg-stone-50 px-6 py-4 border-t border-stone-200 flex justify-end gap-3">
-                    <button type="button" class="px-5 py-2.5 rounded-xl border border-stone-300 bg-white text-sm font-bold text-stone-700 hover:bg-stone-50 transition-colors shadow-sm" onclick="document.getElementById('modal-kategori').classList.add('hidden')">Batal</button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl border border-transparent shadow-sm bg-[#043d2e] hover:bg-[#043d2e]/90 text-sm font-bold text-white transition-colors">Simpan Kategori</button>
+                <div class="px-6 py-5 border-t border-stone-100 bg-stone-50 flex items-center justify-end gap-3">
+                    <button type="button" class="px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all" onclick="document.getElementById('modal-kategori').classList.add('hidden')">Batal</button>
+                    <button type="submit" class="px-6 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95">Simpan Kategori</button>
                 </div>
             </form>
         </div>

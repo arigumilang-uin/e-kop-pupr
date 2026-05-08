@@ -17,6 +17,7 @@ use App\Http\Controllers\Pinjaman\PinjamanGuestController;
 use App\Http\Controllers\Simulasi\SimulasiController;
 use App\Http\Controllers\Sistem\PengaturanController;
 use App\Http\Controllers\Sistem\LogAktivitasController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -127,6 +128,9 @@ Route::middleware('auth')->group(function () {
 
         // Pengaturan Sistem (Update)
         Route::patch('/pengaturan/{pengaturan}', [PengaturanController::class, 'update'])->name('pengaturan.update');
+
+        // Manajemen User (CRUD)
+        Route::resource('users', UserController::class)->except(['show']);
     });
 
     // =============================================

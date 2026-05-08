@@ -47,6 +47,14 @@ class Anggota extends Model
         return $this->belongsTo(Bidang::class);
     }
 
+    /**
+     * Ambil akun user (pengurus/pimpinan) berdasarkan NIP yang sama.
+     */
+    public function user(): ?User
+    {
+        return User::where('nip', $this->nip)->first();
+    }
+
     public function simpanan(): HasMany
     {
         return $this->hasMany(Simpanan::class);

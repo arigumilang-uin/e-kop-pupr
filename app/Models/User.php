@@ -17,6 +17,7 @@ class User extends Authenticatable
         'username',
         'password',
         'role',
+        'nip',
     ];
 
     protected $hidden = [
@@ -51,6 +52,41 @@ class User extends Authenticatable
         return $this->locked_until !== null && $this->locked_until->isFuture();
     }
 
+    // === Anggota Link ===
+
+    /**
+     * Ambil data anggota koperasi berdasarkan NIP yang sama.
+     */
+    public function anggota(): ?Anggota
+    {
+        if (empty($this->nip)) {
+            return null;
+        }
+
+        return Anggota::where('nip', $this->nip)->first();
+    }
+
+    /**
+     * Cek apakah user ini terkait dengan anggota koperasi.
+     */
+    public function hasAnggota(): bool
+    {
+        return !empty($this->nip) && Anggota::where('nip', $this->nip)->exists();
+    }
+
+    // === Scopes ===
+
+    /**
+     * Scope: user pengurus yang memiliki NIP valid (terkait anggota aktif).
+     */
+    public function scopePengurusAktif($query)
+    {
+        $nipAnggotaAktif = Anggota::where('status', 'aktif')->pluck('nip');
+
+        return $query->whereNotNull('nip')
+                     ->whereIn('nip', $nipAnggotaAktif);
+    }
+
     // === Relationships ===
 
     public function pinjamanDisetujui(): HasMany
@@ -78,3 +114,4 @@ class User extends Authenticatable
         return $this->hasMany(PerubahanPengaturan::class, 'diputuskan_oleh');
     }
 }
+

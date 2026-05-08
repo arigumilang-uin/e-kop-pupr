@@ -4,16 +4,6 @@
 @section('subtitle', 'Kelola periode pembukaan pinjaman & link pengajuan anggota koperasi.')
 
 @section('actions')
-    <div class="hidden sm:flex items-center gap-2.5 px-3 py-2 bg-stone-100 rounded-xl border border-stone-200/80 shadow-sm">
-        <div class="relative flex h-2 w-2">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#043d2e] opacity-40"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-[#043d2e]"></span>
-        </div>
-        <span class="text-sm font-medium text-stone-600">
-            Total Periode: <span class="font-bold text-stone-900 ml-0.5">{{ $periodes->total() }}</span>
-        </span>
-    </div>
-
     <a href="{{ route('periode.create') }}" class="py-2.5 px-4 rounded-xl bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
@@ -23,7 +13,21 @@
 @endsection
 
 @section('content')
-<div class="flex flex-col gap-5">
+<div x-data="{ q: '{{ request('q') }}' }" @keydown.enter.prevent="window.location.search = '?q=' + q" class="flex flex-col gap-5">
+    {{-- Filter Sticky Bar Component --}}
+    <x-filter-bar searchPlaceholder="Cari nama periode (Tekan Enter)..." x-model="q">
+        <x-slot name="trailing">
+            <div class="flex items-center gap-2.5 px-4 py-2.5 bg-white border border-stone-200 rounded-xl shadow-sm">
+                <div class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#043d2e] opacity-40"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-[#043d2e]"></span>
+                </div>
+                <span class="text-sm font-medium text-stone-600">
+                    Total Pengajuan: <span class="font-bold text-stone-900 ml-0.5">{{ $totalPengajuan }}</span>
+                </span>
+            </div>
+        </x-slot>
+    </x-filter-bar>
     <div class="bg-white rounded-2xl border border-stone-200 shadow-sm flex flex-col">
         <div class="p-5 border-b border-stone-100 flex items-center justify-between">
             <div>

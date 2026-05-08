@@ -21,7 +21,10 @@ class DatabaseSeeder extends Seeder
             ShuConfigSeeder::class,
         ]);
 
-        // 2. Buat akun default admin & pimpinan
+        // Ambil 2 anggota untuk dihubungkan dengan akun default
+        $anggotaAdmin = \App\Models\Anggota::first();
+        $anggotaPimpinan = \App\Models\Anggota::skip(1)->first();
+
         User::updateOrCreate(
             ['username' => 'admin'],
             [
@@ -29,6 +32,7 @@ class DatabaseSeeder extends Seeder
                 'username' => 'admin',
                 'password' => bcrypt('admin123'),
                 'role' => 'admin',
+                'nip' => $anggotaAdmin?->nip,
             ]
         );
 
@@ -39,6 +43,7 @@ class DatabaseSeeder extends Seeder
                 'username' => 'pimpinan',
                 'password' => bcrypt('pimpinan123'),
                 'role' => 'pimpinan',
+                'nip' => $anggotaPimpinan?->nip,
             ]
         );
     }

@@ -4,16 +4,6 @@
 @section('subtitle', 'Daftar keseluruhan anggota Koperasi Tirta Bina Karya')
 
 @section('actions')
-    <div class="hidden sm:flex items-center gap-2.5 px-3 py-2 bg-stone-100 rounded-xl border border-stone-200/80 shadow-sm">
-        <div class="relative flex h-2 w-2">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#043d2e] opacity-40"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-[#043d2e]"></span>
-        </div>
-        <span class="text-sm font-medium text-stone-600">
-            Total Anggota: <span id="total-anggota-badge" class="font-bold text-stone-900 ml-0.5">{{ $anggotas->total() }}</span>
-        </span>
-    </div>
-
     <a href="{{ route('anggota.create') }}" class="py-2.5 px-4 rounded-xl bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
@@ -26,6 +16,18 @@
 <div x-data="anggotaFilter()" class="flex flex-col gap-5">
     {{-- Filter Sticky Bar Component --}}
     <x-filter-bar searchPlaceholder="Cari berdasarkan NIP atau Nama..." x-model="q">
+        <x-slot name="trailing">
+            <div class="flex items-center gap-2.5 px-4 py-2.5 bg-white border border-stone-200 rounded-xl shadow-sm">
+                <div class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#043d2e] opacity-40"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-[#043d2e]"></span>
+                </div>
+                <span class="text-sm font-medium text-stone-600">
+                    Total Anggota: <span id="total-anggota-badge" class="font-bold text-stone-900 ml-0.5">{{ $anggotas->total() }}</span>
+                </span>
+            </div>
+        </x-slot>
+
         <x-slot name="indicator">
             <template x-if="activeFiltersCount > 0">
                 <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 border-2 border-white rounded-full shadow-sm"></span>

@@ -7,12 +7,14 @@ use App\Http\Requests\Shu\StoreShuKomponenRequest;
 use App\Http\Requests\Shu\UpdateShuKomponenRequest;
 use App\Http\Requests\Shu\StoreShuDistribusiRequest;
 use App\Http\Requests\Shu\UpdateShuDistribusiRequest;
+use App\Models\Anggota;
 use App\Models\JenisSimpanan;
 use App\Models\Simpanan;
 use App\Models\ShuKomponen;
 use App\Models\ShuDistribusi;
 use App\Models\ShuPayout;
 use App\Models\Pinjaman;
+use App\Models\User;
 use App\Services\ShuService;
 use App\Services\ShuProrataService;
 use App\Services\ActivityLogService;
@@ -169,10 +171,11 @@ class ShuController extends Controller
      * One-Click Payout: Kapitalisasi SHU ke Bonus SHU seluruh anggota.
      *
      * Skema:
-     *   1. Hitung SHU & prorata per anggota
+     *   1. Hitung SHU & prorata per anggota (Jasa Modal + Jasa Usaha)
      *   2. Batch insert ke tabel simpanan (jenis: BONUS_SHU)
-     *   3. Catat ke tabel shu_payout agar tidak bisa dieksekusi 2x
-     *   4. Log aktivitas
+     *   3. Distribusi Dana Pengurus ke pengurus yang terkait anggota
+     *   4. Catat ke tabel shu_payout agar tidak bisa dieksekusi 2x
+     *   5. Log aktivitas
      */
     public function eksekusiPayout(Request $request)
     {
@@ -190,9 +193,10 @@ class ShuController extends Controller
             return back()->with('error', "SHU Bersih tahun {$tahun} bernilai nol atau negatif. Tidak ada yang bisa didistribusikan.");
         }
 
-        // Guard 3: Cari pos Jasa Modal & Jasa Usaha dari distribusi
+        // Guard 3: Cari pos Jasa Modal, Jasa Usaha, dan Dana Pengurus dari distribusi
         $danaJasaModal = 0;
         $danaJasaUsaha = 0;
+        $danaPengurus = 0;
 
         foreach ($shu['distribusi_items'] as $d) {
             $namaLower = strtolower($d['nama']);
@@ -200,6 +204,8 @@ class ShuController extends Controller
                 $danaJasaModal = $d['nominal'];
             } elseif (str_contains($namaLower, 'jasa anggota') || str_contains($namaLower, 'jasa usaha')) {
                 $danaJasaUsaha = $d['nominal'];
+            } elseif (str_contains($namaLower, 'dana pengurus')) {
+                $danaPengurus = $d['nominal'];
             }
         }
 
@@ -220,13 +226,30 @@ class ShuController extends Controller
             return back()->with('error', 'Tidak ada anggota yang memenuhi syarat untuk menerima SHU.');
         }
 
+        // Cari pengurus yang memenuhi syarat untuk Dana Pengurus
+        $pengurusEligible = collect();
+        $totalDanaPengurusTerdistribusi = 0;
+
+        if ($danaPengurus > 0) {
+            // Ambil semua user yang punya NIP dan NIP-nya cocok dengan anggota aktif
+            $pengurusEligible = User::pengurusAktif()->get()->map(function ($user) {
+                $anggota = Anggota::where('nip', $user->nip)->where('status', 'aktif')->first();
+                return $anggota ? (object) [
+                    'user_id' => $user->id,
+                    'user_nama' => $user->nama,
+                    'anggota_id' => $anggota->id,
+                    'nip' => $user->nip,
+                ] : null;
+            })->filter()->values();
+        }
+
         // === EKSEKUSI DALAM TRANSAKSI ===
-        DB::transaction(function () use ($prorata, $shu, $tahun, $jenisBonusShu, $danaJasaModal, $danaJasaUsaha) {
+        DB::transaction(function () use ($prorata, $shu, $tahun, $jenisBonusShu, $danaJasaModal, $danaJasaUsaha, $danaPengurus, $pengurusEligible, &$totalDanaPengurusTerdistribusi) {
 
             $today = now()->toDateString();
             $userId = Auth::id();
 
-            // Batch insert simpanan — chunks of 100
+            // 1. Batch insert simpanan Jasa Modal + Jasa Usaha — chunks of 100
             $prorata['detail']->chunk(100)->each(function ($chunk) use ($jenisBonusShu, $today, $userId, $tahun) {
                 $rows = [];
                 foreach ($chunk as $item) {
@@ -255,33 +278,76 @@ class ShuController extends Controller
                 }
             });
 
-            // Catat ke shu_payout
+            // 2. Distribusi Dana Pengurus — bagi rata ke pengurus yang eligible
+            if ($danaPengurus > 0 && $pengurusEligible->isNotEmpty()) {
+                $nominalPerPengurus = floor($danaPengurus / $pengurusEligible->count());
+                $totalDanaPengurusTerdistribusi = $nominalPerPengurus * $pengurusEligible->count();
+
+                $rowsPengurus = [];
+                foreach ($pengurusEligible as $pg) {
+                    $rowsPengurus[] = [
+                        'no_referensi'      => Simpanan::generateNoReferensi(),
+                        'anggota_id'        => $pg->anggota_id,
+                        'jenis_simpanan_id' => $jenisBonusShu->id,
+                        'nominal'           => $nominalPerPengurus,
+                        'tanggal'           => $today,
+                        'bulan_untuk'       => null,
+                        'tahun_untuk'       => null,
+                        'pinjaman_id'       => null,
+                        'keterangan'        => "Distribusi Dana Pengurus SHU Tahun {$tahun}",
+                        'dicatat_oleh'      => $userId,
+                        'created_at'        => now(),
+                        'updated_at'        => now(),
+                    ];
+                }
+
+                if (!empty($rowsPengurus)) {
+                    Simpanan::insert($rowsPengurus);
+                }
+            }
+
+            // 3. Catat ke shu_payout
             ShuPayout::create([
                 'tahun'                => $tahun,
                 'total_shu_bersih'     => $shu['shu_bersih'],
                 'total_jasa_modal'     => $danaJasaModal,
                 'total_jasa_usaha'     => $danaJasaUsaha,
                 'jumlah_penerima'      => $prorata['ringkasan']['jumlah_penerima'],
-                'total_terdistribusi'  => $prorata['ringkasan']['total_terdistribusi'],
+                'total_terdistribusi'  => $prorata['ringkasan']['total_terdistribusi'] + $totalDanaPengurusTerdistribusi,
                 'dieksekusi_oleh'      => Auth::id(),
             ]);
         });
 
         // Log aktivitas
+        $logMessage = "Distribusi SHU tahun {$tahun} berhasil dieksekusi. "
+            . "{$prorata['ringkasan']['jumlah_penerima']} anggota menerima total Rp "
+            . number_format($prorata['ringkasan']['total_terdistribusi'], 0, ',', '.')
+            . " ke Bonus SHU.";
+
+        if ($danaPengurus > 0 && $pengurusEligible->isNotEmpty()) {
+            $logMessage .= " Dana Pengurus Rp " . number_format($totalDanaPengurusTerdistribusi, 0, ',', '.')
+                . " didistribusikan ke {$pengurusEligible->count()} pengurus.";
+        }
+
         $this->logger->log(
             'shu_payout_executed',
-            "Distribusi SHU tahun {$tahun} berhasil dieksekusi. "
-            . "{$prorata['ringkasan']['jumlah_penerima']} anggota menerima total Rp "
-            . number_format($prorata['ringkasan']['total_terdistribusi'], 0, ',', '.')
-            . " ke Bonus SHU.",
-            dataBaru: $prorata['ringkasan'],
+            $logMessage,
+            dataBaru: array_merge($prorata['ringkasan'], [
+                'dana_pengurus_total' => $totalDanaPengurusTerdistribusi,
+                'jumlah_pengurus_penerima' => $pengurusEligible->count(),
+            ]),
         );
 
-        return back()->with('success',
-            "Distribusi SHU tahun {$tahun} berhasil! "
+        $successMessage = "Distribusi SHU tahun {$tahun} berhasil! "
             . "{$prorata['ringkasan']['jumlah_penerima']} anggota menerima total Rp "
             . number_format($prorata['ringkasan']['total_terdistribusi'], 0, ',', '.')
-            . " ke Bonus SHU mereka."
-        );
+            . " ke Bonus SHU mereka.";
+
+        if ($danaPengurus > 0 && $pengurusEligible->isNotEmpty()) {
+            $successMessage .= " Dana Pengurus Rp " . number_format($totalDanaPengurusTerdistribusi, 0, ',', '.')
+                . " telah didistribusikan ke {$pengurusEligible->count()} pengurus.";
+        }
+
+        return back()->with('success', $successMessage);
     }
 }

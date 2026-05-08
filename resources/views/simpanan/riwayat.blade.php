@@ -4,19 +4,6 @@
 @section('subtitle', 'Arsip dan alur pencatatan dana simpanan seluruh anggota secara mendetail')
 
 @section('actions')
-<div x-data="{ totalFilter: '{{ format_rupiah($totalTransaksi) }}', show: {{ count(request()->except('page')) > 0 ? 'true' : 'false' }} }" 
-     @total-updated.window="totalFilter = $event.detail.total; show = $event.detail.show"
-     class="flex items-center gap-3">
-     <template x-if="show">
-        <div class="hidden sm:flex items-center gap-2.5 px-3 py-2 bg-stone-100 rounded-xl border border-stone-200/80 shadow-sm relative overflow-hidden">
-            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
-            <div class="relative z-10 flex min-h-[1.5rem] items-center gap-2">
-                <span class="text-[11px] font-bold text-stone-500 uppercase tracking-wider hidden lg:inline pt-0.5">Total Transaksi (Filter)</span>
-                <span class="text-base font-black font-mono text-[#043d2e] tracking-tight bg-[#043d2e]/5 px-2 py-0.5 rounded shadow-sm border border-[#043d2e]/10" x-text="totalFilter"></span>
-            </div>
-        </div>
-    </template>
-</div>
 @endsection
 
 @section('content')
@@ -24,6 +11,23 @@
 
     {{-- Filter Sticky Bar Component --}}
     <x-filter-bar searchPlaceholder="Cari NIP atau Nama Anggota..." x-model="q">
+        <x-slot name="trailing">
+            <div x-data="{ totalFilter: '{{ format_rupiah($totalTransaksi) }}', show: {{ count(request()->except('page')) > 0 ? 'true' : 'false' }} }" 
+                 @total-updated.window="totalFilter = $event.detail.total; show = $event.detail.show">
+                 <template x-if="show">
+                    <div class="flex items-center gap-2.5 px-4 py-2.5 bg-white border border-stone-200 rounded-xl shadow-sm">
+                        <div class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#043d2e] opacity-40"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-[#043d2e]"></span>
+                        </div>
+                        <span class="text-sm font-medium text-stone-600">
+                            Total Transaksi (Filter): <span class="font-bold text-stone-900 ml-0.5" x-text="totalFilter"></span>
+                        </span>
+                    </div>
+                </template>
+            </div>
+        </x-slot>
+
         <x-slot name="indicator">
             <template x-if="activeFiltersCount > 0">
                 <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 border-2 border-white rounded-full shadow-sm"></span>
