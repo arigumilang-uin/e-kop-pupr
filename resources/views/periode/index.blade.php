@@ -4,12 +4,12 @@
 @section('subtitle', 'Kelola periode pembukaan pinjaman & link pengajuan anggota koperasi.')
 
 @section('actions')
-    <a href="{{ route('periode.create') }}" class="py-2.5 px-4 rounded-xl bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
+    <button type="button" x-data @click="$dispatch('open-modal', 'modal-create-periode')" class="py-2.5 px-4 rounded-xl bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
         </svg>
         <span>Buka Periode Baru</span>
-    </a>
+    </button>
 @endsection
 
 @section('content')
@@ -112,12 +112,12 @@
                                     </div>
                                     <h4 class="text-stone-800 font-bold mb-1">Belum Ada Periode</h4>
                                     <p class="text-sm text-stone-500 mb-5">Buat periode pinjaman pertama agar anggota dapat mengajukan pinjaman secara online.</p>
-                                    <a href="{{ route('periode.create') }}" class="py-2 px-4 rounded-xl bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
+                                    <button type="button" x-data @click="$dispatch('open-modal', 'modal-create-periode')" class="py-2 px-4 rounded-xl bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
                                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                                         </svg>
                                         Buka Periode Baru
-                                    </a>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -133,5 +133,109 @@
             @endif
         </div>
     </div>
+    
+    {{-- Modal Tambah Periode --}}
+    <x-modal name="modal-create-periode" title="Buka Periode Pinjaman Baru" maxWidth="2xl">
+        <form id="form-create-periode" method="POST" action="{{ route('periode.store') }}" class="contents">
+            @csrf
+
+            <div class="space-y-4">
+                {{-- Nama Periode --}}
+                <div class="space-y-1.5">
+                    <label for="nama_periode" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Nama Periode <span class="text-red-500">*</span></label>
+                    <input type="text" id="nama_periode" name="nama_periode" value="{{ old('nama_periode', 'Pinjaman Semester ' . (now()->month <= 6 ? 'I' : 'II') . ' ' . now()->year) }}" required
+                           class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm"
+                           placeholder="Contoh: Pinjaman Semester I {{ now()->year }}">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {{-- Tahun --}}
+                    <div class="space-y-1.5">
+                        <label for="tahun" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tahun Anggaran <span class="text-red-500">*</span></label>
+                        <input type="number" id="tahun" name="tahun" value="{{ old('tahun', now()->year) }}" required min="2020" max="2050"
+                               class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm">
+                    </div>
+
+                    {{-- Batas Bulan Pelunasan --}}
+                    <div class="space-y-1.5">
+                        <label for="batas_bulan_pelunasan" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Batas Bulan Pelunasan <span class="text-red-500">*</span></label>
+                        <select id="batas_bulan_pelunasan" name="batas_bulan_pelunasan" required
+                                class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm cursor-pointer">
+                            @for($i = 1; $i <= 12; $i++)
+                            <option value="{{ $i }}" {{ old('batas_bulan_pelunasan', 11) == $i ? 'selected' : '' }}>
+                                Bulan ke-{{ $i }} ({{ nama_bulan($i) }})
+                            </option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Opsi Angsuran Bulan Berjalan --}}
+                <x-toggle 
+                    name="angsuran_bulan_berjalan" 
+                    :checked="old('angsuran_bulan_berjalan')"
+                >
+                    <x-slot name="label">Angsuran Dimulai dari Bulan Pengajuan</x-slot>
+                    <x-slot name="description">
+                        Jika diaktifkan, angsuran pertama akan jatuh tempo di bulan yang sama saat pinjaman diajukan.
+                    </x-slot>
+                </x-toggle>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {{-- Tanggal Buka --}}
+                    <div class="space-y-1.5">
+                        <label for="tanggal_buka" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tanggal Buka <span class="text-red-500">*</span></label>
+                        <x-datepicker name="tanggal_buka" :value="old('tanggal_buka', now()->format('Y-m-d'))" :required="true" />
+                    </div>
+
+                    {{-- Tanggal Tutup --}}
+                    <div class="space-y-1.5">
+                        <label for="tanggal_tutup" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tanggal Tutup <span class="text-stone-400 normal-case capitalize text-[10px]">(Opsional)</span></label>
+                        <x-datepicker name="tanggal_tutup" :value="old('tanggal_tutup')" placeholder="Tidak Dibatasi" />
+                    </div>
+                </div>
+
+                {{-- Konfigurasi Nominal Pinjaman --}}
+                <div class="space-y-4 p-4 bg-stone-50 border border-stone-200 rounded-xl">
+                    <h3 class="text-[11px] uppercase tracking-widest font-bold text-stone-600 flex items-center gap-2 mb-2">
+                        Limit Pinjaman
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="space-y-1.5">
+                            <label for="nominal_min" class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Minimum <span class="text-red-500">*</span></label>
+                            <x-currency-input name="nominal_min" :value="old('nominal_min', 100000)" :required="true" />
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="limit_per_anggota" class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Maksimum <span class="text-red-500">*</span></label>
+                            <x-currency-input name="limit_per_anggota" :value="old('limit_per_anggota', 50000000)" :required="true" />
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="kelipatan_nominal" class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Kelipatan <span class="text-red-500">*</span></label>
+                            <x-currency-input name="kelipatan_nominal" :value="old('kelipatan_nominal', 100000)" :required="true" />
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Catatan --}}
+                <div class="space-y-1.5">
+                    <label for="catatan" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Catatan Tambahan <span class="text-stone-400 normal-case capitalize text-[10px]">(Opsional)</span></label>
+                    <textarea id="catatan" name="catatan" rows="2"
+                              class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm resize-none"
+                              placeholder="Catatan internal pengingat untuk periode ini...">{{ old('catatan') }}</textarea>
+                </div>
+            </div>
+
+            <x-slot name="footer">
+                <button type="button" @click="$dispatch('close-modal', 'modal-create-periode')" class="px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all">Batalkan</button>
+                <button type="submit" form="form-create-periode" class="px-6 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Buka Periode & Generate Link
+                </button>
+            </x-slot>
+        </form>
+    </x-modal>
 </div>
 @endsection

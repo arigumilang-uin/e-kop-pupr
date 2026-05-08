@@ -89,105 +89,92 @@
     </div>
 
     {{-- Modal Tambah Simpanan Manual --}}
-    <template x-teleport="body">
-        <div x-show="modalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-0" style="display: none;">
-            <div x-show="modalOpen" x-transition.opacity class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm" @click="closeModal()"></div>
+    <x-modal name="modal-catat-simpanan" title="Catat Uang Masuk Simpanan" maxWidth="md">
+        <form id="form-catat-simpanan" action="{{ route('simpanan.store') }}" method="POST" class="contents">
+            @csrf
+            <input type="hidden" name="anggota_id" :value="selectedAnggotaId">
             
-            <div x-show="modalOpen" 
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 class="relative bg-white rounded-2xl border border-stone-200 shadow-2xl w-full max-w-md overflow-hidden z-10 flex flex-col max-h-screen">
-                
-                <form action="{{ route('simpanan.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden">
-                    @csrf
-                    <input type="hidden" name="anggota_id" :value="selectedAnggotaId">
-                    
-                    <div class="px-6 py-5 border-b border-stone-100 bg-stone-50 flex items-center justify-between shrink-0">
-                        <div>
-                            <h3 class="text-base font-bold text-stone-800">Catat Uang Masuk Simpanan</h3>
-                            <p class="text-[13px] text-[#043d2e] font-bold mt-0.5" x-text="selectedAnggotaNama"></p>
-                        </div>
-                        <button type="button" @click="closeModal()" class="text-stone-400 hover:bg-stone-200 hover:text-stone-600 p-2 rounded-xl transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
-                    </div>
-
-                    <div class="p-6 space-y-5 overflow-y-auto custom-scrollbar">
-                        <div class="space-y-1.5">
-                            <select name="jenis_simpanan_id" required 
-                                    @change="selectedKode = $event.target.options[$event.target.selectedIndex].dataset.kode || ''; nominal = $event.target.options[$event.target.selectedIndex].dataset.nominal || ''"
-                                    class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-stone-700 font-semibold cursor-pointer outline-none transition-all shadow-sm">
-                                <option value="" disabled selected>Pilih Kategori...</option>
-                                @foreach($jenisSimpananList->where('kode', '!=', 'SWP') as $j)
-                                    <option value="{{ $j->id }}" data-kode="{{ $j->kode }}" data-nominal="{{ $j->kode == 'POKOK' ? $nominalPokok : ($j->kode == 'WAJIB' ? $nominalWajib : '') }}">{{ $j->nama }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="space-y-1.5" x-show="selectedKode === 'WAJIB'" x-cloak style="display: none;">
-                            <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Untuk Bulan & Tahun</label>
-                            <div class="flex items-center gap-3">
-                                <select name="bulan_untuk" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 font-semibold shadow-sm" :required="selectedKode === 'WAJIB'">
-                                    <option value="">-- Bulan --</option>
-                                    @for($m=1; $m<=12; $m++)
-                                        <option value="{{ $m }}">{{ date('F', mktime(0,0,0,$m,1)) }}</option>
-                                    @endfor
-                                </select>
-                                <select name="tahun_untuk" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 font-semibold shadow-sm" :required="selectedKode === 'WAJIB'">
-                                    <option value="">-- Tahun --</option>
-                                    @for($y=date('Y')-2; $y<=date('Y')+2; $y++)
-                                        <option value="{{ $y }}">{{ $y }}</option>
-                                    @endfor
-                                </select>
-                            </div>
-                        </div>
-
-                        <div x-show="selectedKode === 'POKOK'" x-cloak style="display: none;">
-                            <template x-if="selectedAnggotaPokokPaid">
-                                <div class="px-4 py-3 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 text-sm font-medium flex gap-2">
-                                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    <span class="leading-relaxed">Anggota ini <span class="font-bold uppercase tracking-wider">sudah melunasi</span> Simpanan Pokok. Sistem tidak menyarankan setoran tambahan kecuali kondisi anomali.</span>
-                                </div>
-                            </template>
-                            <template x-if="!selectedAnggotaPokokPaid">
-                                <div class="px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium flex gap-2">
-                                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    <span>Wajib dibayarkan sekali di awal oleh anggota. Nilai ketetapan saat ini: <span class="font-bold">Rp</span><span class="font-bold font-mono" x-text="new Intl.NumberFormat('id-ID').format(nominal || 0)"></span>.</span>
-                                </div>
-                            </template>
-                        </div>
-
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Nominal Rupiah (Rp)</label>
-                            <div class="relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold">Rp</span>
-                                <input type="number" name="nominal" x-model="nominal" required min="1000" :readonly="selectedKode === 'POKOK' || selectedKode === 'WAJIB'" class="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-black font-mono focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm read-only:bg-stone-100 read-only:text-stone-500 read-only:border-stone-200 read-only:cursor-not-allowed" placeholder="0">
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tanggal Transaksi</label>
-                            <x-datepicker name="tanggal" :value="date('Y-m-d')" :required="true" />
-                        </div>
-
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Keterangan Opsional</label>
-                            <textarea name="keterangan" rows="2" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 transition-all shadow-sm" placeholder="Catatan tambahan..."></textarea>
-                        </div>
-                    </div>
-
-                    <div class="px-6 py-5 border-t border-stone-100 bg-stone-50 shrink-0 flex items-center justify-end gap-3">
-                        <button type="button" @click="closeModal()" class="px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all">Batalkan</button>
-                        <button type="submit" class="px-6 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95">Setorkan Dana</button>
-                    </div>
-                </form>
+            <div class="mb-5 bg-emerald-50 border border-emerald-100 rounded-xl p-3 flex items-center gap-3 shadow-sm">
+                 <div class="w-10 h-10 bg-emerald-200/50 text-emerald-700 rounded-lg flex items-center justify-center font-bold border border-emerald-200">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                 </div>
+                 <div>
+                      <p class="text-[10px] uppercase font-bold text-emerald-600 tracking-wider mb-0.5">Informasi Anggota</p>
+                      <p class="font-black text-emerald-900 text-sm tracking-tight" x-text="selectedAnggotaNama"></p>
+                 </div>
             </div>
-        </div>
-    </template>
+
+            <div class="space-y-1.5">
+                <select name="jenis_simpanan_id" required 
+                        @change="selectedKode = $event.target.options[$event.target.selectedIndex].dataset.kode || ''; nominal = $event.target.options[$event.target.selectedIndex].dataset.nominal || ''"
+                        class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-stone-700 font-bold cursor-pointer outline-none transition-all shadow-sm">
+                    <option value="" disabled selected>-- Pilih Kategori Simpanan --</option>
+                    @foreach($jenisSimpananList->where('kode', '!=', 'SWP') as $j)
+                        <option value="{{ $j->id }}" data-kode="{{ $j->kode }}" data-nominal="{{ $j->kode == 'POKOK' ? $nominalPokok : ($j->kode == 'WAJIB' ? $nominalWajib : '') }}">{{ $j->nama }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="space-y-1.5 mt-5" x-show="selectedKode === 'WAJIB'" x-cloak style="display: none;">
+                <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Untuk Bulan & Tahun Transaksi</label>
+                <div class="flex items-center gap-3">
+                    <select name="bulan_untuk" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 font-bold shadow-sm" :required="selectedKode === 'WAJIB'">
+                        <option value="">-- Bulan --</option>
+                        @for($m=1; $m<=12; $m++)
+                            <option value="{{ $m }}">{{ date('F', mktime(0,0,0,$m,1)) }}</option>
+                        @endfor
+                    </select>
+                    <select name="tahun_untuk" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 font-bold shadow-sm" :required="selectedKode === 'WAJIB'">
+                        <option value="">-- Tahun --</option>
+                        @for($y=date('Y')-2; $y<=date('Y')+2; $y++)
+                            <option value="{{ $y }}">{{ $y }}</option>
+                        @endfor
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-5" x-show="selectedKode === 'POKOK'" x-cloak style="display: none;">
+                <template x-if="selectedAnggotaPokokPaid">
+                    <div class="px-4 py-3 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 text-sm font-medium flex gap-2">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span class="leading-relaxed">Anggota ini <span class="font-bold uppercase tracking-wider">sudah melunasi</span> Simpanan Pokok. Sistem tidak menyarankan setoran tambahan kecuali kondisi anomali.</span>
+                    </div>
+                </template>
+                <template x-if="!selectedAnggotaPokokPaid">
+                    <div class="px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium flex gap-2">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Wajib dibayarkan sekali di awal oleh anggota. Nilai ketetapan saat ini: <span class="font-bold">Rp</span><span class="font-bold font-mono" x-text="new Intl.NumberFormat('id-ID').format(nominal || 0)"></span>.</span>
+                    </div>
+                </template>
+            </div>
+
+            <div class="space-y-1.5 mt-5">
+                <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Nominal Rupiah (Rp)</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500 font-bold font-mono">Rp</span>
+                    <input type="number" name="nominal" x-model="nominal" required min="1000" :readonly="selectedKode === 'POKOK' || selectedKode === 'WAJIB'" class="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-black font-mono focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm read-only:bg-stone-100 read-only:text-stone-500 read-only:border-stone-200 read-only:cursor-not-allowed" placeholder="0">
+                </div>
+            </div>
+            
+            <div class="space-y-1.5 mt-5">
+                <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tanggal Transaksi</label>
+                <x-datepicker name="tanggal" :value="date('Y-m-d')" :required="true" />
+            </div>
+
+            <div class="space-y-1.5 mt-5">
+                <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Keterangan Opsional</label>
+                <textarea name="keterangan" rows="2" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 font-medium transition-all shadow-sm" placeholder="Contoh: Titipan tunai melalui pengurus..."></textarea>
+            </div>
+
+            <x-slot name="footer">
+                <button type="button" @click="$dispatch('close-modal', 'modal-catat-simpanan')" class="px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all">Batalkan</button>
+                <button type="submit" form="form-catat-simpanan" class="px-6 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    Setorkan Dana
+                </button>
+            </x-slot>
+        </form>
+    </x-modal>
 </div>
 @endsection
 
@@ -217,12 +204,12 @@ document.addEventListener('alpine:init', () => {
             this.selectedAnggotaPokokPaid = pokokPaid;
             this.selectedKode = '';
             this.nominal = '';
-            this.modalOpen = true;
+            this.$dispatch('open-modal', 'modal-catat-simpanan');
         },
         closeModal() {
-            this.modalOpen = false;
             this.selectedAnggotaId = '';
             this.selectedAnggotaNama = '';
+            this.$dispatch('close-modal', 'modal-catat-simpanan');
         },
 
         init() {

@@ -4,16 +4,16 @@
 @section('subtitle', 'Daftar keseluruhan anggota Koperasi Tirta Bina Karya')
 
 @section('actions')
-    <a href="{{ route('anggota.create') }}" class="py-2.5 px-4 rounded-xl bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
+    <button @click="$dispatch('open-modal', 'modal-tambah-anggota')" class="py-2.5 px-4 rounded-xl bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
         </svg>
         <span>Tambah Anggota</span>
-    </a>
+    </button>
 @endsection
 
 @section('content')
-<div x-data="anggotaFilter()" class="flex flex-col gap-5">
+<div x-data="anggotaPage()" class="flex flex-col gap-5">
     {{-- Filter Sticky Bar Component --}}
     <x-filter-bar searchPlaceholder="Cari berdasarkan NIP atau Nama..." x-model="q">
         <x-slot name="trailing">
@@ -99,12 +99,144 @@
         </div>
     </div>
 </div>
+
+    {{-- ============================================ --}}
+    {{-- MODAL: Tambah Anggota Baru --}}
+    {{-- ============================================ --}}
+    <x-modal name="modal-tambah-anggota" title="Tambah Anggota Baru" maxWidth="xl">
+        <form id="form-tambah-anggota" action="{{ route('anggota.store') }}" method="POST" x-data="{ nip: '' }" class="contents">
+            @csrf
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {{-- NIP --}}
+                <div class="sm:col-span-2 space-y-1.5">
+                    <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">NIP Anggota <span class="text-red-500">*</span></label>
+                    <x-nip-input name="nip" model="nip" placeholder="Masukkan 18 digit angka NIP..." required="true" class="bg-stone-50 text-stone-800 font-mono tracking-wider focus:bg-white focus:ring-[#043d2e]/20 focus:border-[#043d2e]" />
+                    @error('nip') <p class="text-xs text-red-500 font-medium">{{ $message }}</p> @enderror
+                </div>
+                
+                {{-- Nama --}}
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Nama Lengkap <span class="text-red-500">*</span></label>
+                    <input type="text" name="nama" value="{{ old('nama') }}" required placeholder="Contoh: Budi Santoso"
+                           class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 transition-all shadow-sm">
+                    @error('nama') <p class="text-xs text-red-500 font-medium">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Golongan ASN --}}
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Golongan ASN <span class="text-red-500">*</span></label>
+                    <select name="golongan_asn" required class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm transition-all">
+                        <option value="">-- Pilih Golongan --</option>
+                        @foreach(\App\Enums\GolonganAsn::cases() as $gol)
+                            <option value="{{ $gol->value }}">{{ $gol->label() }}</option>
+                        @endforeach
+                    </select>
+                    @error('golongan_asn') <p class="text-xs text-red-500 font-medium">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Bidang --}}
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Bidang Dinas / Unit <span class="text-red-500">*</span></label>
+                    <select name="bidang_id" required class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm transition-all">
+                        <option value="">-- Pilih Ruang Lingkup --</option>
+                        @foreach($bidangs as $bidang)
+                            <option value="{{ $bidang->id }}">{{ $bidang->nama_bidang }}</option>
+                        @endforeach
+                    </select>
+                    @error('bidang_id') <p class="text-xs text-red-500 font-medium">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- No HP --}}
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">No Handphone (WA)</label>
+                    <input type="text" name="no_hp" value="{{ old('no_hp') }}" placeholder="Contoh: 08123456789"
+                           class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 transition-all shadow-sm">
+                    @error('no_hp') <p class="text-xs text-red-500 font-medium">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Tanggal Masuk --}}
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tanggal Masuk Koperasi</label>
+                    <x-datepicker name="tanggal_masuk" :value="old('tanggal_masuk', now()->format('Y-m-d'))" />
+                    @error('tanggal_masuk') <p class="text-xs text-red-500 font-medium">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
+            <x-slot name="footer">
+                <button type="button" @click="$dispatch('close-modal', 'modal-tambah-anggota')" class="px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all">Batalkan</button>
+                <button type="submit" form="form-tambah-anggota" class="px-6 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95">Simpan Anggota Baru</button>
+            </x-slot>
+        </form>
+    </x-modal>
+
+    {{-- ============================================ --}}
+    {{-- MODAL: Edit Anggota --}}
+    {{-- ============================================ --}}
+    <x-modal name="modal-edit-anggota" title="Edit Data Anggota" maxWidth="xl">
+        <form id="form-edit-anggota" :action="editFormAction" method="POST" x-data="{ nip: '' }" x-init="
+            $watch('editData', (val) => { if(val) nip = val.nip || ''; })
+        " class="contents">
+            @csrf
+            @method('PUT')
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {{-- NIP --}}
+                <div class="sm:col-span-2 space-y-1.5">
+                    <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">NIP Anggota <span class="text-red-500">*</span></label>
+                    <x-nip-input name="nip" model="nip" placeholder="Masukkan 18 digit angka NIP..." required="true" class="bg-stone-50 text-stone-800 font-mono tracking-wider focus:bg-white focus:ring-[#043d2e]/20 focus:border-[#043d2e]" />
+                </div>
+                
+                {{-- Nama --}}
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Nama Lengkap <span class="text-red-500">*</span></label>
+                    <input type="text" name="nama" :value="editData?.nama" required placeholder="Contoh: Budi Santoso"
+                           class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 transition-all shadow-sm">
+                </div>
+
+                {{-- Golongan ASN --}}
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Golongan ASN <span class="text-red-500">*</span></label>
+                    <select name="golongan_asn" required x-effect="if(editData) $el.value = editData.golongan_asn || ''" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm transition-all">
+                        <option value="">-- Pilih Golongan --</option>
+                        @foreach(\App\Enums\GolonganAsn::cases() as $gol)
+                            <option value="{{ $gol->value }}">{{ $gol->label() }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Bidang --}}
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Bidang Dinas / Unit <span class="text-red-500">*</span></label>
+                    <select name="bidang_id" required x-effect="if(editData) $el.value = editData.bidang_id || ''" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm transition-all">
+                        <option value="">-- Pilih Ruang Lingkup --</option>
+                        @foreach($bidangs as $bdg)
+                            <option value="{{ $bdg->id }}">{{ $bdg->nama_bidang }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- No HP --}}
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">No Handphone (WA)</label>
+                    <input type="text" name="no_hp" :value="editData?.no_hp" placeholder="Contoh: 08123456789"
+                           class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 transition-all shadow-sm">
+                </div>
+            </div>
+
+            <x-slot name="footer">
+                <button type="button" @click="$dispatch('close-modal', 'modal-edit-anggota')" class="px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all">Batalkan</button>
+                <button type="submit" form="form-edit-anggota" class="px-6 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95">Simpan Perubahan</button>
+            </x-slot>
+        </form>
+    </x-modal>
+
+</div>
 @endsection
 
 @push('scripts')
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.data('anggotaFilter', () => ({
+    Alpine.data('anggotaPage', () => ({
+        // Filter state
         q: new URLSearchParams(location.search).get('q') || '',
         bidang: new URLSearchParams(location.search).get('bidang') || '',
         golongan: new URLSearchParams(location.search).get('golongan') || '',
@@ -113,13 +245,22 @@ document.addEventListener('alpine:init', () => {
         timeout: null,
         abortController: null,
 
+        // Edit modal state
+        editData: null,
+        editFormAction: '',
+
+        openEditModal(anggota) {
+            this.editData = anggota;
+            this.editFormAction = `{{ url('/anggota') }}/${anggota.id}`;
+            this.$dispatch('open-modal', 'modal-edit-anggota');
+        },
+
         init() {
             this.$watch('q', () => this.debouncedFetch());
             this.$watch('bidang', () => this.fetchData());
             this.$watch('golongan', () => this.fetchData());
             this.$watch('status', () => this.fetchData());
 
-            // Listen for Alpine dispatch from pagination links
             window.addEventListener('anggota-paginate', (e) => {
                 this.fetchData(e.detail.url);
             });
@@ -137,7 +278,7 @@ document.addEventListener('alpine:init', () => {
             clearTimeout(this.timeout);
             this.timeout = setTimeout(() => {
                 this.fetchData();
-            }, 400); // 400ms debounce for text input
+            }, 400);
         },
 
         async fetchData(targetUrl = null) {
@@ -160,7 +301,6 @@ document.addEventListener('alpine:init', () => {
             }
 
             try {
-                // Update browser URL
                 window.history.pushState({}, '', url);
 
                 const response = await fetch(url, {
@@ -170,7 +310,6 @@ document.addEventListener('alpine:init', () => {
                 
                 const html = await response.text();
                 
-                // Parse HTML
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
                 const newContent = doc.getElementById('table-content-container');

@@ -42,11 +42,11 @@
 
             <div class="flex flex-wrap gap-2.5">
                 {{-- Edit Periode --}}
-                <a href="{{ route('periode.edit', $periode) }}"
+                <button type="button" x-data @click="$dispatch('open-modal', 'modal-edit-periode')"
                    class="px-4 py-2 rounded-xl bg-white/10 text-white text-xs font-bold hover:bg-white/20 transition-colors inline-flex items-center gap-1.5 border border-white/5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     Edit Periode
-                </a>
+                </button>
 
                 {{-- Tutup/Buka Periode --}}
                 @if($periode->isBuka())
@@ -222,6 +222,139 @@
         </div>
     </div>
 </div>
+
+@php
+    $adaPengajuan = $periode->pinjaman->isNotEmpty();
+@endphp
+
+{{-- Modal Edit Periode --}}
+<x-modal name="modal-edit-periode" title="Edit Periode Pinjaman" maxWidth="2xl">
+    <form id="form-edit-periode" method="POST" action="{{ route('periode.update', $periode) }}" class="contents">
+        @csrf
+        @method('PUT')
+        
+        <x-slot name="subtitle">{{ $periode->nama_periode }}</x-slot>
+
+        <div class="space-y-4">
+            {{-- Banner peringatan jika ada pengajuan --}}
+            @if($adaPengajuan)
+            <div class="p-3 mb-2 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
+                <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <div>
+                    <p class="text-[12px] font-bold text-amber-800 uppercase tracking-widest">PERHATIAN: Terdapat Pengajuan</p>
+                    <p class="text-[11px] font-medium text-amber-600 mt-1 leading-relaxed">Hanya <strong>Nama Periode</strong>, <strong>Tanggal Tutup</strong>, dan <strong>Catatan Tambahan</strong> yang dapat diubah untuk menjaga integritas pinjaman.</p>
+                </div>
+            </div>
+            @endif
+
+            {{-- Nama Periode --}}
+            <div class="space-y-1.5">
+                <label for="nama_periode" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Nama Periode <span class="text-red-500">*</span></label>
+                <input type="text" id="nama_periode" name="nama_periode" value="{{ old('nama_periode', $periode->nama_periode) }}" required
+                       class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm"
+                       placeholder="Contoh: Pinjaman Semester I 2026">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {{-- Tahun --}}
+                <div class="space-y-1.5">
+                    <label for="tahun" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tahun Anggaran <span class="text-red-500">*</span></label>
+                    <input type="number" id="tahun" name="tahun" value="{{ old('tahun', $periode->tahun) }}" required min="2020" max="2050"
+                           class="w-full px-4 py-3 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm
+                                  {{ $adaPengajuan ? 'bg-stone-100 cursor-not-allowed text-stone-500' : 'bg-stone-50' }}"
+                           {{ $adaPengajuan ? 'disabled' : '' }}>
+                </div>
+
+                {{-- Batas Bulan Pelunasan --}}
+                <div class="space-y-1.5">
+                    <label for="batas_bulan_pelunasan" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Batas Bulan Pelunasan <span class="text-red-500">*</span></label>
+                    <select id="batas_bulan_pelunasan" name="batas_bulan_pelunasan" required
+                            class="w-full px-4 py-3 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm
+                                   {{ $adaPengajuan ? 'bg-stone-100 cursor-not-allowed text-stone-500 opacity-90' : 'bg-stone-50 cursor-pointer' }}"
+                            {{ $adaPengajuan ? 'disabled' : '' }}>
+                        @for($i = 1; $i <= 12; $i++)
+                        <option value="{{ $i }}" {{ old('batas_bulan_pelunasan', $periode->batas_bulan_pelunasan) == $i ? 'selected' : '' }}>
+                            Bulan ke-{{ $i }} ({{ nama_bulan($i) }})
+                        </option>
+                        @endfor
+                    </select>
+                </div>
+            </div>
+
+            {{-- Opsi Angsuran Bulan Berjalan --}}
+            <x-toggle 
+                name="angsuran_bulan_berjalan" 
+                :checked="old('angsuran_bulan_berjalan', $periode->angsuran_bulan_berjalan)"
+                :disabled="$adaPengajuan"
+            >
+                <x-slot name="label">Angsuran Dimulai dari Bulan Pengajuan</x-slot>
+                <x-slot name="description">
+                    Jika diaktifkan, angsuran pertama akan jatuh tempo di bulan yang sama saat pinjaman diajukan.
+                    @if($adaPengajuan)
+                    <span class="block text-[10px] text-stone-400 font-bold mt-1.5 uppercase tracking-wider">🔒 Terkunci (sudah ada pengajuan)</span>
+                    @endif
+                </x-slot>
+            </x-toggle>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {{-- Tanggal Buka --}}
+                <div class="space-y-1.5">
+                    <label for="tanggal_buka" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tanggal Buka <span class="text-red-500">*</span></label>
+                    <x-datepicker name="tanggal_buka" :value="old('tanggal_buka', $periode->tanggal_buka->format('Y-m-d'))" :required="true" :disabled="$adaPengajuan" />
+                </div>
+
+                {{-- Tanggal Tutup --}}
+                <div class="space-y-1.5">
+                    <label for="tanggal_tutup" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tanggal Tutup <span class="text-stone-400 normal-case capitalize text-[10px]">(Opsional)</span></label>
+                    <x-datepicker name="tanggal_tutup" :value="old('tanggal_tutup', $periode->tanggal_tutup?->format('Y-m-d'))" placeholder="Pilih Tanggal (Bisa Dikosongkan)" />
+                </div>
+            </div>
+
+            {{-- Konfigurasi Nominal Pinjaman --}}
+            <div class="space-y-4 p-4 rounded-xl border {{ $adaPengajuan ? 'bg-stone-50/50 border-stone-200' : 'bg-stone-50 border-stone-200' }}">
+                <h3 class="text-[11px] uppercase tracking-widest font-bold text-stone-600 flex items-center gap-2 mb-2">
+                    Limit Pinjaman
+                    @if($adaPengajuan)
+                    <span class="text-[9px] font-bold text-stone-400 bg-stone-200/50 px-2 py-[1px] rounded uppercase border border-stone-200 ml-1">— TERKUNCI</span>
+                    @endif
+                </h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="space-y-1.5">
+                        <label for="nominal_min" class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Minimum <span class="text-red-500">*</span></label>
+                        <x-currency-input name="nominal_min" :value="old('nominal_min', $periode->nominal_min)" :required="true" :disabled="$adaPengajuan" />
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label for="limit_per_anggota" class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Maksimum <span class="text-red-500">*</span></label>
+                        <x-currency-input name="limit_per_anggota" :value="old('limit_per_anggota', $periode->limit_per_anggota)" :required="true" :disabled="$adaPengajuan" />
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label for="kelipatan_nominal" class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Kelipatan <span class="text-red-500">*</span></label>
+                        <x-currency-input name="kelipatan_nominal" :value="old('kelipatan_nominal', $periode->kelipatan_nominal)" :required="true" :disabled="$adaPengajuan" />
+                    </div>
+                </div>
+            </div>
+
+            {{-- Catatan --}}
+            <div class="space-y-1.5">
+                <label for="catatan" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Catatan Tambahan <span class="text-stone-400 normal-case capitalize text-[10px]">(Opsional)</span></label>
+                <textarea id="catatan" name="catatan" rows="2"
+                          class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm resize-none"
+                          placeholder="Catatan internal pengingat untuk periode ini...">{{ old('catatan', $periode->catatan) }}</textarea>
+            </div>
+        </div>
+
+        <x-slot name="footer">
+            <button type="button" @click="$dispatch('close-modal', 'modal-edit-periode')" class="px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all">Batalkan</button>
+            <button type="submit" form="form-edit-periode" class="px-6 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Simpan Perubahan
+            </button>
+        </x-slot>
+    </form>
+</x-modal>
 
 <script>
 function copyLink() {

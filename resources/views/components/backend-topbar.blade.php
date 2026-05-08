@@ -14,7 +14,7 @@
                 @endif
             </div>
         </div>
-        <div class="shrink-0" id="topbar-actions-wrapper">
+        <div class="shrink-0" id="topbar-actions-wrapper" x-data>
             @hasSection('actions')
                 {{-- Desktop View: Horizontal Buttons --}}
                 <div class="hidden md:flex items-center gap-2.5">

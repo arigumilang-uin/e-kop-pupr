@@ -4,11 +4,11 @@
 @section('subtitle', 'Catat beban operasional, belanja, dan pengeluaran lain di luar pinjaman anggota')
 
 @section('actions')
-    <button onclick="document.getElementById('modal-kategori').classList.remove('hidden')" class="px-4 py-2.5 bg-white border border-stone-200 text-stone-700 rounded-xl text-sm font-bold hover:bg-stone-50 transition-colors shadow-sm flex items-center justify-center gap-2">
+    <button @click="$dispatch('open-modal', 'modal-kategori')" class="px-4 py-2.5 bg-white border border-stone-200 text-stone-700 rounded-xl text-sm font-bold hover:bg-stone-50 transition-colors shadow-sm flex items-center justify-center gap-2">
         <svg class="w-4 h-4 text-stone-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
         <span>Master Kategori</span>
     </button>
-    <button onclick="document.getElementById('modal-pengeluaran').classList.remove('hidden')" class="px-4 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white rounded-xl text-sm font-bold transition-colors shadow-sm flex items-center justify-center gap-2">
+    <button @click="$dispatch('open-modal', 'modal-pengeluaran')" class="px-4 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white rounded-xl text-sm font-bold transition-colors shadow-sm flex items-center justify-center gap-2">
         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         <span>Catat Pengeluaran</span>
     </button>
@@ -165,112 +165,81 @@
 </div>
 
 {{-- Modal Catat Pengeluaran --}}
-<div id="modal-pengeluaran" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity backdrop-blur-sm bg-stone-900/60" aria-hidden="true" onclick="document.getElementById('modal-pengeluaran').classList.add('hidden')"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl w-full border border-stone-100 relative z-10">
-            <div class="px-6 py-5 border-b border-stone-100 bg-stone-50 flex items-center justify-between">
-                <div>
-                    <h3 class="text-base font-bold text-stone-800 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-[#043d2e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                        Catat Pengeluaran Baru
-                    </h3>
-                </div>
-                <button type="button" class="text-stone-400 hover:bg-stone-200 hover:text-stone-600 p-2 rounded-xl transition-colors" onclick="document.getElementById('modal-pengeluaran').classList.add('hidden')">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <form action="{{ route('pengeluaran.store') }}" method="POST" x-data="pengeluaranForm()">
-                @csrf
-                <div class="px-6 py-4 bg-stone-50 border-b border-stone-200">
-                    <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5">Tanggal Keluar (Berlaku untuk semua catatan di bawah)</label>
-                    <x-datepicker name="tanggal" :value="old('tanggal', date('Y-m-d'))" :required="true" />
-                    @error('tanggal') <p class="text-[11px] text-red-500 mt-1 font-medium">{{ $message }}</p> @enderror
-                </div>
-                
-                <div class="px-6 py-5 bg-white space-y-5 max-h-[55vh] overflow-y-auto">
-                    <template x-for="(item, index) in items" :key="index">
-                        <div class="relative p-5 rounded-2xl border border-stone-200 bg-stone-50/50">
-                            <button type="button" @click="removeItem(index)" x-show="items.length > 1" class="absolute -top-3 -right-3 w-7 h-7 bg-white border border-red-200 text-red-500 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm z-10" title="Hapus Baris">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
-                            </button>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5">Kategori <span x-text="index + 1"></span></label>
-                                    <select x-model="item.kategori_id" :name="`pengeluaran[${index}][kategori_pengeluaran_id]`" required class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-sm text-stone-700 bg-white outline-none transition-all cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm">
-                                        <option value="">-- Pilih Kategori --</option>
-                                        @foreach($kategori as $kat)
-                                        <option value="{{ $kat->id }}">{{ $kat->nama }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5">Nominal (Rp)</label>
-                                    <input type="number" x-model="item.nominal" :name="`pengeluaran[${index}][nominal]`" required min="1" class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-sm text-stone-700 bg-white outline-none transition-all font-mono" placeholder="Contoh: 150000">
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5">Keterangan / Tujuan</label>
-                                    <input type="text" x-model="item.keterangan" :name="`pengeluaran[${index}][keterangan]`" required class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-sm text-stone-700 bg-white outline-none transition-all" placeholder="Contoh: Beli kertas A4 2 rim">
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                    
-                    <button type="button" @click="addItem()" class="w-full py-3 border-2 border-dashed border-stone-300 rounded-xl text-stone-500 font-bold text-sm hover:bg-stone-50 hover:text-[#043d2e] hover:border-[#043d2e]/30 transition-all flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        Tambah Baris Pengeluaran
+<x-modal name="modal-pengeluaran" title="Catat Pengeluaran Baru" maxWidth="xl">
+    <form id="form-catat-pengeluaran" action="{{ route('pengeluaran.store') }}" method="POST" x-data="pengeluaranForm()" class="contents">
+        @csrf
+        <div class="-mx-6 -mt-5 px-6 py-4 bg-stone-50 border-b border-stone-200 mb-5">
+            <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5">Tanggal Keluar (Berlaku untuk semua catatan di bawah)</label>
+            <x-datepicker name="tanggal" :value="old('tanggal', date('Y-m-d'))" :required="true" />
+            @error('tanggal') <p class="text-[11px] text-red-500 mt-1 font-medium">{{ $message }}</p> @enderror
+        </div>
+        
+        <div class="space-y-5">
+            <template x-for="(item, index) in items" :key="index">
+                <div class="relative p-5 rounded-2xl border border-stone-200 bg-stone-50/50">
+                    <button type="button" @click="removeItem(index)" x-show="items.length > 1" class="absolute -top-3 -right-3 w-7 h-7 bg-white border border-red-200 text-red-500 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm z-10" title="Hapus Baris">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
                     </button>
                     
-                    @if($errors->has('pengeluaran') || $errors->has('pengeluaran.*'))
-                    <div class="p-3 bg-red-50 text-red-600 rounded-xl text-[11px] font-medium border border-red-200">
-                        Mohon periksa kembali form pengeluaran Anda. Pastikan semua field terisi dengan benar.
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5">Kategori <span x-text="index + 1"></span></label>
+                            <select x-model="item.kategori_id" :name="`pengeluaran[${index}][kategori_pengeluaran_id]`" required class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-sm text-stone-700 bg-white outline-none transition-all cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm">
+                                <option value="">-- Pilih Kategori --</option>
+                                @foreach($kategori as $kat)
+                                <option value="{{ $kat->id }}">{{ $kat->nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5">Nominal (Rp)</label>
+                            <input type="number" x-model="item.nominal" :name="`pengeluaran[${index}][nominal]`" required min="1" class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-sm text-stone-700 bg-white outline-none transition-all font-mono" placeholder="Contoh: 150000">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5">Keterangan / Tujuan</label>
+                            <input type="text" x-model="item.keterangan" :name="`pengeluaran[${index}][keterangan]`" required class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-sm text-stone-700 bg-white outline-none transition-all" placeholder="Contoh: Beli kertas A4 2 rim">
+                        </div>
                     </div>
-                    @endif
                 </div>
-                <div class="px-6 py-5 border-t border-stone-100 bg-stone-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="text-sm font-bold text-stone-600 flex items-center gap-2">
-                        Total Nominal: <span class="font-mono text-lg text-[#043d2e]" x-text="new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(totalNominal)"></span>
-                    </div>
-                    <div class="flex gap-3 w-full sm:w-auto">
-                        <button type="button" class="flex-1 sm:flex-none px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all" onclick="document.getElementById('modal-pengeluaran').classList.add('hidden')">Batal</button>
-                        <button type="submit" class="flex-1 sm:flex-none px-6 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95">Simpan Semua</button>
-                    </div>
-                </div>
-            </form>
+            </template>
+            
+            <button type="button" @click="addItem()" class="w-full py-3 border-2 border-dashed border-stone-300 rounded-xl text-stone-500 font-bold text-sm hover:bg-stone-50 hover:text-[#043d2e] hover:border-[#043d2e]/30 transition-all flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Tambah Baris Pengeluaran
+            </button>
+            
+            @if($errors->has('pengeluaran') || $errors->has('pengeluaran.*'))
+            <div class="p-3 bg-red-50 text-red-600 rounded-xl text-[11px] font-medium border border-red-200">
+                Mohon periksa kembali form pengeluaran Anda. Pastikan semua field terisi dengan benar.
+            </div>
+            @endif
         </div>
-    </div>
-</div>
+
+        <x-slot name="footer">
+            <div class="flex-1 text-sm font-bold text-stone-600 flex items-center gap-2">
+                Total: <span class="font-mono text-lg text-[#043d2e]" x-text="new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(totalNominal)"></span>
+            </div>
+            <button type="button" @click="$dispatch('close-modal', 'modal-pengeluaran')" class="px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all">Batal</button>
+            <button type="submit" form="form-catat-pengeluaran" class="px-6 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95">Simpan Semua</button>
+        </x-slot>
+    </form>
+</x-modal>
 
 {{-- Modal Tambah Kategori --}}
-<div id="modal-kategori" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity backdrop-blur-sm bg-stone-900/60" aria-hidden="true" onclick="document.getElementById('modal-kategori').classList.add('hidden')"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full border border-stone-100 relative z-10">
-            <div class="px-6 py-5 border-b border-stone-100 bg-stone-50 flex items-center justify-between">
-                <h3 class="text-base font-bold text-stone-800">Tambah Master Kategori</h3>
-                <button type="button" class="text-stone-400 hover:bg-stone-200 hover:text-stone-600 p-2 rounded-xl transition-colors" onclick="document.getElementById('modal-kategori').classList.add('hidden')">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <form action="{{ route('pengeluaran.kategori.store') }}" method="POST">
-                @csrf
-                <div class="p-6 space-y-5">
-                    <div class="space-y-1.5">
-                        <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Nama Kategori</label>
-                        <input type="text" name="nama" required class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-stone-700 outline-none transition-all shadow-sm" placeholder="Contoh: ATK">
-                    </div>
-                </div>
-                <div class="px-6 py-5 border-t border-stone-100 bg-stone-50 flex items-center justify-end gap-3">
-                    <button type="button" class="px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all" onclick="document.getElementById('modal-kategori').classList.add('hidden')">Batal</button>
-                    <button type="submit" class="px-6 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95">Simpan Kategori</button>
-                </div>
-            </form>
+<x-modal name="modal-kategori" title="Tambah Master Kategori" maxWidth="md">
+    <form id="form-tambah-kategori" action="{{ route('pengeluaran.kategori.store') }}" method="POST" class="contents">
+        @csrf
+        <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Nama Kategori</label>
+            <input type="text" name="nama" required class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-stone-700 outline-none transition-all shadow-sm" placeholder="Contoh: ATK">
         </div>
-    </div>
-</div>
+
+        <x-slot name="footer">
+            <button type="button" @click="$dispatch('close-modal', 'modal-kategori')" class="px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all">Batal</button>
+            <button type="submit" form="form-tambah-kategori" class="px-6 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95">Simpan Kategori</button>
+        </x-slot>
+    </form>
+</x-modal>
 
 @push('scripts')
 <script>
