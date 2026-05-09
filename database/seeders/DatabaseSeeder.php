@@ -19,32 +19,33 @@ class DatabaseSeeder extends Seeder
             JenisSimpananSeeder::class,
             PengaturanSeeder::class,
             ShuConfigSeeder::class,
+            RbacSeeder::class,
         ]);
 
         // Ambil 2 anggota untuk dihubungkan dengan akun default
         $anggotaAdmin = \App\Models\Anggota::first();
         $anggotaPimpinan = \App\Models\Anggota::skip(1)->first();
 
-        User::updateOrCreate(
+        $admin = User::updateOrCreate(
             ['username' => 'admin'],
             [
                 'nama' => 'Administrator',
                 'username' => 'admin',
                 'password' => bcrypt('admin123'),
-                'role' => 'admin',
                 'nip' => $anggotaAdmin?->nip,
             ]
         );
+        $admin->assignRole('super_admin'); // Sesuai aturan ID 1 harus super admin
 
-        User::updateOrCreate(
+        $pimpinan = User::updateOrCreate(
             ['username' => 'pimpinan'],
             [
                 'nama' => 'Kepala Koperasi',
                 'username' => 'pimpinan',
                 'password' => bcrypt('pimpinan123'),
-                'role' => 'pimpinan',
                 'nip' => $anggotaPimpinan?->nip,
             ]
         );
+        $pimpinan->assignRole('pimpinan');
     }
 }

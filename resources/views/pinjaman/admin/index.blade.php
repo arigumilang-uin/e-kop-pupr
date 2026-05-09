@@ -155,7 +155,7 @@
     {{-- Table --}}
     <div class="relative flex-1 flex flex-col">
         <x-table>
-            <x-table.thead :sticky="true" class="top-[168px]">
+            <x-table.thead :sticky="true">
                 @canany(['pinjaman.approve', 'pinjaman.reject'])
                 <x-table.th class="w-12 text-center border-r border-stone-100">
                     <input type="checkbox" @click="toggleAll()" :checked="allSelected" :disabled="menungguIds.length === 0" class="w-4 h-4 rounded text-[#043d2e] focus:ring-[#043d2e]/20 border-stone-300 disabled:opacity-50 cursor-pointer">

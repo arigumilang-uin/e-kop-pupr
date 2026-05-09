@@ -88,8 +88,21 @@ class PengaturanService
         return $this->getFloat('simpanan_pokok', 50000);
     }
 
-    public function simpananWajib(): float
+    public function simpananWajib(?int $bulan = null, ?int $tahun = null): float
     {
+        if ($bulan !== null && $tahun !== null) {
+            $khusus = \App\Models\PengaturanKhusus::where('key', 'simpanan_wajib')
+                ->where('bulan', $bulan)
+                ->where('tahun', $tahun)
+                ->value('value');
+                
+            \Illuminate\Support\Facades\Log::info('Cek simpananWajib khusus:', ['bulan' => $bulan, 'tahun' => $tahun, 'result' => $khusus]);
+                
+            if ($khusus !== null) {
+                return (float) $khusus;
+            }
+        }
+        
         return $this->getFloat('simpanan_wajib', 50000);
     }
 

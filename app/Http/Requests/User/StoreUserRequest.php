@@ -27,7 +27,16 @@ class StoreUserRequest extends FormRequest
             ],
             'username' => 'required|string|max:50|unique:users,username',
             'password' => 'required|string|min:6|confirmed',
-            'role'     => ['required', 'string', Rule::exists('roles', 'name')],
+            'role'     => [
+                'required', 
+                'string', 
+                Rule::exists('roles', 'name'),
+                function ($attribute, $value, $fail) {
+                    if ($value === \App\Services\PermissionRegistry::ROLE_SUPER_ADMIN) {
+                        $fail('Role Super Admin tidak dapat diberikan ke pengguna baru.');
+                    }
+                },
+            ],
         ];
     }
 

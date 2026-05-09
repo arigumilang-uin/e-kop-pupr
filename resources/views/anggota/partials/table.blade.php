@@ -1,5 +1,5 @@
 <x-table>
-    <x-table.thead :sticky="true" class="top-[168px]">
+    <x-table.thead :sticky="true">
         <x-table.th>Informasi Pegawai</x-table.th>
         <x-table.th>Bidang</x-table.th>
         <x-table.th class="text-center">Status</x-table.th>

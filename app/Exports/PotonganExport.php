@@ -27,6 +27,17 @@ class PotonganExport
     {
         $data = $this->getData();
         
+        // Cek arsip laporan
+        $dataHash = md5('Potongan TPP' . 'EXCEL' . json_encode($data));
+        $existings = \App\Models\ArsipLaporan::where('data_hash', $dataHash)->get();
+        foreach ($existings as $existing) {
+            if (\Illuminate\Support\Facades\Storage::exists($existing->file_path)) {
+                return \Illuminate\Support\Facades\Storage::download($existing->file_path, $existing->nama_file);
+            } else {
+                $existing->delete();
+            }
+        }
+
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Potongan TPP');
@@ -258,14 +269,24 @@ class PotonganExport
         $sheet->getColumnDimension('G')->setWidth(18);
 
         $filename = 'Laporan_Potongan_TPP_' . now()->format('Ymd_His') . '.xlsx';
+        $path = 'arsip_laporan/' . $filename;
         
         $writer = new Xlsx($spreadsheet);
         
-        return response()->streamDownload(function() use ($writer) {
-            $writer->save('php://output');
-        }, $filename, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        \Illuminate\Support\Facades\Storage::makeDirectory('arsip_laporan');
+        $writer->save(\Illuminate\Support\Facades\Storage::path($path));
+        
+        \App\Models\ArsipLaporan::create([
+            'tipe_laporan' => 'Potongan TPP',
+            'format' => 'EXCEL',
+            'nama_file' => $filename,
+            'file_path' => $path,
+            'data_hash' => $dataHash,
+            'filter_info' => $data['filterInfo'],
+            'dibuat_oleh' => auth()->id(),
         ]);
+        
+        return \Illuminate\Support\Facades\Storage::download($path, $filename);
     }
 
     public function getData(): array
@@ -283,7 +304,7 @@ class PotonganExport
 
         $pengaturan = resolve(PengaturanService::class);
         $nominalPokok = $pengaturan->simpananPokok();
-        $nominalWajib = $pengaturan->simpananWajib();
+        $nominalWajib = $pengaturan->simpananWajib((int) $month, (int) $year);
 
         $query = Anggota::aktif()->with(['bidang'])->orderBy('bidang_id')->orderBy('nama');
 

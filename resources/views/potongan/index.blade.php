@@ -95,7 +95,7 @@
         <div class="bg-white rounded-2xl border border-stone-200 shadow-sm flex flex-col">
             <div class="relative flex-1 flex flex-col">
                 <x-table>
-                    <x-table.thead :sticky="true" class="top-[168px]">
+                    <x-table.thead :sticky="true">
                         <x-table.th>NIP & Nama Anggota</x-table.th>
                         <x-table.th>Bidang</x-table.th>
                         

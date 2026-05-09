@@ -258,13 +258,39 @@ class SimpananController extends Controller
         $export = new \App\Exports\SimpananExport($request);
         $data = $export->getData();
 
+        // Cek arsip laporan
+        $dataHash = md5('Simpanan Anggota' . 'PDF' . json_encode($data));
+        $existings = \App\Models\ArsipLaporan::where('data_hash', $dataHash)->get();
+        foreach ($existings as $existing) {
+            if (\Illuminate\Support\Facades\Storage::exists($existing->file_path)) {
+                return \Illuminate\Support\Facades\Storage::download($existing->file_path, $existing->nama_file);
+            } else {
+                $existing->delete();
+            }
+        }
+
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.simpanan-pdf', [
             'rows' => $data['rows'],
             'grandTotals' => $data['grandTotals'],
             'filterInfo' => $data['filterInfo'],
         ])->setPaper('a4', 'landscape');
 
-        $filename = 'Laporan_Simpanan_Anggota_' . now()->format('Y-m-d_His') . '.pdf';
-        return $pdf->download($filename);
+        $filename = 'Laporan_Simpanan_Anggota_' . now()->format('Ymd_His') . '.pdf';
+        $path = 'arsip_laporan/' . $filename;
+        
+        \Illuminate\Support\Facades\Storage::makeDirectory('arsip_laporan');
+        \Illuminate\Support\Facades\Storage::put($path, $pdf->output());
+        
+        \App\Models\ArsipLaporan::create([
+            'tipe_laporan' => 'Simpanan',
+            'format' => 'PDF',
+            'nama_file' => $filename,
+            'file_path' => $path,
+            'data_hash' => $dataHash,
+            'filter_info' => $data['filterInfo'],
+            'dibuat_oleh' => auth()->id(),
+        ]);
+
+        return \Illuminate\Support\Facades\Storage::download($path, $filename);
     }
 }

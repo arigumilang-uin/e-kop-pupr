@@ -1,6 +1,6 @@
 <div class="w-full overflow-x-auto lg:overflow-x-visible relative">
     <table class="w-full text-left text-sm text-stone-600 whitespace-nowrap">
-        <thead class="sticky top-[168px] z-20 shadow-sm border-b border-stone-200 bg-stone-50">
+        <thead class="lg:sticky lg:top-[168px] z-20 shadow-sm border-b border-stone-200 bg-stone-50">
             <tr>
                 <th class="px-5 py-4 text-[11px] font-bold text-stone-500 uppercase tracking-wider">No. Referensi</th>
                 <th class="px-5 py-4 text-[11px] font-bold text-stone-500 uppercase tracking-wider">Tgl Transaksi</th>

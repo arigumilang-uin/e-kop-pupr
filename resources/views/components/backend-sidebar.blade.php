@@ -27,7 +27,7 @@
             </div>
             <div class="flex-1 min-w-0">
                 <p class="text-sm font-bold text-stone-800 truncate">{{ auth()->user()->nama ?? 'Guest' }}</p>
-                <p class="text-[11px] font-semibold text-emerald-600 tracking-wider mt-0.5">{{ auth()->user()?->role?->value ?? 'Admin' }}</p>
+                <p class="text-[11px] font-semibold text-emerald-600 tracking-wider mt-0.5">{{ \App\Services\PermissionRegistry::roleLabel(auth()->user()->getRoleNames()->first() ?? 'unknown') }}</p>
             </div>
             <form action="{{ route('logout') }}" method="POST">
                 @csrf

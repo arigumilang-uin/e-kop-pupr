@@ -24,6 +24,17 @@ class SimpananExport
     {
         $data = $this->getData();
         
+        // Cek arsip laporan
+        $dataHash = md5('Simpanan Anggota' . 'EXCEL' . json_encode($data));
+        $existings = \App\Models\ArsipLaporan::where('data_hash', $dataHash)->get();
+        foreach ($existings as $existing) {
+            if (\Illuminate\Support\Facades\Storage::exists($existing->file_path)) {
+                return \Illuminate\Support\Facades\Storage::download($existing->file_path, $existing->nama_file);
+            } else {
+                $existing->delete();
+            }
+        }
+
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Simpanan Anggota');
@@ -118,12 +129,6 @@ class SimpananExport
         $sheet->setCellValue("G".($row+1), 'SWP');
         $sheet->setCellValue("H".($row+1), 'Bonus SHU');
 
-        $sheet->mergeCells("I{$row}:J{$row}");
-        $sheet->setCellValue("I{$row}", 'Total Simpanan');
-        $sheet->mergeCells("I".($row+1).":J".($row+1));
-        // Add one more line for aesthetic but let's just merge them properly
-        $sheet->unmergeCells("I{$row}:J{$row}");
-        $sheet->unmergeCells("I".($row+1).":J".($row+1));
         $sheet->mergeCells("I{$row}:J".($row+1));
         $sheet->setCellValue("I{$row}", 'Total Simpanan');
 
@@ -208,15 +213,24 @@ class SimpananExport
         $sheet->getColumnDimension('J')->setWidth(10);
 
         $filename = 'Laporan_Simpanan_' . now()->format('Ymd_His') . '.xlsx';
-        $path = storage_path('app/public/' . $filename);
+        $path = 'arsip_laporan/' . $filename;
         
         $writer = new Xlsx($spreadsheet);
         
-        return response()->streamDownload(function() use ($writer) {
-            $writer->save('php://output');
-        }, $filename, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        \Illuminate\Support\Facades\Storage::makeDirectory('arsip_laporan');
+        $writer->save(\Illuminate\Support\Facades\Storage::path($path));
+        
+        \App\Models\ArsipLaporan::create([
+            'tipe_laporan' => 'Simpanan',
+            'format' => 'EXCEL',
+            'nama_file' => $filename,
+            'file_path' => $path,
+            'data_hash' => $dataHash,
+            'filter_info' => $data['filterInfo'],
+            'dibuat_oleh' => auth()->id(),
         ]);
+        
+        return \Illuminate\Support\Facades\Storage::download($path, $filename);
     }
 
     public function getData(): array

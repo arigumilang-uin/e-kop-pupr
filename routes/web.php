@@ -237,6 +237,21 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:log.view');
 
     // =============================================
+    // ARSIP LAPORAN
+    // =============================================
+    Route::get('/arsip-laporan', [\App\Http\Controllers\Sistem\ArsipLaporanController::class, 'index'])
+        ->name('arsip.index')
+        ->middleware('permission:log.view'); // Use same permission as log view or settings view
+
+    Route::get('/arsip-laporan/{arsip}/download', [\App\Http\Controllers\Sistem\ArsipLaporanController::class, 'download'])
+        ->name('arsip.download')
+        ->middleware('permission:log.view');
+
+    Route::delete('/arsip-laporan/{arsip}', [\App\Http\Controllers\Sistem\ArsipLaporanController::class, 'destroy'])
+        ->name('arsip.destroy')
+        ->middleware('permission:pengaturan.edit'); // Only super admin can delete
+
+    // =============================================
     // PENGATURAN SISTEM — Super Admin Only
     // =============================================
     Route::middleware('permission:pengaturan.view')->group(function () {
@@ -245,6 +260,14 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/pengaturan/{pengaturan}', [PengaturanController::class, 'update'])
         ->name('pengaturan.update')
+        ->middleware('permission:pengaturan.edit');
+        
+    Route::post('/pengaturan-khusus', [PengaturanController::class, 'storeKhusus'])
+        ->name('pengaturan.khusus.store')
+        ->middleware('permission:pengaturan.edit');
+        
+    Route::delete('/pengaturan-khusus/{id}', [PengaturanController::class, 'destroyKhusus'])
+        ->name('pengaturan.khusus.destroy')
         ->middleware('permission:pengaturan.edit');
 
     // =============================================

@@ -30,7 +30,7 @@ class PotonganBulananController extends Controller
         $jenisWajib = JenisSimpanan::wajib();
 
         $nominalPokok = $this->pengaturan->simpananPokok();
-        $nominalWajib = $this->pengaturan->simpananWajib();
+        $nominalWajib = $this->pengaturan->simpananWajib((int) $month, (int) $year);
 
         $query = Anggota::aktif()->with(['bidang'])->orderBy('nama');
 
@@ -214,6 +214,17 @@ class PotonganBulananController extends Controller
         $export = new \App\Exports\PotonganExport($request);
         $data = $export->getData();
 
+        // Cek arsip laporan
+        $dataHash = md5('Potongan TPP' . 'PDF' . json_encode($data));
+        $existings = \App\Models\ArsipLaporan::where('data_hash', $dataHash)->get();
+        foreach ($existings as $existing) {
+            if (\Illuminate\Support\Facades\Storage::exists($existing->file_path)) {
+                return \Illuminate\Support\Facades\Storage::download($existing->file_path, $existing->nama_file);
+            } else {
+                $existing->delete();
+            }
+        }
+
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.potongan-pdf', [
             'rows' => $data['rows'],
             'grandTotals' => $data['grandTotals'],
@@ -221,7 +232,22 @@ class PotonganBulananController extends Controller
             'filterInfo' => $data['filterInfo'],
         ])->setPaper('a4', 'landscape');
 
-        $filename = 'Laporan_Potongan_TPP_' . now()->format('Y-m-d_His') . '.pdf';
-        return $pdf->download($filename);
+        $filename = 'Laporan_Potongan_TPP_' . now()->format('Ymd_His') . '.pdf';
+        $path = 'arsip_laporan/' . $filename;
+        
+        \Illuminate\Support\Facades\Storage::makeDirectory('arsip_laporan');
+        \Illuminate\Support\Facades\Storage::put($path, $pdf->output());
+        
+        \App\Models\ArsipLaporan::create([
+            'tipe_laporan' => 'Potongan TPP',
+            'format' => 'PDF',
+            'nama_file' => $filename,
+            'file_path' => $path,
+            'data_hash' => $dataHash,
+            'filter_info' => $data['filterInfo'],
+            'dibuat_oleh' => auth()->id(),
+        ]);
+
+        return \Illuminate\Support\Facades\Storage::download($path, $filename);
     }
 }

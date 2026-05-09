@@ -1,5 +1,5 @@
 <x-table>
-    <x-table.thead :sticky="true" class="top-[168px]">
+    <x-table.thead :sticky="true">
         <x-table.th>Informasi Anggota</x-table.th>
         <x-table.th class="text-right">Thn. 2025</x-table.th>
         <x-table.th class="text-right">Pokok</x-table.th>

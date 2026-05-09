@@ -33,7 +33,19 @@ class UpdateUserRequest extends FormRequest
                 Rule::unique('users', 'username')->ignore($userId),
             ],
             'password' => 'nullable|string|min:6|confirmed',
-            'role'     => ['required', 'string', Rule::exists('roles', 'name')],
+            'role'     => [
+                'required', 
+                'string', 
+                Rule::exists('roles', 'name'),
+                function ($attribute, $value, $fail) use ($userId) {
+                    if ($userId === 1 && $value !== \App\Services\PermissionRegistry::ROLE_SUPER_ADMIN) {
+                        $fail('Role pengguna ID 1 harus Super Admin.');
+                    }
+                    if ($userId !== 1 && $value === \App\Services\PermissionRegistry::ROLE_SUPER_ADMIN) {
+                        $fail('Role Super Admin hanya untuk pengguna ID 1.');
+                    }
+                },
+            ],
         ];
     }
 

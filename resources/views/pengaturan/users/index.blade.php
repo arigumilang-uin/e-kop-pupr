@@ -97,7 +97,7 @@
                         <x-table.td class="whitespace-nowrap text-right align-top">
                             <x-action-dropdown>
                                 @can('user.edit')
-                                <x-action-dropdown-item type="button" onclick="document.querySelector('#modal-edit-user-{{ $u->id }}').dispatchEvent(new CustomEvent('open-modal', {bubbles:true, detail:'modal-edit-user-{{ $u->id }}'}))" icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>'>
+                                <x-action-dropdown-item type="button" onclick="window.dispatchEvent(new CustomEvent('open-modal', {detail:'modal-edit-user-{{ $u->id }}'}))" icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>'>
                                     Edit
                                 </x-action-dropdown-item>
                                 @endcan
@@ -116,16 +116,6 @@
                         @endcanany
                     </x-table.tr>
 
-                    {{-- Edit Modal per user --}}
-                    @can('user.edit')
-                    <x-modal name="modal-edit-user-{{ $u->id }}" title="Edit Pengguna" subtitle="{{ $u->nama }}" maxWidth="lg">
-                        <form id="form-edit-user-{{ $u->id }}" action="{{ route('users.update', $u->id) }}" method="POST" class="contents" x-data="userForm('{{ $u->nip }}')">
-                            @csrf @method('PUT')
-                            @include('pengaturan.users._form', ['user' => $u, 'formId' => 'form-edit-user-'.$u->id, 'isEdit' => true])
-                        </form>
-                    </x-modal>
-                    @endcan
-
                     @empty
                     <x-table.tr>
                         <x-table.td colspan="7" class="px-6 py-12 text-center text-stone-500 font-medium text-sm">
@@ -138,6 +128,18 @@
                     @endforelse
                 </x-table.tbody>
             </x-table>
+
+            {{-- Edit Modals (Moved outside table for valid HTML) --}}
+            @foreach($users as $u)
+                @can('user.edit')
+                <x-modal name="modal-edit-user-{{ $u->id }}" title="Edit Pengguna" subtitle="{{ $u->nama }}" maxWidth="lg">
+                    <form id="form-edit-user-{{ $u->id }}" action="{{ route('users.update', $u->id) }}" method="POST" class="contents" x-data="userForm('{{ $u->nip }}')">
+                        @csrf @method('PUT')
+                        @include('pengaturan.users._form', ['user' => $u, 'formId' => 'form-edit-user-'.$u->id, 'isEdit' => true])
+                    </form>
+                </x-modal>
+                @endcan
+            @endforeach
 
             @if($users->hasPages())
             <div class="px-6 py-4 border-t border-stone-200 bg-stone-50/50">{{ $users->links() }}</div>

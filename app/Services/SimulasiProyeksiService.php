@@ -34,7 +34,7 @@ class SimulasiProyeksiService
 
         $kasSekarang = $this->saldo->saldoKoperasi();
         $jumlahAnggotaAktif = Anggota::aktif()->count();
-        $nominalWajib = $this->pengaturan->simpananWajib();
+        $nominalWajibGlobal = $this->pengaturan->simpananWajib();
 
         // Ambil pinjaman berjalan + angsuran belum lunas
         $pinjamanBerjalan = Pinjaman::with(['angsuran' => function ($q) {
@@ -52,7 +52,8 @@ class SimulasiProyeksiService
             $bln = $loopDate->month;
             $thn = $loopDate->year;
 
-            $pendapatanWajib = $jumlahAnggotaAktif * $nominalWajib;
+            $nominalWajibBulanIni = $this->pengaturan->simpananWajib($bln, $thn);
+            $pendapatanWajib = $jumlahAnggotaAktif * $nominalWajibBulanIni;
 
             $pendapatanAngsuran = 0;
             $detailAngsuran = [];
@@ -78,6 +79,7 @@ class SimulasiProyeksiService
             $proyeksi[] = [
                 'bulan' => $loopDate->translatedFormat('F Y'),
                 'bulan_raw' => $loopDate->copy(),
+                'nominal_wajib_berlaku' => $nominalWajibBulanIni,
                 'pendapatan_wajib' => $pendapatanWajib,
                 'pendapatan_angsuran' => $pendapatanAngsuran,
                 'detail_angsuran' => $detailAngsuran,
@@ -111,7 +113,7 @@ class SimulasiProyeksiService
         }
 
         $summary = compact(
-            'kasSekarang', 'kasProyeksiAkhir', 'jumlahAnggotaAktif', 'nominalWajib',
+            'kasSekarang', 'kasProyeksiAkhir', 'jumlahAnggotaAktif', 'nominalWajibGlobal',
             'totalPendapatanWajib', 'totalPendapatanAngsuran', 'totalPemasukan',
             'kapasitasPinjaman', 'avgPinjaman', 'pinjamanAkanLunas'
         );

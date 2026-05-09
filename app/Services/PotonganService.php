@@ -28,7 +28,7 @@ class PotonganService
         $jenisPokok = JenisSimpanan::pokok();
         $jenisWajib = JenisSimpanan::wajib();
         $nominalPokok = $this->pengaturan->simpananPokok();
-        $nominalWajib = $this->pengaturan->simpananWajib();
+        $nominalWajib = $this->pengaturan->simpananWajib($month, $year);
         $periodeFilter = Carbon::createFromDate($year, $month, 1);
 
         $countProcessed = 0;

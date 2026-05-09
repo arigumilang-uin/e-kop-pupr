@@ -45,24 +45,7 @@ class RbacSeeder extends Seeder
 
         $this->command->info("✅ Permissions synced: Super Admin ({$superAdmin->permissions->count()}), Admin ({$admin->permissions->count()}), Pimpinan ({$pimpinan->permissions->count()}).");
 
-        // ========================
-        // 4. Assign Super Admin role to User ID=1
-        // ========================
-        $coreUser = User::find(1);
-
-        if ($coreUser) {
-            if ($coreUser->username !== 'core-admin') {
-                $coreUser->update(['username' => 'core-admin']);
-                $this->command->info("✅ User ID=1 username updated to 'core-admin'.");
-            }
-
-            if (!$coreUser->hasRole(PermissionRegistry::ROLE_SUPER_ADMIN)) {
-                $coreUser->syncRoles([PermissionRegistry::ROLE_SUPER_ADMIN]);
-            }
-
-            $this->command->info("✅ User '{$coreUser->nama}' (ID=1) assigned as Super Admin.");
-        } else {
-            $this->command->warn("⚠️ User ID=1 not found. Please manually assign Super Admin after seeding.");
-        }
+        // Note: Assignment of Super Admin and Admin roles to users
+        // is handled in DatabaseSeeder.php after user creation.
     }
 }
