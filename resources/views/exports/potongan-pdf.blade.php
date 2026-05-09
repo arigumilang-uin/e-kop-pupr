@@ -97,23 +97,65 @@
             <tr>
                 <th rowspan="2" style="width: 25px;">No</th>
                 <th colspan="2" rowspan="2" style="width: 200px;">NIP / Nama / Unit Kerja</th>
-                <th colspan="3">Rincian Potongan TPP</th>
-                <th rowspan="2" style="width: 80px;">Total Potongan</th>
+                @if(request('jenis') === 'pinjaman')
+                    <th colspan="3">Rincian Angsuran</th>
+                    <th rowspan="2" style="width: 80px; visibility: hidden;"></th>
+                @elseif(request('jenis') === 'pokok')
+                    <th>Pot. Pokok</th>
+                    <th colspan="2" style="visibility: hidden;"></th>
+                    <th rowspan="2" style="width: 80px;">Total Potongan</th>
+                @elseif(request('jenis') === 'wajib')
+                    <th>Pot. Wajib</th>
+                    <th colspan="2" style="visibility: hidden;"></th>
+                    <th rowspan="2" style="width: 80px;">Total Potongan</th>
+                @else
+                    <th colspan="3">Rincian Potongan TPP</th>
+                    <th rowspan="2" style="width: 80px;">Total Potongan</th>
+                @endif
             </tr>
             <tr>
-                <th style="width: 80px;">S. Pokok</th>
-                <th style="width: 80px;">S. Wajib</th>
-                <th style="width: 90px;">Angsuran Pinjaman</th>
+                @if(request('jenis') === 'pinjaman')
+                    <th style="width: 80px;">Pokok Pinjaman</th>
+                    <th style="width: 80px;">Bunga</th>
+                    <th style="width: 90px;">Total Angsuran</th>
+                @elseif(request('jenis') === 'pokok')
+                    <th style="width: 80px; visibility: hidden;"></th>
+                    <th style="width: 80px; visibility: hidden;"></th>
+                    <th style="width: 90px; visibility: hidden;"></th>
+                @elseif(request('jenis') === 'wajib')
+                    <th style="width: 80px; visibility: hidden;"></th>
+                    <th style="width: 80px; visibility: hidden;"></th>
+                    <th style="width: 90px; visibility: hidden;"></th>
+                @else
+                    <th style="width: 80px;">S. Pokok</th>
+                    <th style="width: 80px;">S. Wajib</th>
+                    <th style="width: 90px;">Angsuran Pinjaman</th>
+                @endif
             </tr>
         </thead>
         <tbody>
             <!-- Grand Total Row -->
             <tr class="grand-total-row">
                 <td colspan="3" class="center">TOTAL SELURUHNYA</td>
-                <td class="num">{{ number_format($grandTotals['pokok'], 0, ',', '.') }}</td>
-                <td class="num">{{ number_format($grandTotals['wajib'], 0, ',', '.') }}</td>
-                <td class="num">{{ number_format($grandTotals['pinjaman'], 0, ',', '.') }}</td>
-                <td class="num" style="font-size: 9px;">{{ number_format($grandTotals['total'], 0, ',', '.') }}</td>
+                @if(request('jenis') === 'pinjaman')
+                    <td class="num">{{ number_format($grandTotals['pinjaman_pokok'], 0, ',', '.') }}</td>
+                    <td class="num">{{ number_format($grandTotals['pinjaman_bunga'], 0, ',', '.') }}</td>
+                    <td class="num">{{ number_format($grandTotals['pinjaman'], 0, ',', '.') }}</td>
+                    <td></td>
+                @elseif(request('jenis') === 'pokok')
+                    <td class="num">{{ number_format($grandTotals['pokok'], 0, ',', '.') }}</td>
+                    <td colspan="2"></td>
+                    <td class="num" style="font-size: 9px;">{{ number_format($grandTotals['total'], 0, ',', '.') }}</td>
+                @elseif(request('jenis') === 'wajib')
+                    <td class="num">{{ number_format($grandTotals['wajib'], 0, ',', '.') }}</td>
+                    <td colspan="2"></td>
+                    <td class="num" style="font-size: 9px;">{{ number_format($grandTotals['total'], 0, ',', '.') }}</td>
+                @else
+                    <td class="num">{{ number_format($grandTotals['pokok'], 0, ',', '.') }}</td>
+                    <td class="num">{{ number_format($grandTotals['wajib'], 0, ',', '.') }}</td>
+                    <td class="num">{{ number_format($grandTotals['pinjaman'], 0, ',', '.') }}</td>
+                    <td class="num" style="font-size: 9px;">{{ number_format($grandTotals['total'], 0, ',', '.') }}</td>
+                @endif
             </tr>
 
             <!-- Group By Bidang -->
@@ -123,10 +165,25 @@
                 <!-- Subtotal Unit Kerja -->
                 <tr class="subtotal-row">
                     <td colspan="3" style="text-indent: 5px;">{{ mb_strtoupper($bidangName) }}</td>
-                    <td class="num">{{ number_format($anggotaList->sum('pokok'), 0, ',', '.') }}</td>
-                    <td class="num">{{ number_format($anggotaList->sum('wajib'), 0, ',', '.') }}</td>
-                    <td class="num">{{ number_format($anggotaList->sum('pinjaman'), 0, ',', '.') }}</td>
-                    <td class="num" style="font-size: 9px;">{{ number_format($anggotaList->sum('total'), 0, ',', '.') }}</td>
+                    @if(request('jenis') === 'pinjaman')
+                        <td class="num">{{ number_format($anggotaList->sum('pinjaman_pokok'), 0, ',', '.') }}</td>
+                        <td class="num">{{ number_format($anggotaList->sum('pinjaman_bunga'), 0, ',', '.') }}</td>
+                        <td class="num">{{ number_format($anggotaList->sum('pinjaman'), 0, ',', '.') }}</td>
+                        <td></td>
+                    @elseif(request('jenis') === 'pokok')
+                        <td class="num">{{ number_format($anggotaList->sum('pokok'), 0, ',', '.') }}</td>
+                        <td colspan="2"></td>
+                        <td class="num" style="font-size: 9px;">{{ number_format($anggotaList->sum('total'), 0, ',', '.') }}</td>
+                    @elseif(request('jenis') === 'wajib')
+                        <td class="num">{{ number_format($anggotaList->sum('wajib'), 0, ',', '.') }}</td>
+                        <td colspan="2"></td>
+                        <td class="num" style="font-size: 9px;">{{ number_format($anggotaList->sum('total'), 0, ',', '.') }}</td>
+                    @else
+                        <td class="num">{{ number_format($anggotaList->sum('pokok'), 0, ',', '.') }}</td>
+                        <td class="num">{{ number_format($anggotaList->sum('wajib'), 0, ',', '.') }}</td>
+                        <td class="num">{{ number_format($anggotaList->sum('pinjaman'), 0, ',', '.') }}</td>
+                        <td class="num" style="font-size: 9px;">{{ number_format($anggotaList->sum('total'), 0, ',', '.') }}</td>
+                    @endif
                 </tr>
 
                 <!-- Anggota List -->
@@ -136,11 +193,25 @@
                     <td class="center" style="width: 75px; font-family: 'DejaVu Sans Mono', monospace; font-size: 7.5px;">{{ $row['nip'] }}</td>
                     <td class="bold" style="font-size: 9px;">{{ $row['nama'] }}</td>
                     
-                    <td class="num">{{ $row['pokok'] > 0 ? number_format($row['pokok'], 0, ',', '.') : '-' }}</td>
-                    <td class="num">{{ $row['wajib'] > 0 ? number_format($row['wajib'], 0, ',', '.') : '-' }}</td>
-                    <td class="num">{{ $row['pinjaman'] > 0 ? number_format($row['pinjaman'], 0, ',', '.') : '-' }}</td>
-                    
-                    <td class="num bold">{{ number_format($row['total'], 0, ',', '.') }}</td>
+                    @if(request('jenis') === 'pinjaman')
+                        <td class="num">{{ $row['pinjaman_pokok'] > 0 ? number_format($row['pinjaman_pokok'], 0, ',', '.') : '-' }}</td>
+                        <td class="num">{{ $row['pinjaman_bunga'] > 0 ? number_format($row['pinjaman_bunga'], 0, ',', '.') : '-' }}</td>
+                        <td class="num">{{ $row['pinjaman'] > 0 ? number_format($row['pinjaman'], 0, ',', '.') : '-' }}</td>
+                        <td></td>
+                    @elseif(request('jenis') === 'pokok')
+                        <td class="num">{{ $row['pokok'] > 0 ? number_format($row['pokok'], 0, ',', '.') : '-' }}</td>
+                        <td colspan="2"></td>
+                        <td class="num bold">{{ number_format($row['total'], 0, ',', '.') }}</td>
+                    @elseif(request('jenis') === 'wajib')
+                        <td class="num">{{ $row['wajib'] > 0 ? number_format($row['wajib'], 0, ',', '.') : '-' }}</td>
+                        <td colspan="2"></td>
+                        <td class="num bold">{{ number_format($row['total'], 0, ',', '.') }}</td>
+                    @else
+                        <td class="num">{{ $row['pokok'] > 0 ? number_format($row['pokok'], 0, ',', '.') : '-' }}</td>
+                        <td class="num">{{ $row['wajib'] > 0 ? number_format($row['wajib'], 0, ',', '.') : '-' }}</td>
+                        <td class="num">{{ $row['pinjaman'] > 0 ? number_format($row['pinjaman'], 0, ',', '.') : '-' }}</td>
+                        <td class="num bold">{{ number_format($row['total'], 0, ',', '.') }}</td>
+                    @endif
                 </tr>
                 @endforeach
             @endforeach

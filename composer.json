@@ -11,7 +11,8 @@
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
         "openspout/openspout": "^5.7",
-        "phpoffice/phpspreadsheet": "^5.7"
+        "phpoffice/phpspreadsheet": "^5.7",
+        "spatie/laravel-permission": "^7.4"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^4.2",

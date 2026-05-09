@@ -4,6 +4,7 @@
 @section('subtitle', 'Catat beban operasional, belanja, dan pengeluaran lain di luar pinjaman anggota')
 
 @section('actions')
+    @can('pengeluaran.create')
     <button @click="$dispatch('open-modal', 'modal-kategori')" class="px-4 py-2.5 bg-white border border-stone-200 text-stone-700 rounded-xl text-sm font-bold hover:bg-stone-50 transition-colors shadow-sm flex items-center justify-center gap-2">
         <svg class="w-4 h-4 text-stone-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
         <span>Master Kategori</span>
@@ -12,6 +13,7 @@
         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         <span>Catat Pengeluaran</span>
     </button>
+    @endcan
 @endsection
 
 @section('content')
@@ -97,7 +99,9 @@
                         <x-table.th>Kategori</x-table.th>
                         <x-table.th>Keterangan</x-table.th>
                         <x-table.th class="text-right">Nominal</x-table.th>
+                        @can('pengeluaran.delete')
                         <x-table.th class="text-right">Aksi</x-table.th>
+                        @endcan
                     </tr>
                 </x-table.thead>
                 <x-table.tbody>
@@ -119,6 +123,7 @@
                         <x-table.td class="align-top text-right font-mono font-bold text-stone-800 whitespace-nowrap text-[13px]">
                             {{ format_rupiah($p->nominal) }}
                         </x-table.td>
+                        @can('pengeluaran.delete')
                         <x-table.td class="whitespace-nowrap text-right align-top">
                             <x-action-dropdown>
                                 <form action="{{ route('pengeluaran.destroy', $p->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan pengeluaran ini?')">
@@ -130,10 +135,11 @@
                                 </form>
                             </x-action-dropdown>
                         </x-table.td>
+                        @endcan
                     </x-table.tr>
                     @empty
                     <x-table.tr>
-                        <x-table.td colspan="5" class="px-6 py-12 text-center text-stone-500 font-medium text-sm">
+                        <x-table.td colspan="{{ auth()->user()->can('pengeluaran.delete') ? 5 : 4 }}" class="px-6 py-12 text-center text-stone-500 font-medium text-sm">
                             <div class="flex flex-col items-center gap-2">
                                 <svg class="w-8 h-8 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
                                 Belum ada riwayat pengeluaran kas.

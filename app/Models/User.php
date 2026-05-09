@@ -2,22 +2,23 @@
 
 namespace App\Models;
 
-use App\Enums\RoleUser;
+use App\Services\PermissionRegistry;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
         'nama',
         'username',
         'password',
-        'role',
         'nip',
+        'is_active',
     ];
 
     protected $hidden = [
@@ -28,23 +29,28 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'password' => 'hashed',
-            'role' => RoleUser::class,
-            'locked_until' => 'datetime',
+            'password'      => 'hashed',
+            'is_active'     => 'boolean',
+            'locked_until'  => 'datetime',
             'last_login_at' => 'datetime',
         ];
     }
 
-    // === Role Checks ===
+    // === Role Checks (Convenience Methods) ===
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole(PermissionRegistry::ROLE_SUPER_ADMIN);
+    }
 
     public function isAdmin(): bool
     {
-        return $this->role === RoleUser::Admin;
+        return $this->hasRole(PermissionRegistry::ROLE_ADMIN);
     }
 
     public function isPimpinan(): bool
     {
-        return $this->role === RoleUser::Pimpinan;
+        return $this->hasRole(PermissionRegistry::ROLE_PIMPINAN);
     }
 
     public function isLocked(): bool
@@ -52,11 +58,15 @@ class User extends Authenticatable
         return $this->locked_until !== null && $this->locked_until->isFuture();
     }
 
+    // === Scopes ===
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
     // === Anggota Link ===
 
-    /**
-     * Ambil data anggota koperasi berdasarkan NIP yang sama.
-     */
     public function anggota(): ?Anggota
     {
         if (empty($this->nip)) {
@@ -66,9 +76,6 @@ class User extends Authenticatable
         return Anggota::where('nip', $this->nip)->first();
     }
 
-    /**
-     * Cek apakah user ini terkait dengan anggota koperasi.
-     */
     public function hasAnggota(): bool
     {
         return !empty($this->nip) && Anggota::where('nip', $this->nip)->exists();
@@ -76,9 +83,6 @@ class User extends Authenticatable
 
     // === Scopes ===
 
-    /**
-     * Scope: user pengurus yang memiliki NIP valid (terkait anggota aktif).
-     */
     public function scopePengurusAktif($query)
     {
         $nipAnggotaAktif = Anggota::where('status', 'aktif')->pluck('nip');
@@ -114,4 +118,3 @@ class User extends Authenticatable
         return $this->hasMany(PerubahanPengaturan::class, 'diputuskan_oleh');
     }
 }
-

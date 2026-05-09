@@ -76,11 +76,15 @@
 
                     {{-- Input --}}
                     <div class="flex items-center gap-3 shrink-0">
+                        @can('pengaturan.edit')
                         <input type="text" name="value" value="{{ $pengaturan->value }}"
                                class="w-40 px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono text-right focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                         <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm whitespace-nowrap">
                             Simpan
                         </button>
+                        @else
+                        <span class="w-40 px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm font-mono text-right text-slate-600 cursor-not-allowed">{{ $pengaturan->value }}</span>
+                        @endcan
                     </div>
                 </div>
             </form>

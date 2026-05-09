@@ -4,12 +4,7 @@
 @section('subtitle', 'Detail Informasi & Rekapitulasi Finansial')
 
 @section('actions')
-<a href="{{ route('anggota.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-stone-200 text-stone-600 rounded-xl text-sm font-bold hover:bg-stone-50 transition-all hover:-translate-x-1 shadow-sm">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-    </svg>
-    Kembali ke Daftar
-</a>
+<x-back-button fallback="{{ route('anggota.index') }}">Kembali</x-back-button>
 @endsection
 
 @section('content')
@@ -87,12 +82,14 @@
                     </div>
                 </div>
 
+                @can('anggota.edit')
                 <div class="mt-8 pt-6 border-t border-stone-100">
                     <a href="{{ route('anggota.edit', $anggota->id) }}" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-stone-50 border border-stone-200 hover:border-stone-300 text-stone-700 hover:bg-white hover:text-stone-900 font-bold rounded-xl transition-all shadow-sm active:scale-95 text-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                         Edit Biodata
                     </a>
                 </div>
+                @endcan
             </div>
         </div>
     </div>
@@ -172,9 +169,11 @@
                                         <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded {{ $pinj->status->value === 'berjalan' ? 'bg-blue-100 text-blue-700' : 'bg-stone-200 text-stone-700' }}">{{ $pinj->status->value }}</span>
                                     </div>
                                 </div>
+                                @can('pinjaman.detail')
                                 <a href="{{ route('pinjaman.show', $pinj->id) }}" class="text-[11px] font-bold text-[#043d2e] hover:text-[#043d2e]/70 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 shadow-sm transition-colors shrink-0">
                                     Lihat Detail &rarr;
                                 </a>
+                                @endcan
                             </div>
                             
                             {{-- Unified Progress --}}
@@ -204,6 +203,7 @@
             
             {{-- Proses Keluar (Only if Active) --}}
             @if($anggota->status->value === 'aktif')
+            @can('anggota.keluar')
             <div class="bg-white rounded-3xl border border-rose-200 shadow-sm p-6 sm:p-8 flex flex-col justify-center items-center text-center relative overflow-hidden group hover:border-rose-300 transition-colors {{ !isset($arsipKeluar) || $arsipKeluar->isEmpty() ? 'md:col-span-2' : '' }}">
                 <div class="absolute inset-0 bg-gradient-to-b from-white to-rose-50/30"></div>
                 <div class="relative z-10 w-full flex flex-col items-center">
@@ -218,6 +218,7 @@
                     </a>
                 </div>
             </div>
+            @endcan
             @endif
 
             {{-- Arsip Keluar Sebelumnya --}}

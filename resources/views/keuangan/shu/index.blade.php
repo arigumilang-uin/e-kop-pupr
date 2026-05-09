@@ -146,6 +146,7 @@
     {{-- ============================================== --}}
     {{-- PANEL KONFIGURASI: Komponen & Distribusi SHU   --}}
     {{-- ============================================== --}}
+    @can('shu.manage')
     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div class="px-6 py-4 bg-slate-50 border-b border-slate-200">
             <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
@@ -297,6 +298,7 @@
 
         </div>
     </div>
+    @endcan
 
     {{-- ============================================== --}}
     {{-- PAYOUT STATUS & PRORATA PER ANGGOTA            --}}
@@ -344,6 +346,7 @@
             </div>
 
             {{-- One-Click Payout Button --}}
+            @can('shu.manage')
             @if(!$payoutTahunIni)
             <form action="{{ route('shu.payout') }}" method="POST" class="shrink-0"
                   onsubmit="return confirm('⚠️ PERHATIAN: Anda akan mendistribusikan SHU tahun {{ $tahun }} ke Simpanan Sukarela seluruh anggota.\n\nTotal: {{ format_rupiah($prorata['ringkasan']['total_terdistribusi']) }} untuk {{ $prorata['ringkasan']['jumlah_penerima'] }} anggota.\n\nAksi ini TIDAK BISA DIBATALKAN. Lanjutkan?')">
@@ -355,6 +358,7 @@
                 </button>
             </form>
             @endif
+            @endcan
         </div>
 
         <div class="overflow-x-auto">

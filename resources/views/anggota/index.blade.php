@@ -4,12 +4,14 @@
 @section('subtitle', 'Daftar keseluruhan anggota Koperasi Tirta Bina Karya')
 
 @section('actions')
+    @can('anggota.create')
     <button @click="$dispatch('open-modal', 'modal-tambah-anggota')" class="py-2.5 px-4 rounded-xl bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
         </svg>
         <span>Tambah Anggota</span>
     </button>
+    @endcan
 @endsection
 
 @section('content')

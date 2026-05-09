@@ -106,6 +106,13 @@ class LoginController extends Controller
 
     private function handleBerhasilLogin(Request $request, User $user)
     {
+        // Guard: akun nonaktif
+        if (!$user->is_active) {
+            return back()
+                ->withInput($request->only('username'))
+                ->withErrors(['username' => 'Akun Anda telah dinonaktifkan. Hubungi Super Admin.']);
+        }
+
         $user->update([
             'failed_login_attempts' => 0,
             'locked_until' => null,
@@ -116,7 +123,8 @@ class LoginController extends Controller
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
-        $this->logger->logLogin($user->id, $user->nama, $user->role->value);
+        $roleName = $user->getRoleNames()->first() ?? 'unknown';
+        $this->logger->logLogin($user->id, $user->nama, $roleName);
 
         return redirect()->intended(route('dashboard'));
     }

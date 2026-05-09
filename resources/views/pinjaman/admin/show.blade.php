@@ -4,9 +4,7 @@
 @section('subtitle', 'Detail pengajuan ref: ' . $pinjaman->no_referensi)
 
 @section('actions')
-<a href="{{ route('pinjaman.index') }}" class="py-2.5 px-4 rounded-xl bg-white border border-stone-200 text-stone-600 hover:bg-stone-50 hover:text-stone-900 text-sm font-bold transition-colors shadow-sm">
-    Kembali
-</a>
+<x-back-button fallback="{{ route('pinjaman.index') }}">Kembali</x-back-button>
 @endsection
 
 @section('content')
@@ -147,6 +145,7 @@
                                         <span class="text-[11px] text-stone-400 mt-1.5 font-medium">Tgl: {{ $angs->tanggal_bayar ? $angs->tanggal_bayar->format('d/m/Y') : '-' }}</span>
                                     </div>
                                 @elseif($angs->status->value === 'belum')
+                                    @can('pinjaman.bayar')
                                     <form action="{{ route('pinjaman.angsuran.bayar', [$pinjaman->id, $angs->id]) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
@@ -154,6 +153,9 @@
                                             Lunasi Sekarang
                                         </button>
                                     </form>
+                                    @else
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-amber-50 text-amber-600 uppercase tracking-widest border border-amber-200">Belum Lunas</span>
+                                    @endcan
                                 @endif
                             </td>
                         </tr>
@@ -214,6 +216,7 @@
         </div>
 
         @if($pinjaman->status->value === 'menunggu')
+        @canany(['pinjaman.approve', 'pinjaman.reject'])
         <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 overflow-hidden relative">
             <h3 class="text-sm font-bold text-stone-800 mb-4 border-b border-stone-100 pb-3">Validasi Persetujuan</h3>
             
@@ -248,6 +251,7 @@
 
             <div class="space-y-3 pt-4 border-t border-stone-100">
                 {{-- Form Approve --}}
+                @can('pinjaman.approve')
                 <form action="{{ route('pinjaman.approve', $pinjaman->id) }}" method="POST">
                     @csrf
                     @method('PATCH')
@@ -256,11 +260,14 @@
                         Setujui Pengajuan & Cairkan
                     </button>
                 </form>
+                @endcan
 
                 {{-- Trigger Reject Modal --}}
+                @can('pinjaman.reject')
                 <button type="button" class="w-full py-2.5 rounded-xl text-red-600 bg-white hover:bg-red-50 font-bold transition-all border border-red-200 hover:border-red-300" onclick="document.getElementById('rejectModal').classList.remove('hidden')">
                     Tolak Pengajuan...
                 </button>
+                @endcan
             </div>
         </div>
 
@@ -298,6 +305,7 @@
                 </div>
             </div>
         </div>
+        @endcanany
         @endif
     </div>
 </div>

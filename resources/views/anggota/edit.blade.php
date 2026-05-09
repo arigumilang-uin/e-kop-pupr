@@ -4,10 +4,10 @@
 @section('subtitle', 'Pembaruan informasi registrasi milik ' . $anggota->nama)
 
 @section('actions')
-<a href="{{ route('anggota.index') }}" class="py-2.5 px-4 rounded-xl bg-white border border-stone-200 text-stone-600 hover:bg-stone-50 hover:text-stone-900 text-sm font-medium transition-colors shadow-sm">
+<x-back-button fallback="{{ route('anggota.index') }}">
     <span class="hidden sm:inline">Batal & Kembali</span>
     <span class="sm:hidden">Kembali</span>
-</a>
+</x-back-button>
 @endsection
 
 @section('content')

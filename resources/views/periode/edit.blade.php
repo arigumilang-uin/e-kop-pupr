@@ -4,12 +4,7 @@
 @section('subtitle', $periode->nama_periode)
 
 @section('actions')
-<a href="{{ route('periode.show', $periode) }}" class="py-2.5 px-4 rounded-xl bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-    </svg>
-    Kembali
-</a>
+<x-back-button fallback="{{ route('periode.show', $periode) }}" />
 @endsection
 
 @section('content')
@@ -174,7 +169,7 @@
             </div>
 
             <div class="px-6 py-5 border-t border-stone-100 bg-stone-50 shrink-0 flex items-center justify-end gap-3">
-                <a href="{{ route('periode.show', $periode) }}" class="px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all">Batalkan</a>
+                <a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('periode.show', $periode) }}" class="px-4 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 rounded-xl transition-all">Batalkan</a>
                 <button type="submit"
                         class="px-6 py-2.5 bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

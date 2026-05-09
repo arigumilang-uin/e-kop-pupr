@@ -4,9 +4,7 @@
 @section('subtitle', 'Formulir setoran/simpanan uang manual oleh anggota koperasi')
 
 @section('actions')
-<a href="{{ route('simpanan.index') }}" class="py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-sm font-medium transition-colors">
-    Batal & Kembali
-</a>
+<x-back-button fallback="{{ route('simpanan.index') }}">Batal & Kembali</x-back-button>
 @endsection
 
 @section('content')

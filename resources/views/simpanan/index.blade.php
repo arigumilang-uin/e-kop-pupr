@@ -5,8 +5,8 @@
 
 @section('actions')
     <x-export-dropdown 
-        excelRoute="{{ route('simpanan.export.excel') }}" 
-        pdfRoute="{{ route('simpanan.export.pdf') }}" 
+        :excelRoute="route('simpanan.export.excel')" 
+        :pdfRoute="route('simpanan.export.pdf')" 
     />
 @endsection
 

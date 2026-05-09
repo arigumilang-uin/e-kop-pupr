@@ -28,12 +28,16 @@
             <x-table.tr>
                 <x-table.td>
                     <div class="flex flex-col">
+                        @can('simpanan.create')
                         <button type="button" @click="openModal({{ $anggota->id }}, '{{ addslashes($anggota->nama) }}', {{ $anggota->neto_pokok > 0 ? 'true' : 'false' }})" class="group font-bold text-stone-800 hover:text-[#043d2e] transition-colors flex items-center gap-2 w-fit text-left focus:outline-none" title="Catat Simpanan Manual">
                             {{ $anggota->nama }}
                             <span class="inline-flex items-center justify-center w-5 h-5 rounded border border-stone-200 bg-stone-50 text-stone-400 group-hover:border-[#043d2e]/30 group-hover:bg-emerald-50 group-hover:text-[#043d2e] transition-all shadow-sm">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                             </span>
                         </button>
+                        @else
+                        <span class="font-bold text-stone-800">{{ $anggota->nama }}</span>
+                        @endcan
                         <div class="flex items-center gap-2 mt-1">
                             <span class="text-[11px] text-stone-500 font-mono font-medium tracking-wide">NIP. <x-nip-display :value="$anggota->nip" /></span>
                             @if($anggota->golongan_asn)

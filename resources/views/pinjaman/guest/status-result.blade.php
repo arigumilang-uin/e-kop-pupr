@@ -146,7 +146,7 @@
 
         <!-- Global Action -->
         <div class="pt-6 flex justify-center">
-            <a href="{{ route('pinjaman.guest.status') }}" class="h-12 px-8 bg-[#0f172a] text-white hover:bg-slate-800 rounded-xl font-bold text-[14px] shadow-lg shadow-slate-900/10 transition-all flex items-center justify-center gap-2 outline-none">
+            <a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('pinjaman.guest.status') }}" class="h-12 px-8 bg-[#0f172a] text-white hover:bg-slate-800 rounded-xl font-bold text-[14px] shadow-lg shadow-slate-900/10 transition-all flex items-center justify-center gap-2 outline-none group">
                 Kembali ke Pencarian
                 <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </a>

@@ -108,6 +108,7 @@
 }">
 
     {{-- Alert Bar Mass Action --}}
+    @canany(['pinjaman.approve', 'pinjaman.reject'])
     <div x-show="selected.length > 0" x-transition class="mb-6 bg-[#043d2e] rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl border border-[#043d2e]">
         <div class="flex items-center gap-4 text-white">
             <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-black text-lg border border-white/20">
@@ -119,6 +120,7 @@
             </div>
         </div>
         <div class="flex items-center gap-3 w-full md:w-auto">
+            @can('pinjaman.approve')
             <form action="{{ route('pinjaman.massApprove') }}" method="POST" class="w-full md:w-auto">
                 @csrf
                 <template x-for="id in selected" :key="id">
@@ -128,12 +130,16 @@
                     Setujui Semua
                 </button>
             </form>
+            @endcan
             
+            @can('pinjaman.reject')
             <button type="button" @click="showRejectModal = true" class="w-full md:w-auto px-5 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-black transition-all shadow-md active:scale-95 whitespace-nowrap border border-red-400">
                 Tolak
             </button>
+            @endcan
         </div>
     </div>
+    @endcanany
 
 <div class="bg-white rounded-2xl border border-stone-200 shadow-sm flex flex-col">
     
@@ -150,19 +156,24 @@
     <div class="relative flex-1 flex flex-col">
         <x-table>
             <x-table.thead :sticky="true" class="top-[168px]">
+                @canany(['pinjaman.approve', 'pinjaman.reject'])
                 <x-table.th class="w-12 text-center border-r border-stone-100">
                     <input type="checkbox" @click="toggleAll()" :checked="allSelected" :disabled="menungguIds.length === 0" class="w-4 h-4 rounded text-[#043d2e] focus:ring-[#043d2e]/20 border-stone-300 disabled:opacity-50 cursor-pointer">
                 </x-table.th>
+                @endcanany
                 <x-table.th>Referensi / Periode</x-table.th>
                 <x-table.th>Anggota / Bidang</x-table.th>
                 <x-table.th>Dana Cair & Potongan</x-table.th>
                 <x-table.th>Plafon / Tenor</x-table.th>
                 <x-table.th class="text-center">Status</x-table.th>
+                @canany(['pinjaman.detail', 'pinjaman.approve', 'pinjaman.reject', 'pinjaman.bayar'])
                 <x-table.th class="text-right">Aksi</x-table.th>
+                @endcanany
             </x-table.thead>
             <x-table.tbody>
                 @forelse($pinjamans as $pinjaman)
                 <x-table.tr class="hover:bg-stone-50/50 transition-colors" x-bind:class="{ 'bg-stone-50': selected.includes({{ $pinjaman->id }}) }">
+                    @canany(['pinjaman.approve', 'pinjaman.reject'])
                     <x-table.td class="text-center border-r border-stone-100">
                         @if($pinjaman->status->value === 'menunggu')
                         <input type="checkbox" x-model="selected" value="{{ $pinjaman->id }}" class="w-4 h-4 rounded text-[#043d2e] focus:ring-[#043d2e]/20 border-stone-300 cursor-pointer">
@@ -170,6 +181,7 @@
                         <div class="w-4 h-4 rounded border border-stone-200 bg-stone-100 opacity-50 inline-block"></div>
                         @endif
                     </x-table.td>
+                    @endcanany
                     <x-table.td class="align-top">
                         <div class="flex flex-col gap-1">
                             <span class="font-mono text-[#043d2e] font-bold text-[13px]">{{ $pinjaman->no_referensi }}</span>
@@ -239,6 +251,7 @@
                             <span class="w-3 h-3 rounded-full {{ $bgStatus }}" title="{{ ucfirst($pinjaman->status->value) }}"></span>
                         </div>
                     </x-table.td>
+                    @canany(['pinjaman.detail', 'pinjaman.approve', 'pinjaman.reject', 'pinjaman.bayar'])
                     <x-table.td class="text-right align-top">
                         <div class="flex items-center justify-end gap-1">
                             <x-action-dropdown>
@@ -248,10 +261,11 @@
                             </x-action-dropdown>
                         </div>
                     </x-table.td>
+                    @endcanany
                 </x-table.tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-16 text-center">
+                    <td colspan="{{ auth()->user()->canAny(['pinjaman.detail', 'pinjaman.approve', 'pinjaman.reject', 'pinjaman.bayar']) ? 7 : 5 }}" class="px-6 py-16 text-center">
                         <div class="flex flex-col items-center justify-center">
                             <div class="w-16 h-16 rounded-2xl bg-stone-50 border border-stone-200 flex items-center justify-center mb-4">
                                 <svg class="w-8 h-8 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">

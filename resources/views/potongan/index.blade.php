@@ -5,10 +5,11 @@
 
 @section('actions')
     <x-export-dropdown 
-        excelRoute="{{ route('potongan.export.excel', request()->all()) }}" 
-        pdfRoute="{{ route('potongan.export.pdf', request()->all()) }}" 
+        :excelRoute="route('potongan.export.excel', request()->query())" 
+        :pdfRoute="route('potongan.export.pdf', request()->query())" 
     />
 
+    @can('potongan.proses')
     @if($totalKeseluruhan > 0)
     <form action="{{ route('potongan.proses') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membukukan seluruh potongan TPP periode ini? Tindakan ini tidak dapat dibatalkan.')">
         @csrf
@@ -22,6 +23,7 @@
         </button>
     </form>
     @endif
+    @endcan
 @endsection
 
 @section('content')

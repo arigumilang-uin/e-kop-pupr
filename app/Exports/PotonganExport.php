@@ -100,6 +100,8 @@ class PotonganExport
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
         ]);
 
+        $jenisFilter = $this->request->input('jenis');
+
         // 2. Headers
         $row = 6;
         $sheet->mergeCells("A{$row}:A".($row+1));
@@ -108,15 +110,39 @@ class PotonganExport
         $sheet->mergeCells("B{$row}:C".($row+1));
         $sheet->setCellValue("B{$row}", 'NIP / Nama / Unit Kerja');
 
-        $sheet->mergeCells("D{$row}:F{$row}");
-        $sheet->setCellValue("D{$row}", 'Rincian Potongan TPP');
-
-        $sheet->setCellValue("D".($row+1), 'S. Pokok');
-        $sheet->setCellValue("E".($row+1), 'S. Wajib');
-        $sheet->setCellValue("F".($row+1), 'Pinjaman');
-
-        $sheet->mergeCells("G{$row}:G".($row+1));
-        $sheet->setCellValue("G{$row}", 'Total Potongan');
+        if ($jenisFilter === 'pinjaman') {
+            $sheet->mergeCells("D{$row}:F{$row}");
+            $sheet->setCellValue("D{$row}", 'Rincian Angsuran');
+            $sheet->setCellValue("D".($row+1), 'Pokok Pinjaman');
+            $sheet->setCellValue("E".($row+1), 'Bunga');
+            $sheet->setCellValue("F".($row+1), 'Total Angsuran');
+            
+            $sheet->mergeCells("G{$row}:G".($row+1));
+            $sheet->setCellValue("G{$row}", '');
+        } elseif ($jenisFilter === 'pokok') {
+            $sheet->mergeCells("D{$row}:D".($row+1));
+            $sheet->setCellValue("D{$row}", 'Pot. Pokok');
+            $sheet->mergeCells("E{$row}:F".($row+1));
+            $sheet->setCellValue("E{$row}", '');
+            $sheet->mergeCells("G{$row}:G".($row+1));
+            $sheet->setCellValue("G{$row}", 'Total Potongan');
+        } elseif ($jenisFilter === 'wajib') {
+            $sheet->mergeCells("D{$row}:D".($row+1));
+            $sheet->setCellValue("D{$row}", 'Pot. Wajib');
+            $sheet->mergeCells("E{$row}:F".($row+1));
+            $sheet->setCellValue("E{$row}", '');
+            $sheet->mergeCells("G{$row}:G".($row+1));
+            $sheet->setCellValue("G{$row}", 'Total Potongan');
+        } else {
+            $sheet->mergeCells("D{$row}:F{$row}");
+            $sheet->setCellValue("D{$row}", 'Rincian Potongan TPP');
+            $sheet->setCellValue("D".($row+1), 'S. Pokok');
+            $sheet->setCellValue("E".($row+1), 'S. Wajib');
+            $sheet->setCellValue("F".($row+1), 'Pinjaman');
+            
+            $sheet->mergeCells("G{$row}:G".($row+1));
+            $sheet->setCellValue("G{$row}", 'Total Potongan');
+        }
 
         $sheet->getStyle("A{$row}:G".($row+1))->applyFromArray($headerStyle);
         $row += 2;
@@ -126,10 +152,28 @@ class PotonganExport
         $sheet->setCellValue("A{$row}", 'TOTAL SELURUHNYA');
         
         $gt = $data['grandTotals'];
-        $sheet->setCellValue("D{$row}", $gt['pokok']);
-        $sheet->setCellValue("E{$row}", $gt['wajib']);
-        $sheet->setCellValue("F{$row}", $gt['pinjaman']);
-        $sheet->setCellValue("G{$row}", $gt['total']);
+        if ($jenisFilter === 'pinjaman') {
+            $sheet->setCellValue("D{$row}", $gt['pinjaman_pokok']);
+            $sheet->setCellValue("E{$row}", $gt['pinjaman_bunga']);
+            $sheet->setCellValue("F{$row}", $gt['pinjaman']);
+            $sheet->setCellValue("G{$row}", '');
+        } elseif ($jenisFilter === 'pokok') {
+            $sheet->setCellValue("D{$row}", $gt['pokok']);
+            $sheet->setCellValue("E{$row}", '');
+            $sheet->setCellValue("F{$row}", '');
+            $sheet->setCellValue("G{$row}", $gt['total']);
+        } elseif ($jenisFilter === 'wajib') {
+            $sheet->setCellValue("D{$row}", $gt['wajib']);
+            $sheet->setCellValue("E{$row}", '');
+            $sheet->setCellValue("F{$row}", '');
+            $sheet->setCellValue("G{$row}", $gt['total']);
+        } else {
+            $sheet->setCellValue("D{$row}", $gt['pokok']);
+            $sheet->setCellValue("E{$row}", $gt['wajib']);
+            $sheet->setCellValue("F{$row}", $gt['pinjaman']);
+            $sheet->setCellValue("G{$row}", $gt['total']);
+        }
+        
         $sheet->getStyle("A{$row}:G{$row}")->applyFromArray($grandTotalStyle);
         $sheet->getStyle("D{$row}:G{$row}")->getNumberFormat()->setFormatCode('#,##0');
         $row++;
@@ -142,16 +186,28 @@ class PotonganExport
             $sheet->mergeCells("A{$row}:C{$row}");
             $sheet->setCellValue("A{$row}", mb_strtoupper($bidangName));
             
-            // Calculate subtotal
-            $subPokok = $anggotaList->sum('pokok');
-            $subWajib = $anggotaList->sum('wajib');
-            $subPinjaman = $anggotaList->sum('pinjaman');
-            $subTotal = $anggotaList->sum('total');
+            if ($jenisFilter === 'pinjaman') {
+                $sheet->setCellValue("D{$row}", $anggotaList->sum('pinjaman_pokok'));
+                $sheet->setCellValue("E{$row}", $anggotaList->sum('pinjaman_bunga'));
+                $sheet->setCellValue("F{$row}", $anggotaList->sum('pinjaman'));
+                $sheet->setCellValue("G{$row}", '');
+            } elseif ($jenisFilter === 'pokok') {
+                $sheet->setCellValue("D{$row}", $anggotaList->sum('pokok'));
+                $sheet->setCellValue("E{$row}", '');
+                $sheet->setCellValue("F{$row}", '');
+                $sheet->setCellValue("G{$row}", $anggotaList->sum('total'));
+            } elseif ($jenisFilter === 'wajib') {
+                $sheet->setCellValue("D{$row}", $anggotaList->sum('wajib'));
+                $sheet->setCellValue("E{$row}", '');
+                $sheet->setCellValue("F{$row}", '');
+                $sheet->setCellValue("G{$row}", $anggotaList->sum('total'));
+            } else {
+                $sheet->setCellValue("D{$row}", $anggotaList->sum('pokok'));
+                $sheet->setCellValue("E{$row}", $anggotaList->sum('wajib'));
+                $sheet->setCellValue("F{$row}", $anggotaList->sum('pinjaman'));
+                $sheet->setCellValue("G{$row}", $anggotaList->sum('total'));
+            }
 
-            $sheet->setCellValue("D{$row}", $subPokok);
-            $sheet->setCellValue("E{$row}", $subWajib);
-            $sheet->setCellValue("F{$row}", $subPinjaman);
-            $sheet->setCellValue("G{$row}", $subTotal);
             $sheet->getStyle("A{$row}:G{$row}")->applyFromArray($subtotalStyle);
             $sheet->getStyle("D{$row}:G{$row}")->getNumberFormat()->setFormatCode('#,##0');
             $row++;
@@ -162,10 +218,28 @@ class PotonganExport
                 $sheet->setCellValue("A{$row}", $no++);
                 $sheet->setCellValueExplicit("B{$row}", $anggota['nip'], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
                 $sheet->setCellValue("C{$row}", $anggota['nama']);
-                $sheet->setCellValue("D{$row}", $anggota['pokok']);
-                $sheet->setCellValue("E{$row}", $anggota['wajib']);
-                $sheet->setCellValue("F{$row}", $anggota['pinjaman']);
-                $sheet->setCellValue("G{$row}", $anggota['total']);
+                
+                if ($jenisFilter === 'pinjaman') {
+                    $sheet->setCellValue("D{$row}", $anggota['pinjaman_pokok']);
+                    $sheet->setCellValue("E{$row}", $anggota['pinjaman_bunga']);
+                    $sheet->setCellValue("F{$row}", $anggota['pinjaman']);
+                    $sheet->setCellValue("G{$row}", '');
+                } elseif ($jenisFilter === 'pokok') {
+                    $sheet->setCellValue("D{$row}", $anggota['pokok']);
+                    $sheet->setCellValue("E{$row}", '');
+                    $sheet->setCellValue("F{$row}", '');
+                    $sheet->setCellValue("G{$row}", $anggota['total']);
+                } elseif ($jenisFilter === 'wajib') {
+                    $sheet->setCellValue("D{$row}", $anggota['wajib']);
+                    $sheet->setCellValue("E{$row}", '');
+                    $sheet->setCellValue("F{$row}", '');
+                    $sheet->setCellValue("G{$row}", $anggota['total']);
+                } else {
+                    $sheet->setCellValue("D{$row}", $anggota['pokok']);
+                    $sheet->setCellValue("E{$row}", $anggota['wajib']);
+                    $sheet->setCellValue("F{$row}", $anggota['pinjaman']);
+                    $sheet->setCellValue("G{$row}", $anggota['total']);
+                }
 
                 $sheet->getStyle("A{$row}:G{$row}")->applyFromArray($cellStyle);
                 $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -178,8 +252,8 @@ class PotonganExport
         $sheet->getColumnDimension('A')->setWidth(5);
         $sheet->getColumnDimension('B')->setWidth(20); // NIP
         $sheet->getColumnDimension('C')->setWidth(35); // Nama
-        $sheet->getColumnDimension('D')->setWidth(15);
-        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('D')->setWidth(18);
+        $sheet->getColumnDimension('E')->setWidth(18);
         $sheet->getColumnDimension('F')->setWidth(20);
         $sheet->getColumnDimension('G')->setWidth(18);
 
@@ -253,6 +327,8 @@ class PotonganExport
                 ->whereYear('angsuran.tanggal_jatuh_tempo', $year)
                 ->select(
                     'pinjaman.anggota_id',
+                    'angsuran.nominal_pokok',
+                    'angsuran.nominal_bunga',
                     'angsuran.nominal_total'
                 )
                 ->get()
@@ -260,7 +336,7 @@ class PotonganExport
         }
 
         $grandTotals = [
-            'pokok' => 0, 'wajib' => 0, 'pinjaman' => 0, 'total' => 0,
+            'pokok' => 0, 'wajib' => 0, 'pinjaman' => 0, 'pinjaman_pokok' => 0, 'pinjaman_bunga' => 0, 'total' => 0,
         ];
 
         $rows = [];
@@ -283,9 +359,13 @@ class PotonganExport
             }
 
             $potonganPinjaman = 0;
+            $pinjamanPokok = 0;
+            $pinjamanBunga = 0;
             if (!$jenisFilter || $jenisFilter === 'pinjaman') {
                 if ($allPinjamanData->has($anggota->id)) {
                     $pinjamanData = $allPinjamanData->get($anggota->id);
+                    $pinjamanPokok = $pinjamanData->sum('nominal_pokok');
+                    $pinjamanBunga = $pinjamanData->sum('nominal_bunga');
                     $potonganPinjaman = $pinjamanData->sum('nominal_total');
                 }
             }
@@ -298,6 +378,8 @@ class PotonganExport
                 $grandTotals['pokok'] += $potonganPokok;
                 $grandTotals['wajib'] += $potonganWajib;
                 $grandTotals['pinjaman'] += $potonganPinjaman;
+                $grandTotals['pinjaman_pokok'] += $pinjamanPokok;
+                $grandTotals['pinjaman_bunga'] += $pinjamanBunga;
                 $grandTotals['total'] += $totalPotongan;
 
                 $rows[] = [
@@ -307,6 +389,8 @@ class PotonganExport
                     'pokok' => $potonganPokok,
                     'wajib' => $potonganWajib,
                     'pinjaman' => $potonganPinjaman,
+                    'pinjaman_pokok' => $pinjamanPokok,
+                    'pinjaman_bunga' => $pinjamanBunga,
                     'total' => $totalPotongan,
                 ];
             }
