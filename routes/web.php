@@ -6,7 +6,7 @@ use App\Http\Controllers\Keuangan\SimpananController;
 use App\Http\Controllers\Keuangan\PotonganBulananController;
 use App\Http\Controllers\Keuangan\LaporanKeuanganController;
 use App\Http\Controllers\Keuangan\SimulasiKeuanganController;
-use App\Http\Controllers\Keuangan\ArsipTransaksiController;
+
 use App\Http\Controllers\Keuangan\PengeluaranKasController;
 use App\Http\Controllers\Keuangan\ShuController;
 use App\Http\Controllers\Keuangan\NeracaController;
@@ -138,6 +138,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/pinjaman/aktif', [PinjamanAdminController::class, 'aktif'])
         ->name('pinjaman.aktif')
         ->middleware('permission:pinjaman.aktif');
+        
+    Route::get('/pinjaman/aktif/export/excel', [PinjamanAdminController::class, 'exportExcel'])
+        ->name('pinjaman.aktif.export.excel')
+        ->middleware('permission:pinjaman.aktif');
+        
+    Route::get('/pinjaman/aktif/export/pdf', [PinjamanAdminController::class, 'exportPdf'])
+        ->name('pinjaman.aktif.export.pdf')
+        ->middleware('permission:pinjaman.aktif');
 
     Route::get('/pinjaman/{pinjaman}', [PinjamanAdminController::class, 'show'])
         ->name('pinjaman.show')
@@ -174,7 +182,7 @@ Route::middleware('auth')->group(function () {
     // =============================================
     // SHU
     // =============================================
-    Route::get('/keuangan/shu', [ShuController::class, 'index'])->name('keuangan.shu')->middleware('permission:simulasi.view');
+    Route::get('/keuangan/shu', [ShuController::class, 'index'])->name('keuangan.shu')->middleware('permission:simulasi.shu');
 
     Route::middleware('permission:shu.manage')->group(function () {
         Route::post('/keuangan/shu/komponen', [ShuController::class, 'storeKomponen'])->name('shu.komponen.store');
@@ -214,10 +222,14 @@ Route::middleware('auth')->group(function () {
     // =============================================
     // LAPORAN & AKUNTABILITAS (Read-only)
     // =============================================
-    Route::middleware('permission:laporan.view')->group(function () {
+    Route::middleware('permission:laporan.ringkasan')->group(function () {
         Route::get('/keuangan/laporan', [LaporanKeuanganController::class, 'index'])->name('keuangan.laporan');
+    });
+
+    Route::middleware('permission:laporan.neraca')->group(function () {
         Route::get('/keuangan/neraca', [NeracaController::class, 'index'])->name('keuangan.neraca');
-        Route::get('/keuangan/arsip', [ArsipTransaksiController::class, 'index'])->name('keuangan.arsip');
+        Route::get('/keuangan/neraca/export/excel', [NeracaController::class, 'exportExcel'])->name('keuangan.neraca.export.excel');
+        Route::get('/keuangan/neraca/export/pdf', [NeracaController::class, 'exportPdf'])->name('keuangan.neraca.export.pdf');
     });
 
     // =============================================
@@ -225,7 +237,7 @@ Route::middleware('auth')->group(function () {
     // =============================================
     Route::get('/keuangan/simulasi', [SimulasiKeuanganController::class, 'index'])
         ->name('keuangan.simulasi')
-        ->middleware('permission:simulasi.view');
+        ->middleware('permission:simulasi.aliran_dana');
 
     // =============================================
     // LOG AKTIVITAS
@@ -239,15 +251,19 @@ Route::middleware('auth')->group(function () {
     // =============================================
     Route::get('/arsip-laporan', [\App\Http\Controllers\Sistem\ArsipLaporanController::class, 'index'])
         ->name('arsip.index')
-        ->middleware('permission:log.view'); // Use same permission as log view or settings view
+        ->middleware('permission:laporan.arsip');
 
     Route::get('/arsip-laporan/{arsip}/download', [\App\Http\Controllers\Sistem\ArsipLaporanController::class, 'download'])
         ->name('arsip.download')
-        ->middleware('permission:log.view');
+        ->middleware('permission:laporan.arsip');
+
+    Route::patch('/arsip-laporan/{arsip}/toggle-pin', [\App\Http\Controllers\Sistem\ArsipLaporanController::class, 'togglePin'])
+        ->name('arsip.toggle-pin')
+        ->middleware('permission:laporan.arsip_manage');
 
     Route::delete('/arsip-laporan/{arsip}', [\App\Http\Controllers\Sistem\ArsipLaporanController::class, 'destroy'])
         ->name('arsip.destroy')
-        ->middleware('permission:pengaturan.edit'); // Only super admin can delete
+        ->middleware('permission:laporan.arsip_manage');
 
     // =============================================
     // VOID MANAGEMENT — Jurnal Ledger & Permintaan Void

@@ -20,7 +20,7 @@ class RoleController extends Controller
      */
     public function index()
     {
-        $roles = Role::withCount('users', 'permissions')
+        $roles = Role::with(['users', 'permissions'])->withCount('users', 'permissions')
             ->orderByRaw("FIELD(name, 'super_admin', 'admin', 'pimpinan') DESC, name ASC")
             ->get();
 

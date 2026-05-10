@@ -83,11 +83,15 @@ class PermissionRegistry
             ],
 
             'Laporan' => [
-                'laporan.view' => 'Lihat ringkasan, neraca, arsip keuangan',
+                'laporan.ringkasan' => 'Lihat ringkasan laporan',
+                'laporan.neraca'    => 'Lihat neraca keuangan',
+                'laporan.arsip'     => 'Lihat daftar arsip laporan',
+                'laporan.arsip_manage' => 'Pin, unpin, hapus arsip laporan',
             ],
 
             'Simulasi' => [
-                'simulasi.view' => 'Lihat proyeksi aliran dana & SHU',
+                'simulasi.aliran_dana' => 'Lihat proyeksi aliran dana',
+                'simulasi.shu'         => 'Lihat simulasi pembagian SHU',
             ],
 
             'SHU' => [
@@ -117,10 +121,10 @@ class PermissionRegistry
                 'log.view' => 'Lihat log aktivitas',
             ],
 
-            'Void' => [
-                'void.view'    => 'Lihat riwayat void & jurnal ledger',
-                'void.request' => 'Ajukan permintaan void transaksi',
-                'void.approve' => 'Setujui/tolak permintaan void',
+            'Pembatalan Transaksi' => [
+                'void.view'    => 'Lihat riwayat pembatalan transaksi',
+                'void.request' => 'Ajukan permintaan pembatalan transaksi',
+                'void.approve' => 'Setujui/tolak pembatalan transaksi',
             ],
         ];
     }
@@ -202,6 +206,8 @@ class PermissionRegistry
             'role.edit',
             'role.delete',
             'log.view',
+            'laporan.arsip',
+            'laporan.arsip_manage',
         ];
     }
 
@@ -225,12 +231,13 @@ class PermissionRegistry
             // Potongan
             'potongan.view', 'potongan.proses',
             // Laporan & Simulasi
-            'laporan.view', 'simulasi.view',
+            'laporan.ringkasan', 'laporan.neraca', 'laporan.arsip', 'laporan.arsip_manage',
+            'simulasi.aliran_dana', 'simulasi.shu',
             // SHU
             'shu.manage',
             // System (view-only)
             'pengaturan.view', 'user.view', 'role.view',
-            // Log
+            // Log & Arsip
             'log.view',
             // Void (request only — approve is Pimpinan)
             'void.view', 'void.request',
@@ -254,11 +261,14 @@ class PermissionRegistry
             'periode.view',
             'pengeluaran.view',
             'potongan.view',
-            'laporan.view',
-            'simulasi.view',
+            'laporan.ringkasan',
+            'laporan.neraca',
+            'laporan.arsip',
+            'simulasi.aliran_dana',
+            'simulasi.shu',
             // System (view-only)
             'pengaturan.view', 'user.view', 'role.view',
-            // Log
+            // Log & Arsip
             'log.view',
             // Void (approve/reject)
             'void.view', 'void.approve',
@@ -276,5 +286,18 @@ class PermissionRegistry
             self::ROLE_PIMPINAN    => 'Pimpinan / Kepala',
             default                => ucwords(str_replace('_', ' ', $slug)),
         };
+    }
+
+    /**
+     * Get human-readable label for a permission slug.
+     */
+    public static function permissionLabel(string $slug): string
+    {
+        foreach (static::allPermissions() as $group => $perms) {
+            if (isset($perms[$slug])) {
+                return $perms[$slug];
+            }
+        }
+        return $slug;
     }
 }

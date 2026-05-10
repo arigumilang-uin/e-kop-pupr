@@ -160,6 +160,50 @@ class PinjamanAdminController extends Controller
         return view('pinjaman.admin.aktif', compact('anggotas', 'bidangs', 'periodes', 'tenors', 'nominals', 'bulans'));
     }
 
+    public function exportExcel(Request $request)
+    {
+        $export = new \App\Exports\PinjamanAktifExport($request);
+        return $export->download();
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $export = new \App\Exports\PinjamanAktifExport($request);
+        $data = $export->getData();
+
+        $dataHash = md5('Pinjaman Aktif' . 'PDF' . json_encode($data));
+        $existings = \App\Models\ArsipLaporan::where('data_hash', $dataHash)->get();
+        foreach ($existings as $existing) {
+            if (\Illuminate\Support\Facades\Storage::exists($existing->file_path)) {
+                return \Illuminate\Support\Facades\Storage::download($existing->file_path, $existing->nama_file);
+            } else {
+                $existing->delete();
+            }
+        }
+
+        // Setup PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.pinjaman-aktif-pdf', $data)
+            ->setPaper('legal', 'landscape');
+
+        $filename = 'Laporan_Pinjaman_Aktif_' . now()->format('Ymd_His') . '.pdf';
+        $path = 'arsip_laporan/' . $filename;
+        
+        \Illuminate\Support\Facades\Storage::makeDirectory('arsip_laporan');
+        \Illuminate\Support\Facades\Storage::put($path, $pdf->output());
+        
+        \App\Models\ArsipLaporan::create([
+            'tipe_laporan' => 'Pinjaman Aktif',
+            'format' => 'PDF',
+            'nama_file' => $filename,
+            'file_path' => $path,
+            'data_hash' => $dataHash,
+            'filter_info' => $data['filterInfo'],
+            'dibuat_oleh' => auth()->id(),
+        ]);
+        
+        return \Illuminate\Support\Facades\Storage::download($path, $filename);
+    }
+
     public function show(Pinjaman $pinjaman)
     {
         $pinjaman->load(['anggota.bidang', 'periodePinjaman', 'angsuran' => function($q) { $q->orderBy('angsuran_ke'); }]);

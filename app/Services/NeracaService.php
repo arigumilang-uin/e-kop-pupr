@@ -139,8 +139,9 @@ class NeracaService
         // =============================================
         $totalPasiva = $totalKewajiban + $totalModal;
 
-        $selisih = round($totalAktiva - $totalPasiva, 2);
-        $isBalance = abs($selisih) < 0.01;
+        $selisih = round($totalAktiva - $totalPasiva);
+        // Toleransi selisih 1 Rupiah akibat pembulatan desimal (misal potongan admin 1.5%)
+        $isBalance = abs($selisih) <= 1;
 
         return [
             'tanggal' => now()->toDateString(),

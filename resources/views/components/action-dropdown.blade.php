@@ -15,7 +15,7 @@
          x-transition:leave="transition ease-in duration-100"
          x-transition:leave-start="transform opacity-100 scale-100 translate-y-0"
          x-transition:leave-end="transform opacity-0 scale-95 translate-y-1"
-         class="absolute right-8 top-0 mt-0 w-44 rounded-xl shadow-lg bg-white ring-1 ring-black/5 divide-y divide-stone-100 z-50 origin-top-right"
+         class="absolute right-8 top-0 mt-0 w-max min-w-[12rem] rounded-xl shadow-lg bg-white ring-1 ring-black/5 divide-y divide-stone-100 z-50 origin-top-right"
          style="display: none;">
         <div class="py-1">
             {{ $slot }}

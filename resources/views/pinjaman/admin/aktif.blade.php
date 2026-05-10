@@ -5,6 +5,13 @@
 
 @section('content')
 
+@section('actions')
+    <x-export-dropdown 
+        :excelRoute="route('pinjaman.aktif.export.excel')" 
+        :pdfRoute="route('pinjaman.aktif.export.pdf')" 
+    />
+@endsection
+
 <div x-data="pinjamanFilter()" class="flex flex-col gap-5">
     {{-- Filter Sticky Bar Component --}}
     <x-filter-bar searchPlaceholder="Cari NIP atau Nama..." x-model="q">
@@ -69,7 +76,6 @@
             <button type="button" @click="resetFilter()" x-show="activeFiltersCount > 0" class="mt-2 w-full py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition-colors border border-red-200">
                 Reset Filter
             </button>
-        </x-slot>
     </x-filter-bar>
 
     <div id="table-content-container" class="relative">
@@ -210,6 +216,8 @@
                 this.$watch('tenor', () => this.fetchData());
                 this.$watch('nominal', () => this.fetchData());
                 this.$watch('periode_id', () => this.fetchData());
+                
+                this.updateExportLinks(window.location.href);
             },
 
             get activeFiltersCount() {
@@ -230,6 +238,14 @@
                 this.nominal = '';
                 this.periode_id = '';
                 this.fetchData();
+            },
+
+            updateExportLinks(url) {
+                const params = url.split('?')[1] || '';
+                const excelLink = document.getElementById('export-excel-link');
+                const pdfLink = document.getElementById('export-pdf-link');
+                if (excelLink) excelLink.href = `{{ route('pinjaman.aktif.export.excel') }}${params ? '?' + params : ''}`;
+                if (pdfLink) pdfLink.href = `{{ route('pinjaman.aktif.export.pdf') }}${params ? '?' + params : ''}`;
             },
 
             debouncedFetch() {
@@ -277,6 +293,8 @@
                     if (newContent) {
                         document.getElementById('table-content-container').innerHTML = newContent.innerHTML;
                     }
+
+                    this.updateExportLinks(url);
                 } catch (error) {
                     if (error.name !== 'AbortError') {
                         console.error('Failed to fetch data', error);

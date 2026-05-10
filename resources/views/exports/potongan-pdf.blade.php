@@ -5,60 +5,60 @@
     <title>Laporan Potongan TPP</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DejaVu Sans', sans-serif; font-size: 9px; color: #44403c; line-height: 1.4; }
+        body { font-family: 'DejaVu Sans', sans-serif; font-size: 9px; color: #000000; line-height: 1.4; }
         
-        .header { text-align: center; margin-bottom: 16px; border-bottom: 1px solid #d6d3d1; padding-bottom: 12px; }
-        .header h1 { font-size: 14px; font-weight: bold; color: #292524; letter-spacing: 1px; }
-        .header h2 { font-size: 11px; font-weight: bold; margin-top: 4px; color: #44403c; }
-        .header .meta { font-size: 8px; color: #78716c; margin-top: 6px; }
+        .header { text-align: center; margin-bottom: 16px; border-bottom: 1px solid #000000; padding-bottom: 12px; }
+        .header h1 { font-size: 14px; font-weight: bold; color: #000000; letter-spacing: 1px; }
+        .header h2 { font-size: 11px; font-weight: bold; margin-top: 4px; color: #000000; }
+        .header .meta { font-size: 8px; color: #333333; margin-top: 6px; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 8px; }
         
         thead th {
-            background-color: #f5f5f4;
-            color: #44403c;
+            background-color: #e0e0e0;
+            color: #000000;
             font-size: 8.5px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.3px;
             padding: 8px 4px;
             text-align: center;
-            border: 1px solid #d6d3d1;
+            border: 1px solid #000000;
         }
         thead th.left { text-align: left; }
 
         tbody td {
             padding: 6px 4px;
-            border: 1px solid #e7e5e4;
+            border: 1px solid #999999;
             font-size: 8.5px;
             vertical-align: middle;
-            color: #44403c;
+            color: #000000;
         }
         
-        .row-even { background-color: #fafaf9; }
+        .row-even { background-color: #ffffff; }
         
         .num { text-align: right; font-family: 'DejaVu Sans Mono', monospace; font-size: 8px; }
         .center { text-align: center; }
         .bold { font-weight: bold; }
         
         .grand-total-row td {
-            background-color: #ecfdf5;
+            background-color: #000000;
             font-weight: bold;
-            color: #065f46;
+            color: #ffffff;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             font-size: 9px;
-            border-top: 2px solid #a7f3d0;
-            border-bottom: 2px solid #a7f3d0;
+            border-top: 2px solid #000000;
+            border-bottom: 2px solid #000000;
         }
         
         .subtotal-row td {
-            background-color: #f3f4f6;
-            color: #374151;
+            background-color: #e0e0e0;
+            color: #000000;
             font-weight: bold;
             font-size: 9px;
-            border-top: 2px solid #d1d5db;
-            border-bottom: 1px solid #e5e7eb;
+            border-top: 2px solid #666666;
+            border-bottom: 1px solid #999999;
             padding-top: 8px;
             padding-bottom: 8px;
         }

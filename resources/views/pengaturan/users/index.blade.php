@@ -57,10 +57,10 @@
                     @php
                         $userRole = $u->getRoleNames()->first() ?? 'unknown';
                         $rc = match($userRole) {
-                            'super_admin' => ['bg-violet-100 text-violet-700 border-violet-200', 'bg-violet-600'],
-                            'admin'       => ['bg-[#043d2e]/10 text-[#043d2e] border-[#043d2e]/20', 'bg-[#043d2e]'],
-                            'pimpinan'    => ['bg-amber-100 text-amber-700 border-amber-200', 'bg-amber-600'],
-                            default       => ['bg-stone-100 text-stone-600 border-stone-200', 'bg-stone-500'],
+                            'super_admin' => ['bg-[#043d2e]/10 text-[#043d2e] border-[#043d2e]/20', 'bg-[#043d2e]'],
+                            'admin'       => ['bg-emerald-50 text-emerald-700 border-emerald-200', 'bg-emerald-600'],
+                            'pimpinan'    => ['bg-stone-100 text-stone-700 border-stone-200', 'bg-stone-600'],
+                            default       => ['bg-stone-50 text-stone-500 border-stone-200', 'bg-stone-400'],
                         };
                     @endphp
                     <x-table.tr class="hover:bg-stone-50/50 transition-colors {{ !$u->is_active ? 'opacity-50' : '' }}">

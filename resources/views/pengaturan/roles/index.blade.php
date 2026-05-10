@@ -25,24 +25,22 @@
         @php
             $isProtected = in_array($role->name, PermissionRegistry::PROTECTED_ROLES);
             $isSuperAdmin = $role->name === PermissionRegistry::ROLE_SUPER_ADMIN;
-            $cardColor = match($role->name) {
-                'super_admin' => 'border-violet-200 bg-gradient-to-br from-violet-50 to-white',
-                'admin'       => 'border-[#043d2e]/20 bg-gradient-to-br from-emerald-50 to-white',
-                'pimpinan'    => 'border-amber-200 bg-gradient-to-br from-amber-50 to-white',
-                default       => 'border-stone-200 bg-white',
-            };
-            $badgeColor = match($role->name) {
-                'super_admin' => 'bg-violet-100 text-violet-700 border-violet-200',
-                'admin'       => 'bg-[#043d2e]/10 text-[#043d2e] border-[#043d2e]/20',
-                'pimpinan'    => 'bg-amber-100 text-amber-700 border-amber-200',
-                default       => 'bg-stone-100 text-stone-600 border-stone-200',
-            };
-            $iconColor = match($role->name) {
-                'super_admin' => 'text-violet-500',
-                'admin'       => 'text-[#043d2e]',
-                'pimpinan'    => 'text-amber-600',
-                default       => 'text-stone-500',
-            };
+            $isCore = in_array($role->name, ['super_admin', 'admin', 'pimpinan']);
+            
+            $cardColor = $isCore ? 'border-[#043d2e] bg-[#043d2e]' : 'border-stone-200 bg-white';
+            $badgeColor = $isCore ? 'bg-white/10 border-white/20' : 'bg-stone-50 border-stone-200';
+            $iconColor = $isCore ? 'text-white' : 'text-stone-500';
+            
+            $titleColor = $isCore ? 'text-white' : 'text-stone-800';
+            $subtitleColor = $isCore ? 'text-emerald-100/70' : 'text-stone-400';
+            $statsColor = $isCore ? 'text-white' : 'text-stone-700';
+            $statsIconColor = $isCore ? 'text-emerald-100/70' : 'text-stone-500';
+            $badgeIntiColor = $isCore ? 'bg-white/10 text-white border-white/20' : 'bg-stone-100 text-stone-500 border-stone-200';
+            
+            $actionBgColor = $isCore ? 'bg-[#033024] border-white/10' : 'bg-stone-50/80 border-stone-100';
+            $btnEditColor = $isCore ? 'text-emerald-100 hover:text-white hover:bg-white/10' : 'text-stone-600 hover:text-[#043d2e] hover:bg-[#043d2e]/5';
+            $btnDeleteColor = $isCore ? 'text-red-300 hover:text-red-200 hover:bg-red-500/20' : 'text-red-500 hover:text-red-700 hover:bg-red-50';
+            $infoColor = $isCore ? 'text-emerald-100/70' : 'text-stone-400';
         @endphp
         <div class="rounded-2xl border {{ $cardColor }} shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             {{-- Card Header --}}
@@ -59,12 +57,12 @@
                             </svg>
                         </div>
                         <div>
-                            <h3 class="font-bold text-stone-800 text-[15px]">{{ PermissionRegistry::roleLabel($role->name) }}</h3>
-                            <p class="text-[11px] text-stone-400 font-mono mt-0.5">{{ $role->name }}</p>
+                            <h3 class="font-bold {{ $titleColor }} text-[15px]">{{ PermissionRegistry::roleLabel($role->name) }}</h3>
+                            <p class="text-[11px] {{ $subtitleColor }} font-mono mt-0.5">{{ $role->name }}</p>
                         </div>
                     </div>
                     @if($isProtected)
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-stone-100 text-stone-500 border border-stone-200 shrink-0">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold {{ $badgeIntiColor }} shrink-0">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         Inti
                     </span>
@@ -73,22 +71,22 @@
 
                 {{-- Stats --}}
                 <div class="flex items-center gap-4 mt-4">
-                    <div class="flex items-center gap-1.5 text-[12px] text-stone-500">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                        <span class="font-bold text-stone-700">{{ $role->users_count }}</span> pengguna
-                    </div>
-                    <div class="flex items-center gap-1.5 text-[12px] text-stone-500">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-                        <span class="font-bold text-stone-700">{{ $role->permissions_count }}</span> permission
-                    </div>
+                    <button type="button" x-data @click="$dispatch('open-modal', 'modal-info-users-{{ $role->id }}')" class="flex items-center gap-1.5 text-[12px] {{ $statsIconColor }} hover:opacity-80 transition-opacity group">
+                        <svg class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <span class="font-bold {{ $statsColor }} group-hover:underline">{{ $role->users_count }}</span> pengguna
+                    </button>
+                    <button type="button" x-data @click="$dispatch('open-modal', 'modal-info-permissions-{{ $role->id }}')" class="flex items-center gap-1.5 text-[12px] {{ $statsIconColor }} hover:opacity-80 transition-opacity group">
+                        <svg class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                        <span class="font-bold {{ $statsColor }} group-hover:underline">{{ $role->permissions_count }}</span> permission
+                    </button>
                 </div>
             </div>
 
             {{-- Card Actions --}}
-            <div class="px-5 py-3 bg-stone-50/80 border-t border-stone-100 flex items-center justify-end gap-2">
+            <div class="px-5 py-3 border-t flex items-center justify-end gap-2 {{ $actionBgColor }}">
                 @if(!$isSuperAdmin)
                 @can('role.edit')
-                <button type="button" x-data @click="$dispatch('open-modal', 'modal-edit-role-{{ $role->id }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-bold text-stone-600 hover:text-[#043d2e] hover:bg-[#043d2e]/5 rounded-lg transition-colors">
+                <button type="button" x-data @click="$dispatch('open-modal', 'modal-edit-role-{{ $role->id }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-bold rounded-lg transition-colors {{ $btnEditColor }}">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     Edit Permissions
                 </button>
@@ -100,7 +98,7 @@
                 <form action="{{ route('roles.destroy', $role) }}" method="POST" onsubmit="return confirm('Hapus role \'{{ $role->name }}\'? Aksi ini tidak dapat dibatalkan.')">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-bold text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
+                    <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-bold rounded-lg transition-colors {{ $btnDeleteColor }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         Hapus
                     </button>
@@ -109,7 +107,7 @@
                 @endif
 
                 @if($isSuperAdmin)
-                <span class="text-[11px] text-stone-400 italic">Tidak dapat diedit</span>
+                <span class="text-[11px] italic {{ $infoColor }}">Tidak dapat diedit</span>
                 @endif
             </div>
         </div>
@@ -155,11 +153,14 @@
                             </div>
                             <div class="px-3.5 py-2.5 space-y-1.5">
                                 @foreach($permissions as $perm => $label)
-                                <label class="flex items-start gap-2.5 cursor-pointer group py-0.5">
-                                    <input type="checkbox" name="permissions[]" value="{{ $perm }}" {{ in_array($perm, $rolePermissions) ? 'checked' : '' }} class="mt-0.5 rounded border-stone-300 text-[#043d2e] shadow-sm focus:ring-[#043d2e]/20 cursor-pointer">
-                                    <div>
-                                        <span class="text-[12px] font-bold text-stone-700 group-hover:text-[#043d2e] transition-colors">{{ $perm }}</span>
-                                        <p class="text-[10px] text-stone-400 leading-tight">{{ $label }}</p>
+                                <label class="flex items-start gap-3 cursor-pointer group py-1 relative">
+                                    <div class="relative flex items-center shrink-0 mt-0.5">
+                                        <input type="checkbox" name="permissions[]" value="{{ $perm }}" {{ in_array($perm, $rolePermissions) ? 'checked' : '' }} class="peer sr-only">
+                                        <div class="w-9 h-5 bg-stone-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#043d2e]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#043d2e] shadow-inner transition-colors"></div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <span class="text-[12px] font-bold text-stone-700 group-hover:text-[#043d2e] transition-colors">{{ $label }}</span>
+                                        <p class="text-[10px] text-stone-400 font-mono leading-tight mt-0.5">{{ $perm }}</p>
                                     </div>
                                 </label>
                                 @endforeach
@@ -176,6 +177,47 @@
             </form>
         </x-modal>
         @endif
+
+        {{-- Info Modals --}}
+        <x-modal name="modal-info-users-{{ $role->id }}" title="Pengguna dengan Role: {{ PermissionRegistry::roleLabel($role->name) }}" maxWidth="md">
+            <div class="px-1 py-2">
+                @if($role->users->count() > 0)
+                    <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar space-y-2">
+                        @foreach($role->users as $u)
+                        <div class="flex items-center gap-3 p-3 bg-stone-50 border border-stone-200 rounded-xl">
+                            <div class="w-10 h-10 rounded-full bg-[#043d2e]/10 text-[#043d2e] flex items-center justify-center font-bold text-[15px] shrink-0 border border-[#043d2e]/20">{{ strtoupper(substr($u->nama, 0, 1)) }}</div>
+                            <div class="overflow-hidden">
+                                <h4 class="text-[13px] font-bold text-stone-800 truncate">{{ $u->nama }}</h4>
+                                <p class="text-[11px] text-stone-500 font-mono truncate">{{ $u->username }} {{ $u->nip ? '| '.$u->nip : '' }}</p>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="py-8 text-center text-stone-500 text-sm">Belum ada pengguna dengan role ini.</div>
+                @endif
+            </div>
+            <x-slot name="footer">
+                <button type="button" @click="$dispatch('close-modal', 'modal-info-users-{{ $role->id }}')" class="px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-bold rounded-xl transition-colors w-full">Tutup</button>
+            </x-slot>
+        </x-modal>
+
+        <x-modal name="modal-info-permissions-{{ $role->id }}" title="Permission Aktif: {{ PermissionRegistry::roleLabel($role->name) }}" maxWidth="lg">
+            <div class="px-1 py-2">
+                @if($role->permissions->count() > 0)
+                    <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar flex flex-wrap gap-2">
+                        @foreach($role->permissions->pluck('name') as $p)
+                        <span class="inline-flex px-2.5 py-1.5 bg-[#043d2e]/5 text-[#043d2e] border border-[#043d2e]/20 rounded-lg text-[11px] font-bold">{{ \App\Services\PermissionRegistry::permissionLabel($p) }}</span>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="py-8 text-center text-stone-500 text-sm">Role ini tidak memiliki permission aktif.</div>
+                @endif
+            </div>
+            <x-slot name="footer">
+                <button type="button" @click="$dispatch('close-modal', 'modal-info-permissions-{{ $role->id }}')" class="px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-bold rounded-xl transition-colors w-full">Tutup</button>
+            </x-slot>
+        </x-modal>
         @endforeach
     </div>
 
@@ -214,11 +256,14 @@
                     </div>
                     <div class="px-3.5 py-2.5 space-y-1.5">
                         @foreach($permissions as $perm => $label)
-                        <label class="flex items-start gap-2.5 cursor-pointer group py-0.5">
-                            <input type="checkbox" name="permissions[]" value="{{ $perm }}" class="mt-0.5 rounded border-stone-300 text-[#043d2e] shadow-sm focus:ring-[#043d2e]/20 cursor-pointer">
-                            <div>
-                                <span class="text-[12px] font-bold text-stone-700 group-hover:text-[#043d2e] transition-colors">{{ $perm }}</span>
-                                <p class="text-[10px] text-stone-400 leading-tight">{{ $label }}</p>
+                        <label class="flex items-start gap-3 cursor-pointer group py-1 relative">
+                            <div class="relative flex items-center shrink-0 mt-0.5">
+                                <input type="checkbox" name="permissions[]" value="{{ $perm }}" class="peer sr-only">
+                                <div class="w-9 h-5 bg-stone-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#043d2e]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#043d2e] shadow-inner transition-colors"></div>
+                            </div>
+                            <div class="flex-1">
+                                <span class="text-[12px] font-bold text-stone-700 group-hover:text-[#043d2e] transition-colors">{{ $label }}</span>
+                                <p class="text-[10px] text-stone-400 font-mono leading-tight mt-0.5">{{ $perm }}</p>
                             </div>
                         </label>
                         @endforeach
