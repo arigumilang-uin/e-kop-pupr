@@ -19,7 +19,10 @@ class DashboardService
     {
         $saldoKoperasi = $this->saldo->saldoKoperasi();
 
-        $simpanan_all = (float) DB::table('simpanan')->sum('nominal');
+        $simpanan_all = (float) DB::table('simpanan')
+            ->whereNull('deleted_at')
+            ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
+            ->sum('nominal');
         $angsuran_pokok = (float) DB::table('angsuran')->where('status', 'lunas')->sum('nominal_pokok');
         $angsuran_bunga = (float) DB::table('angsuran')->where('status', 'lunas')->sum('nominal_bunga');
         $angsuran_pokok_bunga = $angsuran_pokok + $angsuran_bunga;
@@ -27,7 +30,10 @@ class DashboardService
             ->sum(DB::raw('potongan_dana_resiko + potongan_biaya_admin'));
         $dana_cair_pinjaman = (float) DB::table('pinjaman')->whereIn('status', ['berjalan', 'lunas'])->sum('nominal_pinjaman');
         $tarik_simpanan = (float) DB::table('penarikan_simpanan')->sum('nominal');
-        $keluar_pengeluaran_kas = (float) DB::table('pengeluaran_kas')->sum('nominal');
+        $keluar_pengeluaran_kas = (float) DB::table('pengeluaran_kas')
+            ->whereNull('deleted_at')
+            ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
+            ->sum('nominal');
 
         $totalPokokPinjamanAktif = (float) DB::table('pinjaman')->where('status', 'berjalan')->sum('nominal_pinjaman');
         $angsuranPokokTerbayar = (float) DB::table('angsuran')
@@ -39,6 +45,8 @@ class DashboardService
 
         $simpanan_per_jenis = DB::table('simpanan')
             ->join('jenis_simpanan', 'simpanan.jenis_simpanan_id', '=', 'jenis_simpanan.id')
+            ->whereNull('simpanan.deleted_at')
+            ->where(function ($q) { $q->where('simpanan.status', 'aktif')->orWhereNull('simpanan.status'); })
             ->select('jenis_simpanan.nama', DB::raw('SUM(simpanan.nominal) as total'))
             ->groupBy('jenis_simpanan.nama')
             ->get();
@@ -109,7 +117,7 @@ class DashboardService
 
         for ($i = 1; $i <= 12; $i++) {
             // Pemasukan
-            $masukSimpanan = (float) DB::table('simpanan')->whereYear('tanggal', $year)->whereMonth('tanggal', $i)->sum('nominal');
+            $masukSimpanan = (float) DB::table('simpanan')->whereYear('tanggal', $year)->whereMonth('tanggal', $i)->whereNull('deleted_at')->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })->sum('nominal');
             $masukAngsuran = (float) DB::table('angsuran')->whereYear('tanggal_bayar', $year)->whereMonth('tanggal_bayar', $i)->where('status', 'lunas')->sum(DB::raw('nominal_pokok + nominal_bunga'));
             // Fee pendapatan langsung masuk ke bulan pinjaman saat di-approve
             $masukFee = (float) DB::table('pinjaman')->whereYear('tanggal_approval', $year)->whereMonth('tanggal_approval', $i)->whereIn('status', ['berjalan', 'lunas'])->sum(DB::raw('potongan_dana_resiko + potongan_biaya_admin'));
@@ -117,7 +125,7 @@ class DashboardService
             // Pengeluaran
             $keluarPinjaman = (float) DB::table('pinjaman')->whereYear('tanggal_approval', $year)->whereMonth('tanggal_approval', $i)->whereIn('status', ['berjalan', 'lunas'])->sum('nominal_pinjaman');
             $keluarTarik = (float) DB::table('penarikan_simpanan')->whereYear('tanggal', $year)->whereMonth('tanggal', $i)->sum('nominal');
-            $keluarKas = (float) DB::table('pengeluaran_kas')->whereYear('tanggal', $year)->whereMonth('tanggal', $i)->sum('nominal');
+            $keluarKas = (float) DB::table('pengeluaran_kas')->whereYear('tanggal', $year)->whereMonth('tanggal', $i)->whereNull('deleted_at')->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })->sum('nominal');
 
             $pemasukan[] = $masukSimpanan + $masukAngsuran + $masukFee;
             $pengeluaran[] = $keluarPinjaman + $keluarTarik + $keluarKas;

@@ -39,28 +39,19 @@
 @endcan
 
 {{-- Main Operasional --}}
-@canany(['simpanan.view', 'potongan.view', 'pinjaman.view', 'pengeluaran.view'])
+@canany(['simpanan.view', 'potongan.view', 'pinjaman.view', 'pengeluaran.view', 'void.view'])
 <p class="px-3 pt-2 pb-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Operasional</p>
 <div class="space-y-2 mb-5">
     
-    {{-- Grup Manajemen Simpanan --}}
+    {{-- Simpanan --}}
     @can('simpanan.view')
-    <div x-data="{ open: {{ $isGroupActive(['simpanan.*']) ? 'true' : 'false' }} }">
-        <button @click="open = !open" class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-[14.5px] transition-all duration-200 focus:outline-none {{ $groupHeaderClass(['simpanan.*']) }}">
-            <div class="flex items-center gap-3">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                Simpanan
-            </div>
-            <svg class="w-4 h-4 opacity-70 transition-transform duration-300" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </button>
-        <div x-show="open" x-collapse class="pl-11 pr-2 mt-1 space-y-0.5">
-            <a href="{{ route('simpanan.index') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('simpanan.index') }}">Simpanan Anggota</a>
-            @can('simpanan.riwayat')
-            <a href="{{ route('simpanan.riwayat') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('simpanan.riwayat') }}">Riwayat Transaksi</a>
-            @endcan
-        </div>
+    <div>
+        <a href="{{ route('simpanan.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14.5px] transition-all duration-200 {{ $singleActive('simpanan.*') }}">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Simpanan
+        </a>
     </div>
     @endcan
 
@@ -117,6 +108,22 @@
         <div x-show="open" x-collapse class="pl-11 pr-2 mt-1 space-y-0.5">
             <a href="{{ route('pengeluaran.index') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('pengeluaran.*') }}">Kas Operasional</a>
         </div>
+    </div>
+    @endcan
+
+    {{-- Void & Jurnal Ledger --}}
+    @can('void.view')
+    <div>
+        <a href="{{ route('void.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14.5px] transition-all duration-200 relative {{ $singleActive('void.*') }}">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Jurnal & Pembatalan
+            @php $pendingVoidCount = \App\Models\VoidRequest::where('status', 'menunggu')->count(); @endphp
+            @if($pendingVoidCount > 0)
+            <span class="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-sm">{{ $pendingVoidCount }}</span>
+            @endif
+        </a>
     </div>
     @endcan
 

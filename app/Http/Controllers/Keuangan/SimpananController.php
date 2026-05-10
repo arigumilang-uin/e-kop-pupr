@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Anggota;
 use App\Models\Bidang;
 use App\Models\JenisSimpanan;
+use App\Services\LedgerService;
 use Illuminate\Http\Request;
 
 class SimpananController extends Controller
@@ -40,6 +41,7 @@ class SimpananController extends Controller
         $sumSetor = function($jenisId) use ($sampaiTanggal, $dariTanggal) {
             return function($q) use ($jenisId, $sampaiTanggal, $dariTanggal) {
                 $q->where('jenis_simpanan_id', $jenisId);
+                $q->where(function ($sq) { $sq->where('status', 'aktif')->orWhereNull('status'); });
                 if ($dariTanggal) $q->where('tanggal', '>=', $dariTanggal);
                 if ($sampaiTanggal) $q->where('tanggal', '<=', $sampaiTanggal);
             };
@@ -92,7 +94,7 @@ class SimpananController extends Controller
         }
 
         // Calculate Grand Total for the filtered result per tab
-        $baseSimpananQuery = \App\Models\Simpanan::whereHas('anggota', $anggotaFilters)
+        $baseSimpananQuery = \App\Models\Simpanan::aktif()->whereHas('anggota', $anggotaFilters)
             ->when($dariTanggal, fn($q) => $q->where('tanggal', '>=', $dariTanggal))
             ->when($sampaiTanggal, fn($q) => $q->where('tanggal', '<=', $sampaiTanggal));
 
@@ -143,70 +145,7 @@ class SimpananController extends Controller
         return view('simpanan.index', compact('anggotas', 'bidangs', 'grandTotal', 'grandTotals', 'jenisSimpananList', 'nominalPokok', 'nominalWajib'));
     }
 
-    public function riwayat(Request $request)
-    {
-        $query = \App\Models\Simpanan::with(['anggota.bidang', 'jenisSimpanan', 'pencatat'])
-                    ->latest('tanggal')
-                    ->latest('id');
 
-        // Filter Q (Nama / NIP Anggota)
-        if ($request->filled('q')) {
-            $query->whereHas('anggota', function ($q) use ($request) {
-                $q->where('nama', 'like', "%{$request->q}%")
-                  ->orWhere('nip', 'like', "%{$request->q}%");
-            });
-        }
-
-        // Filter Rentang Waktu
-        if ($request->filled('dari_tanggal')) {
-            $query->where('tanggal', '>=', $request->dari_tanggal);
-        }
-        if ($request->filled('sampai_tanggal')) {
-            $query->where('tanggal', '<=', $request->sampai_tanggal);
-        }
-
-        // Filter Jenis Simpanan
-        if ($request->filled('jenis_simpanan_id')) {
-            $query->where('jenis_simpanan_id', $request->jenis_simpanan_id);
-        }
-
-        // Filter Bidang Anggota
-        if ($request->filled('bidang')) {
-            $query->whereHas('anggota', function ($q) use ($request) {
-                $q->where('bidang_id', $request->bidang);
-            });
-        }
-
-        // Filter Golongan ASN
-        if ($request->filled('golongan')) {
-            $query->whereHas('anggota', function ($q) use ($request) {
-                $q->where('golongan_asn', $request->golongan);
-            });
-        }
-
-        // Filter Pencatat (User)
-        if ($request->filled('pencatat_id')) {
-            $query->where('dicatat_oleh', $request->pencatat_id);
-        }
-
-        // Hitung total transaksi (nominal setoran masuk sesuai filter)
-        $totalTransaksi = (clone $query)->sum('nominal');
-
-        $simpanans = $query->paginate(15)->withQueryString();
-        
-        $bidangs = Bidang::orderBy('nama_bidang')->get();
-        $jenisSimpananList = JenisSimpanan::orderBy('nama')->get();
-        $pencatatList = \App\Models\User::whereIn('id', \App\Models\Simpanan::select('dicatat_oleh')->distinct())->orderBy('nama')->get();
-
-        if ($request->ajax()) {
-            return response()->json([
-                'html' => view('simpanan.partials.table_riwayat', compact('simpanans'))->render(),
-                'totalTransaksi' => format_rupiah($totalTransaksi)
-            ]);
-        }
-
-        return view('simpanan.riwayat', compact('simpanans', 'totalTransaksi', 'bidangs', 'jenisSimpananList', 'pencatatList'));
-    }
 
     public function store(Request $request)
     {
@@ -229,8 +168,23 @@ class SimpananController extends Controller
             $nominal = resolve(\App\Services\PengaturanService::class)->simpananWajib();
         }
 
+        // Validasi duplikat (menggantikan unique constraint yang sudah dihapus)
+        // Hanya cek untuk simpanan wajib bulanan yang masih aktif
+        if ($request->bulan_untuk && $request->tahun_untuk) {
+            $exists = \App\Models\Simpanan::where('anggota_id', $request->anggota_id)
+                ->where('jenis_simpanan_id', $request->jenis_simpanan_id)
+                ->where('bulan_untuk', $request->bulan_untuk)
+                ->where('tahun_untuk', $request->tahun_untuk)
+                ->where('status', \App\Enums\StatusSimpanan::Aktif)
+                ->exists();
+
+            if ($exists) {
+                return back()->with('error', 'Setoran gagal. Anggota ini sudah tercatat membayar kategori simpanan bulanan pada bulan dan tahun tersebut.');
+            }
+        }
+
         try {
-            \App\Models\Simpanan::create([
+            $simpanan = \App\Models\Simpanan::create([
                 'anggota_id' => $request->anggota_id,
                 'jenis_simpanan_id' => $request->jenis_simpanan_id,
                 'nominal' => $nominal,
@@ -240,8 +194,17 @@ class SimpananController extends Controller
                 'keterangan' => $request->keterangan,
                 'dicatat_oleh' => auth()->id()
             ]);
-        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-            return back()->with('error', 'Setoran gagal. Anggota ini sudah tercatat membayar kategori simpanan bulanan pada bulan dan tahun tersebut.');
+
+            // Tulis ke Ledger
+            resolve(LedgerService::class)->catatSimpanan(
+                $nominal,
+                $simpanan->id,
+                $simpanan->anggota_id,
+                $jenisSimpanan->nama,
+                $request->tanggal,
+            );
+        } catch (\Exception $e) {
+            return back()->with('error', 'Setoran gagal: ' . $e->getMessage());
         }
 
         return back()->with('success', 'Setoran simpanan berhasil dicatat!');

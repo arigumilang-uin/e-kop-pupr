@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\DB;
 class PengeluaranKasController extends Controller
 {
     public function __construct(
-        private \App\Services\ActivityLogService $logger
+        private \App\Services\ActivityLogService $logger,
+        private \App\Services\LedgerService $ledgerService,
     ) {}
 
     public function index(Request $request)
@@ -21,7 +22,9 @@ class PengeluaranKasController extends Controller
         $kategori = KategoriPengeluaran::withCount('pengeluaranKas')->get();
         $nominals = PengeluaranKas::select('nominal')->distinct()->orderBy('nominal')->pluck('nominal');
         
-        $pengeluaranQuery = PengeluaranKas::with(['kategori', 'pencatat'])->orderByDesc('tanggal')->orderByDesc('id');
+        $pengeluaranQuery = PengeluaranKas::with(['kategori', 'pencatat'])
+            ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
+            ->orderByDesc('tanggal')->orderByDesc('id');
         
         if ($request->filled('q')) {
             $pengeluaranQuery->where('keterangan', 'like', '%' . $request->q . '%');
@@ -45,7 +48,9 @@ class PengeluaranKasController extends Controller
 
         $pengeluaran = $pengeluaranQuery->paginate(20)->withQueryString();
 
-        $totalPengeluaran = PengeluaranKas::sum('nominal');
+        $totalPengeluaran = PengeluaranKas::where(function ($q) {
+                $q->where('status', 'aktif')->orWhereNull('status');
+            })->sum('nominal');
 
         return view('keuangan.pengeluaran.index', compact('kategori', 'pengeluaran', 'totalPengeluaran', 'nominals'));
     }
@@ -68,6 +73,14 @@ class PengeluaranKasController extends Controller
                     'keterangan' => $item['keterangan'],
                     'dicatat_oleh' => auth()->id(),
                 ]);
+
+                // Tulis ke Ledger
+                $this->ledgerService->catatPengeluaran(
+                    $pengeluaran->nominal,
+                    $pengeluaran->id,
+                    $pengeluaran->kategori->nama ?? 'Lainnya',
+                    $request->tanggal,
+                );
 
                 $this->logger->logPengeluaran(
                     $pengeluaran->kategori->nama ?? '-',

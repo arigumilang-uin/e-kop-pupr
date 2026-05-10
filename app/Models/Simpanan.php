@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StatusSimpanan;
 use App\Traits\HasNoReferensi;
 use App\Traits\HasRupiahFormat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,6 +28,7 @@ class Simpanan extends Model
         'tahun_untuk',
         'pinjaman_id',
         'keterangan',
+        'status',
         'dicatat_oleh',
     ];
 
@@ -35,6 +37,7 @@ class Simpanan extends Model
         return [
             'nominal' => 'decimal:2',
             'tanggal' => 'date',
+            'status' => StatusSimpanan::class,
         ];
     }
 
@@ -58,5 +61,23 @@ class Simpanan extends Model
     public function pencatat(): BelongsTo
     {
         return $this->belongsTo(User::class, 'dicatat_oleh');
+    }
+
+    // === Scopes ===
+
+    /**
+     * Hanya simpanan yang aktif (belum di-void).
+     */
+    public function scopeAktif($query)
+    {
+        return $query->where('status', StatusSimpanan::Aktif);
+    }
+
+    /**
+     * Cek apakah simpanan ini sudah di-void.
+     */
+    public function isVoided(): bool
+    {
+        return $this->status === StatusSimpanan::Voided;
     }
 }

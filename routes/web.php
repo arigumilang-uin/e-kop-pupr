@@ -113,9 +113,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/simpanan/export/pdf', [SimpananController::class, 'exportPdf'])->name('simpanan.export.pdf');
     });
 
-    Route::get('/simpanan/riwayat', [SimpananController::class, 'riwayat'])
-        ->name('simpanan.riwayat')
-        ->middleware('permission:simpanan.riwayat');
+
 
     Route::middleware('permission:simpanan.create')->group(function () {
         Route::get('/simpanan/create', [SimpananController::class, 'create'])->name('simpanan.create');
@@ -250,6 +248,22 @@ Route::middleware('auth')->group(function () {
     Route::delete('/arsip-laporan/{arsip}', [\App\Http\Controllers\Sistem\ArsipLaporanController::class, 'destroy'])
         ->name('arsip.destroy')
         ->middleware('permission:pengaturan.edit'); // Only super admin can delete
+
+    // =============================================
+    // VOID MANAGEMENT — Jurnal Ledger & Permintaan Void
+    // =============================================
+    Route::middleware('permission:void.view')->group(function () {
+        Route::get('/void', [\App\Http\Controllers\Keuangan\VoidController::class, 'index'])->name('void.index');
+    });
+
+    Route::post('/void', [\App\Http\Controllers\Keuangan\VoidController::class, 'store'])
+        ->name('void.store')
+        ->middleware('permission:void.request');
+
+    Route::middleware('permission:void.approve')->group(function () {
+        Route::patch('/void/{voidRequest}/approve', [\App\Http\Controllers\Keuangan\VoidController::class, 'approve'])->name('void.approve');
+        Route::patch('/void/{voidRequest}/reject', [\App\Http\Controllers\Keuangan\VoidController::class, 'reject'])->name('void.reject');
+    });
 
     // =============================================
     // PENGATURAN SISTEM — Super Admin Only

@@ -119,6 +119,7 @@ class ShuProrataService
             ->join('jenis_simpanan', 'simpanan.jenis_simpanan_id', '=', 'jenis_simpanan.id')
             ->whereIn('jenis_simpanan.kode', $kodeModal)
             ->whereNull('simpanan.deleted_at')
+            ->where(function ($q) { $q->where('simpanan.status', 'aktif')->orWhereNull('simpanan.status'); })
             ->select('simpanan.anggota_id', DB::raw('SUM(simpanan.nominal) as total'))
             ->groupBy('simpanan.anggota_id')
             ->get()

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Master Data Anggota')
+@section('title', 'Data Anggota')
 @section('subtitle', 'Daftar keseluruhan anggota Koperasi Tirta Bina Karya')
 
 @section('actions')

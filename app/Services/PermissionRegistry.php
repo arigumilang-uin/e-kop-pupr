@@ -52,7 +52,6 @@ class PermissionRegistry
 
             'Simpanan' => [
                 'simpanan.view'    => 'Lihat buku simpanan anggota',
-                'simpanan.riwayat' => 'Lihat riwayat transaksi simpanan',
                 'simpanan.create'  => 'Catat setoran simpanan',
             ],
 
@@ -117,6 +116,12 @@ class PermissionRegistry
             'Log' => [
                 'log.view' => 'Lihat log aktivitas',
             ],
+
+            'Void' => [
+                'void.view'    => 'Lihat riwayat void & jurnal ledger',
+                'void.request' => 'Ajukan permintaan void transaksi',
+                'void.approve' => 'Setujui/tolak permintaan void',
+            ],
         ];
     }
 
@@ -141,7 +146,6 @@ class PermissionRegistry
     {
         return [
             'anggota.profile' => ['anggota.view'],
-            'simpanan.riwayat' => ['simpanan.view'],
             'pinjaman.detail' => ['pinjaman.view'],
         ];
     }
@@ -211,7 +215,7 @@ class PermissionRegistry
             'anggota.view', 'anggota.profile', 'anggota.create', 'anggota.edit',
             'anggota.keluar', 'anggota.reaktivasi',
             // Simpanan
-            'simpanan.view', 'simpanan.riwayat', 'simpanan.create',
+            'simpanan.view', 'simpanan.create',
             // Pinjaman
             'pinjaman.view', 'pinjaman.aktif', 'pinjaman.detail', 'pinjaman.approve', 'pinjaman.reject', 'pinjaman.bayar',
             // Periode
@@ -228,6 +232,8 @@ class PermissionRegistry
             'pengaturan.view', 'user.view', 'role.view',
             // Log
             'log.view',
+            // Void (request only — approve is Pimpinan)
+            'void.view', 'void.request',
         ];
     }
 
@@ -240,7 +246,6 @@ class PermissionRegistry
             'anggota.view',
             'anggota.profile',
             'simpanan.view',
-            'simpanan.riwayat',
             'pinjaman.view',
             'pinjaman.aktif',
             'pinjaman.detail',
@@ -255,6 +260,8 @@ class PermissionRegistry
             'pengaturan.view', 'user.view', 'role.view',
             // Log
             'log.view',
+            // Void (approve/reject)
+            'void.view', 'void.approve',
         ];
     }
 

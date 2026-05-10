@@ -34,6 +34,8 @@ class DashboardController extends Controller
         $query = DB::table('simpanan')
             ->join('jenis_simpanan', 'simpanan.jenis_simpanan_id', '=', 'jenis_simpanan.id')
             ->join('anggota', 'simpanan.anggota_id', '=', 'anggota.id')
+            ->whereNull('simpanan.deleted_at')
+            ->where(function ($q) { $q->where('simpanan.status', 'aktif')->orWhereNull('simpanan.status'); })
             ->select('jenis_simpanan.nama', DB::raw('SUM(simpanan.nominal) as total'));
 
         if ($bidangId) {

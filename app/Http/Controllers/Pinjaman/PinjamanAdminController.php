@@ -6,6 +6,7 @@ use App\Enums\StatusPinjaman;
 use App\Http\Controllers\Controller;
 use App\Models\Pinjaman;
 use App\Services\ActivityLogService;
+use App\Services\LedgerService;
 use App\Services\SaldoService;
 use App\Http\Requests\Pinjaman\RejectPinjamanRequest;
 use Illuminate\Http\Request;
@@ -15,7 +16,8 @@ class PinjamanAdminController extends Controller
 {
     public function __construct(
         private ActivityLogService $logger,
-        private SaldoService $saldoService
+        private SaldoService $saldoService,
+        private LedgerService $ledgerService,
     ) {}
 
     public function index(Request $request)
@@ -223,7 +225,7 @@ class PinjamanAdminController extends Controller
         if ($pinjaman->potongan_swp > 0) {
             $jenisSwp = \App\Models\JenisSimpanan::swp();
             if ($jenisSwp) {
-                \App\Models\Simpanan::create([
+                $simpananSwp = \App\Models\Simpanan::create([
                     'anggota_id' => $pinjaman->anggota_id,
                     'jenis_simpanan_id' => $jenisSwp->id,
                     'nominal' => $pinjaman->potongan_swp,
@@ -232,8 +234,36 @@ class PinjamanAdminController extends Controller
                     'dicatat_oleh' => auth()->id(),
                     'pinjaman_id' => $pinjaman->id,
                 ]);
+
+                // Tulis simpanan SWP ke Ledger
+                $this->ledgerService->catatSimpanan(
+                    $pinjaman->potongan_swp,
+                    $simpananSwp->id,
+                    $pinjaman->anggota_id,
+                    $jenisSwp->nama,
+                    now()->toDateString(),
+                );
             }
         }
+
+        // Tulis potongan dana resiko + biaya admin ke Ledger
+        $this->ledgerService->catatPotonganPinjaman(
+            (float) $pinjaman->potongan_dana_resiko,
+            (float) $pinjaman->potongan_biaya_admin,
+            $pinjaman->id,
+            $pinjaman->anggota_id,
+            $pinjaman->no_referensi,
+            now()->toDateString(),
+        );
+
+        // Tulis pencairan pinjaman (dana keluar) ke Ledger
+        $this->ledgerService->catatPencairan(
+            (float) $pinjaman->nominal_pinjaman,
+            $pinjaman->id,
+            $pinjaman->anggota_id,
+            $pinjaman->no_referensi,
+            now()->toDateString(),
+        );
 
         $tanggalMulai = now();
         $angsuranBulanBerjalan = (bool) ($pinjaman->periodePinjaman->angsuran_bulan_berjalan ?? false);
@@ -334,6 +364,16 @@ class PinjamanAdminController extends Controller
                 'status' => \App\Enums\StatusAngsuran::Lunas,
                 'tanggal_bayar' => now(),
             ]);
+
+            // Tulis angsuran ke Ledger
+            $this->ledgerService->catatAngsuran(
+                (float) $angsuran->nominal_total,
+                $angsuran->id,
+                $pinjaman->anggota_id,
+                $angsuran->angsuran_ke,
+                $pinjaman->no_referensi,
+                now()->toDateString(),
+            );
 
             // Check if all angsurans are paid
             $belumLunasCount = $pinjaman->angsuran()->where('status', \App\Enums\StatusAngsuran::Belum)->count();

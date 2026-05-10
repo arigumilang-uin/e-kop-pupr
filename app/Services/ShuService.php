@@ -50,12 +50,16 @@ class ShuService
                     ->sum('potongan_biaya_admin'),
 
             'pengeluaran_kas' => fn(int $tahun) =>
-                (float) PengeluaranKas::whereYear('tanggal', $tahun)->sum('nominal'),
+                (float) PengeluaranKas::whereYear('tanggal', $tahun)
+                    ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
+                    ->sum('nominal'),
 
             'simpanan_swp' => fn(int $tahun) =>
                 (float) DB::table('simpanan')
                     ->join('jenis_simpanan', 'simpanan.jenis_simpanan_id', '=', 'jenis_simpanan.id')
                     ->where('jenis_simpanan.kode', 'SWP')
+                    ->whereNull('simpanan.deleted_at')
+                    ->where(function ($q) { $q->where('simpanan.status', 'aktif')->orWhereNull('simpanan.status'); })
                     ->whereYear('simpanan.tanggal', $tahun)
                     ->sum('simpanan.nominal'),
         ];

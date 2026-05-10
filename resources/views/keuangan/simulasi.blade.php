@@ -71,7 +71,7 @@
             </div>
             <div>
                 <p class="text-sm font-bold text-violet-800">{{ $summary['jumlahAnggotaAktif'] }} Anggota Aktif</p>
-                <p class="text-xs text-violet-600 mt-0.5">Masing-masing menyetor Rp {{ number_format($summary['nominalWajib'], 0, ',', '.') }} simpanan wajib/bulan</p>
+                <p class="text-xs text-violet-600 mt-0.5">Masing-masing menyetor rata-rata global Rp {{ number_format($summary['nominalWajibGlobal'], 0, ',', '.') }} simpanan wajib/bulan (dapat berubah sesuai konfigurasi per bulan)</p>
             </div>
         </div>
         <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-3">

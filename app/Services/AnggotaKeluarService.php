@@ -23,6 +23,7 @@ class AnggotaKeluarService
 {
     public function __construct(
         private SaldoService $saldoService,
+        private LedgerService $ledgerService,
     ) {}
 
     /**
@@ -42,6 +43,8 @@ class AnggotaKeluarService
         $simpananPerJenis = DB::table('simpanan')
             ->join('jenis_simpanan', 'simpanan.jenis_simpanan_id', '=', 'jenis_simpanan.id')
             ->where('simpanan.anggota_id', $anggota->id)
+            ->whereNull('simpanan.deleted_at')
+            ->where(function ($q) { $q->where('simpanan.status', 'aktif')->orWhereNull('simpanan.status'); })
             ->select(
                 'jenis_simpanan.id as jenis_id',
                 'jenis_simpanan.kode',
@@ -120,7 +123,7 @@ class AnggotaKeluarService
             foreach ($analisis['rincian_simpanan'] as $item) {
                 if ($item['neto'] <= 0) continue;
 
-                PenarikanSimpanan::create([
+                $penarikan = PenarikanSimpanan::create([
                     'anggota_id' => $anggota->id,
                     'jenis_simpanan_id' => $item['jenis_id'],
                     'nominal' => $item['neto'],
@@ -128,6 +131,16 @@ class AnggotaKeluarService
                     'keterangan' => "Pengembalian {$item['nama']} — Anggota keluar dari koperasi",
                     'diproses_oleh' => $userId,
                 ]);
+
+                // Tulis penarikan ke Ledger
+                $this->ledgerService->catatPenarikan(
+                    $item['neto'],
+                    $penarikan->id,
+                    $anggota->id,
+                    $item['nama'],
+                    $tanggalKeluar,
+                    $userId,
+                );
 
                 $rincianJson[] = [
                     'kode' => $item['kode'],

@@ -16,6 +16,7 @@ class PotonganService
     public function __construct(
         private PengaturanService $pengaturan,
         private ActivityLogService $logger,
+        private LedgerService $ledgerService,
     ) {}
 
     /**
@@ -87,10 +88,14 @@ class PotonganService
             $sudahBayarPokok = DB::table('simpanan')
                 ->where('anggota_id', $anggota->id)
                 ->where('jenis_simpanan_id', $jenisPokok->id)
+                ->whereNull('deleted_at')
+                ->where(function ($q) {
+                    $q->where('status', 'aktif')->orWhereNull('status');
+                })
                 ->exists();
 
             if (!$sudahBayarPokok && !$belumWaktunyaDipotong) {
-                Simpanan::create([
+                $simpanan = Simpanan::create([
                     'anggota_id' => $anggota->id,
                     'jenis_simpanan_id' => $jenisPokok->id,
                     'nominal' => $nominalPokok,
@@ -100,20 +105,34 @@ class PotonganService
                     'keterangan' => "Potongan TPP Masal (Pokok) - Periode $month/$year",
                     'dicatat_oleh' => $userId,
                 ]);
+
+                $this->ledgerService->catatSimpanan(
+                    $nominalPokok,
+                    $simpanan->id,
+                    $anggota->id,
+                    $jenisPokok->nama,
+                    now()->toDateString(),
+                    $userId,
+                );
             }
         }
 
         // 2. Simpanan Wajib
         if ($jenisWajib) {
+            // Validasi duplikat: hanya cek simpanan aktif (menggantikan unique constraint)
             $sudahBayarWajib = DB::table('simpanan')
                 ->where('anggota_id', $anggota->id)
                 ->where('jenis_simpanan_id', $jenisWajib->id)
                 ->where('bulan_untuk', $month)
                 ->where('tahun_untuk', $year)
+                ->whereNull('deleted_at')
+                ->where(function ($q) {
+                    $q->where('status', 'aktif')->orWhereNull('status');
+                })
                 ->exists();
 
             if (!$sudahBayarWajib && !$belumWaktunyaDipotong) {
-                Simpanan::create([
+                $simpanan = Simpanan::create([
                     'anggota_id' => $anggota->id,
                     'jenis_simpanan_id' => $jenisWajib->id,
                     'nominal' => $nominalWajib,
@@ -123,6 +142,15 @@ class PotonganService
                     'keterangan' => "Potongan TPP Masal (Wajib) - Periode $month/$year",
                     'dicatat_oleh' => $userId,
                 ]);
+
+                $this->ledgerService->catatSimpanan(
+                    $nominalWajib,
+                    $simpanan->id,
+                    $anggota->id,
+                    $jenisWajib->nama,
+                    now()->toDateString(),
+                    $userId,
+                );
             }
         }
 
@@ -141,7 +169,18 @@ class PotonganService
                 'tanggal_bayar' => now(),
             ]);
 
+            // Tulis angsuran ke Ledger
             $pinjaman = $angs->pinjaman;
+            $this->ledgerService->catatAngsuran(
+                (float) $angs->nominal_total,
+                $angs->id,
+                $anggota->id,
+                $angs->angsuran_ke,
+                $pinjaman->no_referensi ?? '-',
+                now()->toDateString(),
+                $userId,
+            );
+
             if ($pinjaman->angsuran()->where('status', StatusAngsuran::Belum)->count() === 0) {
                 $pinjaman->update(['status' => StatusPinjaman::Lunas]);
             }

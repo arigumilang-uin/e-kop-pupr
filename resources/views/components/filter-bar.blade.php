@@ -1,6 +1,11 @@
 @props(['searchPlaceholder' => 'Cari...'])
 
 <div class="sticky top-[92px] z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-[#f7f7f5]/95 backdrop-blur-xl border-b border-stone-200/60 transition-all duration-200">
+    @if(isset($header))
+        <div class="mb-4">
+            {{ $header }}
+        </div>
+    @endif
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         {{-- Search and filters wrapper (Left Aligned) --}}
         <div class="flex items-center gap-3 w-full lg:w-auto lg:flex-1">

@@ -325,6 +325,8 @@ class PotonganExport
         if (!$jenisFilter || $jenisFilter === 'pokok') {
             $paidPokokIds = DB::table('simpanan')
                 ->where('jenis_simpanan_id', $jenisPokok->id ?? 0)
+                ->whereNull('deleted_at')
+                ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
                 ->pluck('anggota_id')
                 ->toArray();
         }
@@ -335,6 +337,8 @@ class PotonganExport
                 ->where('jenis_simpanan_id', $jenisWajib->id ?? 0)
                 ->where('bulan_untuk', $month)
                 ->where('tahun_untuk', $year)
+                ->whereNull('deleted_at')
+                ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
                 ->pluck('anggota_id')
                 ->toArray();
         }

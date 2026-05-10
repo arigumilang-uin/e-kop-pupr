@@ -26,7 +26,12 @@ class SaldoService
      */
     public function totalDanaMasuk(): float
     {
-        $simpanan = (float) DB::table('simpanan')->sum('nominal');
+        $simpanan = (float) DB::table('simpanan')
+            ->whereNull('deleted_at')
+            ->where(function ($q) {
+                $q->where('status', 'aktif')->orWhereNull('status');
+            })
+            ->sum('nominal');
 
         $angsuranLunas = (float) DB::table('angsuran')
             ->where('status', 'lunas')
@@ -57,7 +62,10 @@ class SaldoService
 
         $penarikan = (float) PenarikanSimpanan::sum('nominal');
 
-        $pengeluaran = (float) PengeluaranKas::sum('nominal');
+        $pengeluaran = (float) PengeluaranKas::where(function ($q) {
+                $q->where('status', 'aktif')->orWhereNull('status');
+            })
+            ->sum('nominal');
 
         return $pencairan + $penarikan + $pengeluaran;
     }

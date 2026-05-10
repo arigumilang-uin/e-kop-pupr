@@ -104,8 +104,13 @@ class AnggotaController extends Controller
         $anggota = collect([$anggotum])->first();
         if(!$anggota->id) $anggota = request()->route('anggota');
 
-        $anggota->load(['bidang', 'simpanan.jenisSimpanan', 'pinjaman' => function($q) {
+        $anggota->load(['bidang', 'pinjaman' => function($q) {
             $q->whereIn('status', ['berjalan', 'lunas', 'menunggu', 'ditinjau'])->with('angsuran');
+        }]);
+
+        // Load hanya simpanan aktif (exclude voided)
+        $anggota->load(['simpanan' => function ($q) {
+            $q->aktif()->with('jenisSimpanan');
         }]);
 
         // Hitung neto simpanan per jenis
@@ -216,18 +221,27 @@ class AnggotaController extends Controller
             // Jika ada arsip keluar → otomatis buat simpanan baru sesuai rincian
             if ($arsipKeluar && $arsipKeluar->rincian_simpanan) {
                 $jenisMap = \App\Models\JenisSimpanan::pluck('id', 'kode');
+                $jenisNamaMap = \App\Models\JenisSimpanan::pluck('nama', 'kode');
 
                 foreach ($arsipKeluar->rincian_simpanan as $item) {
                     $jenisId = $jenisMap[$item['kode']] ?? null;
                     if (!$jenisId || $item['nominal'] <= 0) continue;
 
-                    \App\Models\Simpanan::create([
+                    $simpanan = \App\Models\Simpanan::create([
                         'anggota_id' => $anggota->id,
                         'jenis_simpanan_id' => $jenisId,
                         'nominal' => $item['nominal'],
                         'tanggal' => now()->toDateString(),
                         'keterangan' => "Setoran wajib pendaftar ulang — berdasar arsip keluar #{$arsipKeluar->id}",
                     ]);
+
+                    resolve(\App\Services\LedgerService::class)->catatSimpanan(
+                        nominal: $simpanan->nominal,
+                        simpananId: $simpanan->id,
+                        anggotaId: $anggota->id,
+                        jenisSimpanan: ($jenisNamaMap[$item['kode']] ?? 'Reaktivasi') . ' (Daftar Ulang)',
+                        tanggal: $simpanan->tanggal
+                    );
                 }
             }
 

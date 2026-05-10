@@ -62,6 +62,8 @@ class NeracaService
 
         $simpananAll = DB::table('simpanan')
             ->join('jenis_simpanan', 'simpanan.jenis_simpanan_id', '=', 'jenis_simpanan.id')
+            ->whereNull('simpanan.deleted_at')
+            ->where(function ($q) { $q->where('simpanan.status', 'aktif')->orWhereNull('simpanan.status'); })
             ->select(
                 'jenis_simpanan.kode',
                 'jenis_simpanan.nama',
@@ -122,8 +124,10 @@ class NeracaService
             ->whereIn('status', ['berjalan', 'lunas'])
             ->sum('potongan_biaya_admin');
 
-        // Beban (pengeluaran kas manual)
-        $totalBeban = (float) PengeluaranKas::sum('nominal');
+        // Beban (pengeluaran kas manual — exclude voided)
+        $totalBeban = (float) PengeluaranKas::where(function ($q) {
+                $q->where('status', 'aktif')->orWhereNull('status');
+            })->sum('nominal');
 
         // Laba Ditahan = Pendapatan Terealisasi - Beban
         $labaDitahan = $pendapatanBunga + $pendapatanBiayaAdmin - $totalBeban;

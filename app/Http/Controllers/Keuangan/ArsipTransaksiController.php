@@ -48,6 +48,7 @@ class ArsipTransaksiController extends Controller
 
         // === 1. SIMPANAN ===
         $simpananQuery = Simpanan::with(['anggota', 'jenisSimpanan', 'pencatat'])
+            ->aktif()
             ->whereBetween('tanggal', [$dari->toDateString(), $sampai->toDateString()])
             ->orderByDesc('tanggal')
             ->orderByDesc('id');
@@ -88,6 +89,7 @@ class ArsipTransaksiController extends Controller
 
         // === 4. PENGELUARAN KAS (MANUAL) ===
         $pengeluaranQuery = \App\Models\PengeluaranKas::with(['kategori', 'pencatat'])
+            ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
             ->whereBetween('tanggal', [$dari->toDateString(), $sampai->toDateString()])
             ->orderByDesc('tanggal')
             ->orderByDesc('id');

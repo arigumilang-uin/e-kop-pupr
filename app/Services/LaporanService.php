@@ -17,7 +17,10 @@ class LaporanService
     public function ringkasan(): array
     {
         $saldoKoperasi = $this->saldo->saldoKoperasi();
-        $totalSimpanan = (float) DB::table('simpanan')->sum('nominal');
+        $totalSimpanan = (float) DB::table('simpanan')
+            ->whereNull('deleted_at')
+            ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
+            ->sum('nominal');
         $totalPenarikan = (float) DB::table('penarikan_simpanan')->sum('nominal');
         $simpananBersih = $totalSimpanan - $totalPenarikan;
 
@@ -38,7 +41,10 @@ class LaporanService
         $masukFee = (float) DB::table('pinjaman')->whereIn('status', ['berjalan', 'lunas'])->sum(DB::raw('potongan_dana_resiko + potongan_biaya_admin'));
         $keluarPinjaman = (float) DB::table('pinjaman')->whereIn('status', ['berjalan', 'lunas'])->sum('nominal_pinjaman');
         $keluarTarik = $totalPenarikan;
-        $keluarPengeluaranKas = (float) DB::table('pengeluaran_kas')->sum('nominal');
+        $keluarPengeluaranKas = (float) DB::table('pengeluaran_kas')
+            ->whereNull('deleted_at')
+            ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
+            ->sum('nominal');
 
         // Breakdown Simpanan per Jenis (Neto)
         $simpananPerJenis = $this->simpananPerJenisNeto();
@@ -57,6 +63,8 @@ class LaporanService
     {
         $setorPerJenis = DB::table('simpanan')
             ->join('jenis_simpanan', 'simpanan.jenis_simpanan_id', '=', 'jenis_simpanan.id')
+            ->whereNull('simpanan.deleted_at')
+            ->where(function ($q) { $q->where('simpanan.status', 'aktif')->orWhereNull('simpanan.status'); })
             ->select('jenis_simpanan.nama', 'jenis_simpanan.kode', DB::raw('SUM(simpanan.nominal) as total'))
             ->groupBy('jenis_simpanan.nama', 'jenis_simpanan.kode')
             ->get()->keyBy('kode');
@@ -117,6 +125,8 @@ class LaporanService
         $simpananAnggota = DB::table('simpanan')
             ->join('anggota', 'simpanan.anggota_id', '=', 'anggota.id')
             ->join('jenis_simpanan', 'simpanan.jenis_simpanan_id', '=', 'jenis_simpanan.id')
+            ->whereNull('simpanan.deleted_at')
+            ->where(function ($q) { $q->where('simpanan.status', 'aktif')->orWhereNull('simpanan.status'); })
             ->select(
                 'anggota.id as anggota_id', 'anggota.nip', 'anggota.nama',
                 'anggota.status as status_anggota',

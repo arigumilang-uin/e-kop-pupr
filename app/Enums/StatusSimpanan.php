@@ -2,17 +2,15 @@
 
 namespace App\Enums;
 
-enum StatusAngsuran: string
+enum StatusSimpanan: string
 {
-    case Belum = 'belum';
-    case Lunas = 'lunas';
+    case Aktif = 'aktif';
     case Voided = 'voided';
 
     public function label(): string
     {
         return match ($this) {
-            self::Belum => 'Belum Dibayar',
-            self::Lunas => 'Lunas',
+            self::Aktif => 'Aktif',
             self::Voided => 'Dibatalkan (Void)',
         };
     }
@@ -20,8 +18,7 @@ enum StatusAngsuran: string
     public function color(): string
     {
         return match ($this) {
-            self::Belum => 'amber',
-            self::Lunas => 'emerald',
+            self::Aktif => 'emerald',
             self::Voided => 'red',
         };
     }
