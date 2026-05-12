@@ -9,6 +9,7 @@ use App\Http\Controllers\Keuangan\SimulasiKeuanganController;
 
 use App\Http\Controllers\Keuangan\PengeluaranKasController;
 use App\Http\Controllers\Keuangan\ShuController;
+use App\Http\Controllers\Keuangan\ShuKewajibanController;
 use App\Http\Controllers\Keuangan\NeracaController;
 use App\Http\Controllers\Master\AnggotaController;
 use App\Http\Controllers\Periode\PeriodeController;
@@ -32,7 +33,7 @@ Route::get('/', function () {
 });
 
 Route::get('/simulasi', [SimulasiController::class, 'index'])->name('simulasi');
-Route::post('/simulasi/hitung', [SimulasiController::class, 'hitung'])->name('simulasi.hitung');
+Route::post('/simulasi/hitung', [SimulasiController::class, 'hitung'])->name('simulasi.hitung')->middleware('throttle:30,1');
 
 /*
 |--------------------------------------------------------------------------
@@ -58,7 +59,7 @@ Route::patch('/cek-pinjaman/batal', [PinjamanGuestController::class, 'cancel'])-
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
+    Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
 });
 
 /*
@@ -192,6 +193,12 @@ Route::middleware('auth')->group(function () {
         Route::patch('/keuangan/shu/distribusi/{distribusi}', [ShuController::class, 'updateDistribusi'])->name('shu.distribusi.update');
         Route::delete('/keuangan/shu/distribusi/{distribusi}', [ShuController::class, 'destroyDistribusi'])->name('shu.distribusi.destroy');
         Route::post('/keuangan/shu/payout', [ShuController::class, 'eksekusiPayout'])->name('shu.payout');
+
+        // Kewajiban & Realisasi Dana SHU
+        Route::get('/keuangan/shu/kewajiban', [ShuKewajibanController::class, 'index'])->name('shu.kewajiban.index');
+        Route::get('/keuangan/shu/kewajiban/{kewajiban}', [ShuKewajibanController::class, 'show'])->name('shu.kewajiban.show');
+        Route::post('/keuangan/shu/kewajiban/{kewajiban}/realisasi', [ShuKewajibanController::class, 'storeRealisasi'])->name('shu.kewajiban.realisasi.store');
+        Route::delete('/keuangan/shu/kewajiban/{kewajiban}/realisasi/{realisasi}', [ShuKewajibanController::class, 'destroyRealisasi'])->name('shu.kewajiban.realisasi.destroy');
     });
 
     // =============================================

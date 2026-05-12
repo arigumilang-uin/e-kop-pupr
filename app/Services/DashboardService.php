@@ -14,27 +14,42 @@ class DashboardService
 
     /**
      * Hitung seluruh statistik dashboard.
+     * Semua agregat dihitung sekali — tidak ada duplikasi query.
      */
     public function getStats(): array
     {
-        $saldoKoperasi = $this->saldo->saldoKoperasi();
-
+        // === Pemasukan (4 query) ===
         $simpanan_all = (float) DB::table('simpanan')
             ->whereNull('deleted_at')
             ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
             ->sum('nominal');
-        $angsuran_pokok = (float) DB::table('angsuran')->where('status', 'lunas')->sum('nominal_pokok');
-        $angsuran_bunga = (float) DB::table('angsuran')->where('status', 'lunas')->sum('nominal_bunga');
-        $angsuran_pokok_bunga = $angsuran_pokok + $angsuran_bunga;
-        $pendapatan_potongan = (float) DB::table('pinjaman')->whereIn('status', ['berjalan', 'lunas'])
-            ->sum(DB::raw('potongan_dana_resiko + potongan_biaya_admin'));
-        $dana_cair_pinjaman = (float) DB::table('pinjaman')->whereIn('status', ['berjalan', 'lunas'])->sum('nominal_pinjaman');
+
+        $angsuran = DB::table('angsuran')->where('status', 'lunas')
+            ->selectRaw('SUM(nominal_pokok) as pokok, SUM(nominal_bunga) as bunga, SUM(nominal_pokok + nominal_bunga) as total')
+            ->first();
+        $angsuran_pokok = (float) ($angsuran->pokok ?? 0);
+        $angsuran_bunga = (float) ($angsuran->bunga ?? 0);
+        $angsuran_total = (float) ($angsuran->total ?? 0);
+
+        $potongan = DB::table('pinjaman')->whereIn('status', ['berjalan', 'lunas'])
+            ->selectRaw('SUM(potongan_dana_resiko) as resiko, SUM(potongan_biaya_admin) as admin, SUM(potongan_dana_resiko + potongan_biaya_admin) as total, SUM(nominal_pinjaman) as pencairan')
+            ->first();
+        $pendapatan_potongan = (float) ($potongan->total ?? 0);
+        $dana_cair_pinjaman = (float) ($potongan->pencairan ?? 0);
+
+        // === Pengeluaran (2 query) ===
         $tarik_simpanan = (float) DB::table('penarikan_simpanan')->sum('nominal');
         $keluar_pengeluaran_kas = (float) DB::table('pengeluaran_kas')
             ->whereNull('deleted_at')
             ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
             ->sum('nominal');
 
+        // === Saldo Koperasi (dihitung dari data di atas, 0 query tambahan) ===
+        $totalMasuk = $simpanan_all + $angsuran_total + (float) ($potongan->resiko ?? 0) + (float) ($potongan->admin ?? 0);
+        $totalKeluar = $dana_cair_pinjaman + $tarik_simpanan + $keluar_pengeluaran_kas;
+        $saldoKoperasi = $totalMasuk - $totalKeluar;
+
+        // === Piutang (2 query) ===
         $totalPokokPinjamanAktif = (float) DB::table('pinjaman')->where('status', 'berjalan')->sum('nominal_pinjaman');
         $angsuranPokokTerbayar = (float) DB::table('angsuran')
             ->join('pinjaman', 'angsuran.pinjaman_id', '=', 'pinjaman.id')
@@ -43,6 +58,7 @@ class DashboardService
             ->sum('angsuran.nominal_pokok');
         $piutangBerjalan = $totalPokokPinjamanAktif - $angsuranPokokTerbayar;
 
+        // === Breakdown Simpanan (1 query) ===
         $simpanan_per_jenis = DB::table('simpanan')
             ->join('jenis_simpanan', 'simpanan.jenis_simpanan_id', '=', 'jenis_simpanan.id')
             ->whereNull('simpanan.deleted_at')
@@ -51,9 +67,9 @@ class DashboardService
             ->groupBy('jenis_simpanan.nama')
             ->get();
 
+        // === Counts (2 query) ===
         $total_simpanan = $simpanan_all - $tarik_simpanan;
         $total_aset = $saldoKoperasi + $piutangBerjalan;
-
         $rasioLikuiditas = $total_simpanan > 0 ? ($saldoKoperasi / $total_simpanan) * 100 : 0;
         $rasioPiutang = $total_aset > 0 ? ($piutangBerjalan / $total_aset) * 100 : 0;
         $totalPendapatan = $angsuran_bunga + $pendapatan_potongan;
@@ -70,7 +86,7 @@ class DashboardService
             'rasio_piutang' => $rasioPiutang,
             'breakdown_kas' => [
                 'masuk_simpanan' => $simpanan_all,
-                'masuk_angsuran' => $angsuran_pokok_bunga,
+                'masuk_angsuran' => $angsuran_total,
                 'masuk_fee' => $pendapatan_potongan,
                 'keluar_pinjaman' => $dana_cair_pinjaman,
                 'keluar_tarik' => $tarik_simpanan,
@@ -112,23 +128,84 @@ class DashboardService
      */
     public function getMonthlyFlow(int $year): array
     {
-        $pemasukan = [];
-        $pengeluaran = [];
+        // Inisialisasi array 12 bulan dengan 0
+        $pemasukan = array_fill(0, 12, 0);
+        $pengeluaran = array_fill(0, 12, 0);
 
-        for ($i = 1; $i <= 12; $i++) {
-            // Pemasukan
-            $masukSimpanan = (float) DB::table('simpanan')->whereYear('tanggal', $year)->whereMonth('tanggal', $i)->whereNull('deleted_at')->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })->sum('nominal');
-            $masukAngsuran = (float) DB::table('angsuran')->whereYear('tanggal_bayar', $year)->whereMonth('tanggal_bayar', $i)->where('status', 'lunas')->sum(DB::raw('nominal_pokok + nominal_bunga'));
-            // Fee pendapatan langsung masuk ke bulan pinjaman saat di-approve
-            $masukFee = (float) DB::table('pinjaman')->whereYear('tanggal_approval', $year)->whereMonth('tanggal_approval', $i)->whereIn('status', ['berjalan', 'lunas'])->sum(DB::raw('potongan_dana_resiko + potongan_biaya_admin'));
-            
-            // Pengeluaran
-            $keluarPinjaman = (float) DB::table('pinjaman')->whereYear('tanggal_approval', $year)->whereMonth('tanggal_approval', $i)->whereIn('status', ['berjalan', 'lunas'])->sum('nominal_pinjaman');
-            $keluarTarik = (float) DB::table('penarikan_simpanan')->whereYear('tanggal', $year)->whereMonth('tanggal', $i)->sum('nominal');
-            $keluarKas = (float) DB::table('pengeluaran_kas')->whereYear('tanggal', $year)->whereMonth('tanggal', $i)->whereNull('deleted_at')->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })->sum('nominal');
+        // Helper: convert grouped result ke array index 0-11
+        $mapMonthly = function ($rows) {
+            $result = array_fill(0, 12, 0);
+            foreach ($rows as $row) {
+                $result[$row->bulan - 1] = (float) $row->total;
+            }
+            return $result;
+        };
 
-            $pemasukan[] = $masukSimpanan + $masukAngsuran + $masukFee;
-            $pengeluaran[] = $keluarPinjaman + $keluarTarik + $keluarKas;
+        // 1 query: Simpanan per bulan
+        $simpananBulanan = $mapMonthly(
+            DB::table('simpanan')
+                ->selectRaw('MONTH(tanggal) as bulan, SUM(nominal) as total')
+                ->whereYear('tanggal', $year)
+                ->whereNull('deleted_at')
+                ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
+                ->groupByRaw('MONTH(tanggal)')
+                ->get()
+        );
+
+        // 1 query: Angsuran per bulan
+        $angsuranBulanan = $mapMonthly(
+            DB::table('angsuran')
+                ->selectRaw('MONTH(tanggal_bayar) as bulan, SUM(nominal_pokok + nominal_bunga) as total')
+                ->whereYear('tanggal_bayar', $year)
+                ->where('status', 'lunas')
+                ->groupByRaw('MONTH(tanggal_bayar)')
+                ->get()
+        );
+
+        // 1 query: Fee potongan per bulan (dari approval pinjaman)
+        $feeBulanan = $mapMonthly(
+            DB::table('pinjaman')
+                ->selectRaw('MONTH(tanggal_approval) as bulan, SUM(potongan_dana_resiko + potongan_biaya_admin) as total')
+                ->whereYear('tanggal_approval', $year)
+                ->whereIn('status', ['berjalan', 'lunas'])
+                ->groupByRaw('MONTH(tanggal_approval)')
+                ->get()
+        );
+
+        // 1 query: Pencairan pinjaman per bulan
+        $pencairanBulanan = $mapMonthly(
+            DB::table('pinjaman')
+                ->selectRaw('MONTH(tanggal_approval) as bulan, SUM(nominal_pinjaman) as total')
+                ->whereYear('tanggal_approval', $year)
+                ->whereIn('status', ['berjalan', 'lunas'])
+                ->groupByRaw('MONTH(tanggal_approval)')
+                ->get()
+        );
+
+        // 1 query: Penarikan simpanan per bulan
+        $penarikanBulanan = $mapMonthly(
+            DB::table('penarikan_simpanan')
+                ->selectRaw('MONTH(tanggal) as bulan, SUM(nominal) as total')
+                ->whereYear('tanggal', $year)
+                ->groupByRaw('MONTH(tanggal)')
+                ->get()
+        );
+
+        // 1 query: Pengeluaran kas per bulan
+        $kasBulanan = $mapMonthly(
+            DB::table('pengeluaran_kas')
+                ->selectRaw('MONTH(tanggal) as bulan, SUM(nominal) as total')
+                ->whereYear('tanggal', $year)
+                ->whereNull('deleted_at')
+                ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
+                ->groupByRaw('MONTH(tanggal)')
+                ->get()
+        );
+
+        // Gabungkan per bulan
+        for ($i = 0; $i < 12; $i++) {
+            $pemasukan[$i] = $simpananBulanan[$i] + $angsuranBulanan[$i] + $feeBulanan[$i];
+            $pengeluaran[$i] = $pencairanBulanan[$i] + $penarikanBulanan[$i] + $kasBulanan[$i];
         }
 
         return [

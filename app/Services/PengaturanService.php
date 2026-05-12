@@ -8,22 +8,47 @@ use Illuminate\Support\Facades\Cache;
 /**
  * Service untuk mengakses pengaturan sistem dengan caching.
  * Sumber data: tabel `pengaturan`.
+ *
+ * Optimasi: Semua pengaturan di-load dalam 1 query dan di-cache
+ * sebagai collection, menghindari N+1 query per key.
  */
 class PengaturanService
 {
-    private const CACHE_PREFIX = 'pengaturan:';
+    private const CACHE_KEY = 'pengaturan:all';
     private const CACHE_TTL = 3600; // 1 jam
 
     /**
-     * Ambil nilai pengaturan by key (dengan cache).
+     * In-memory store agar dalam satu request tidak perlu
+     * hit cache driver berulang kali.
+     */
+    private ?array $store = null;
+
+    /**
+     * Load semua pengaturan sekaligus (1 query, 1 cache entry).
+     */
+    private function loadAll(): array
+    {
+        if ($this->store !== null) {
+            return $this->store;
+        }
+
+        $this->store = Cache::remember(
+            self::CACHE_KEY,
+            self::CACHE_TTL,
+            fn () => Pengaturan::pluck('value', 'key')->toArray()
+        );
+
+        return $this->store;
+    }
+
+    /**
+     * Ambil nilai pengaturan by key (dengan cache batch).
      */
     public function get(string $key, mixed $default = null): mixed
     {
-        return Cache::remember(
-            self::CACHE_PREFIX . $key,
-            self::CACHE_TTL,
-            fn () => Pengaturan::where('key', $key)->value('value') ?? $default
-        );
+        $all = $this->loadAll();
+
+        return $all[$key] ?? $default;
     }
 
     /**
@@ -44,10 +69,12 @@ class PengaturanService
 
     /**
      * Hapus cache untuk key tertentu (dipanggil setelah update pengaturan).
+     * Karena sekarang batch, kita flush seluruh cache pengaturan.
      */
     public function clearCache(string $key): void
     {
-        Cache::forget(self::CACHE_PREFIX . $key);
+        Cache::forget(self::CACHE_KEY);
+        $this->store = null;
     }
 
     /**
@@ -55,10 +82,8 @@ class PengaturanService
      */
     public function clearAllCache(): void
     {
-        $keys = Pengaturan::pluck('key');
-        foreach ($keys as $key) {
-            Cache::forget(self::CACHE_PREFIX . $key);
-        }
+        Cache::forget(self::CACHE_KEY);
+        $this->store = null;
     }
 
     // === Shortcut Methods (yang sering dipakai) ===
@@ -95,14 +120,12 @@ class PengaturanService
                 ->where('bulan', $bulan)
                 ->where('tahun', $tahun)
                 ->value('value');
-                
-            \Illuminate\Support\Facades\Log::info('Cek simpananWajib khusus:', ['bulan' => $bulan, 'tahun' => $tahun, 'result' => $khusus]);
-                
+
             if ($khusus !== null) {
                 return (float) $khusus;
             }
         }
-        
+
         return $this->getFloat('simpanan_wajib', 50000);
     }
 

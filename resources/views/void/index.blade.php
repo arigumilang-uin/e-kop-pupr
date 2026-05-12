@@ -171,7 +171,7 @@
                         {{ $entry->tipe === \App\Enums\TipeLedger::Kredit ? '+' : '-' }} {{ format_rupiah($entry->nominal) }}
                     </x-table.td>
                     <x-table.td class="align-top text-right whitespace-nowrap">
-                        @if($entry->kategori !== \App\Enums\KategoriLedger::Void && !$entry->isVoided() && !$entry->hasPendingVoidRequest())
+                        @if($entry->kategori !== \App\Enums\KategoriLedger::Void && !$entry->is_voided && !$entry->has_pending_void)
                             @can('void.request')
                             @if(in_array($entry->kategori, [\App\Enums\KategoriLedger::Simpanan, \App\Enums\KategoriLedger::Angsuran, \App\Enums\KategoriLedger::Pengeluaran]))
                             <button @click.stop="$dispatch('open-modal', 'request-void-{{ $entry->id }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-[12px] font-bold border border-red-200 hover:bg-red-100 transition-colors relative z-10">
@@ -223,12 +223,12 @@
                             </div>
                             @endif
                             @endcan
-                        @elseif($entry->isVoided())
+                        @elseif($entry->is_voided)
                             <span class="inline-flex items-center gap-1 px-2 py-1 bg-stone-100 text-stone-500 rounded-lg text-[11px] font-bold">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                 Dibatalkan
                             </span>
-                        @elseif($entry->hasPendingVoidRequest())
+                        @elseif($entry->has_pending_void)
                             <span class="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-600 rounded-lg text-[11px] font-bold border border-amber-200">
                                 <svg class="w-3 h-3 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 Menunggu
@@ -278,12 +278,12 @@
                                     <p class="text-[14px] text-stone-800 leading-relaxed break-words whitespace-pre-wrap">{{ $entry->deskripsi }}</p>
                                 </div>
 
-                                @if($entry->isVoided())
+                                @if($entry->is_voided)
                                 <div class="p-3 bg-stone-100 border border-stone-200 rounded-xl flex items-center gap-2">
                                     <svg class="w-5 h-5 text-stone-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                     <p class="text-[13px] font-bold text-stone-600">Status: Dibatalkan (Voided)</p>
                                 </div>
-                                @elseif($entry->hasPendingVoidRequest())
+                                @elseif($entry->has_pending_void)
                                 <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2">
                                     <svg class="w-5 h-5 text-amber-500 shrink-0 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     <p class="text-[13px] font-bold text-amber-700">Status: Menunggu Otorisasi Pembatalan</p>

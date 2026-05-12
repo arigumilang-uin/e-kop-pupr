@@ -47,8 +47,8 @@
                 <div class="animate-enter delay-100" style="position: relative; z-index: 10; text-align: left;">
                     <p style="color: #475569; font-family: 'Playfair Display', serif; font-size: 36px; margin: 0 0 8px 0; font-weight: 600; font-style: italic; letter-spacing: 0.5px;">Selamat Datang di</p>
                     
-                    <h1 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 80px; font-weight: 800; margin: 0 0 20px 0; letter-spacing: -2px; line-height: 0.85; white-space: nowrap; color: #0f172a;">Tirta Bina Karya</h1>
-                    <div style="width: 60px; height: 4px; background: #0f172a; margin-bottom: 24px; border-radius: 2px;"></div>
+                    <h1 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 80px; font-weight: 800; margin: 0 0 20px 0; letter-spacing: -2px; line-height: 0.85; white-space: nowrap; color: #0f172a;">Koperasi <br> Tirta Bina Karya</h1>
+                    
                     
                     <p style="color: #475569; font-size: 18px; margin: 0; line-height: 1.6; font-weight: 500; max-width: 500px;">
                         Koperasi Simpan Pinjam Konsumen di Dinas PUPRPKPP Provinsi Riau

@@ -123,6 +123,7 @@ class ShuService
                 'id' => $d->id,
                 'nama' => $d->nama,
                 'persen' => $d->persen,
+                'tipe_routing' => $d->tipe_routing,
                 'nominal' => $shuDibagi * ($d->persen / 100),
                 'deskripsi' => $d->deskripsi,
             ];

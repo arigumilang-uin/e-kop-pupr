@@ -55,11 +55,41 @@ class ShuConfigSeeder extends Seeder
         // Distribusi / Alokasi SHU
         // ============================
         $distribusi = [
-            ['nama' => 'Jasa Modal',                  'persen' => 25, 'deskripsi' => 'Dibagikan ke anggota berdasarkan proporsi simpanan.', 'urutan' => 1],
-            ['nama' => 'Jasa Anggota (Peminjam)',      'persen' => 25, 'deskripsi' => 'Dibagikan ke anggota yang meminjam berdasarkan volume pinjaman.', 'urutan' => 2],
-            ['nama' => 'Dana Cadangan Koperasi',       'persen' => 30, 'deskripsi' => 'Disimpan sebagai cadangan modal koperasi.', 'urutan' => 3],
-            ['nama' => 'Dana Pengurus',                'persen' => 10, 'deskripsi' => 'Insentif untuk pengurus koperasi.', 'urutan' => 4],
-            ['nama' => 'Dana Sosial & Pendidikan',     'persen' => 10, 'deskripsi' => 'Untuk kegiatan sosial dan pendidikan anggota.', 'urutan' => 5],
+            [
+                'nama'         => 'Jasa Modal',
+                'persen'       => 25,
+                'tipe_routing' => ShuDistribusi::ROUTING_PRORATA_SIMPANAN,
+                'deskripsi'    => 'Dibagikan ke anggota berdasarkan proporsi simpanan.',
+                'urutan'       => 1,
+            ],
+            [
+                'nama'         => 'Jasa Anggota (Peminjam)',
+                'persen'       => 25,
+                'tipe_routing' => ShuDistribusi::ROUTING_PRORATA_PINJAMAN,
+                'deskripsi'    => 'Dibagikan ke anggota yang meminjam berdasarkan volume pinjaman.',
+                'urutan'       => 2,
+            ],
+            [
+                'nama'         => 'Dana Cadangan Koperasi',
+                'persen'       => 30,
+                'tipe_routing' => ShuDistribusi::ROUTING_EKUITAS,
+                'deskripsi'    => 'Disimpan sebagai cadangan modal koperasi (ekuitas).',
+                'urutan'       => 3,
+            ],
+            [
+                'nama'         => 'Dana Pengurus',
+                'persen'       => 10,
+                'tipe_routing' => ShuDistribusi::ROUTING_BAGI_RATA_PENGURUS,
+                'deskripsi'    => 'Insentif untuk pengurus koperasi.',
+                'urutan'       => 4,
+            ],
+            [
+                'nama'         => 'Dana Sosial & Pendidikan',
+                'persen'       => 10,
+                'tipe_routing' => ShuDistribusi::ROUTING_KEWAJIBAN,
+                'deskripsi'    => 'Untuk kegiatan sosial dan pendidikan anggota.',
+                'urutan'       => 5,
+            ],
         ];
 
         foreach ($distribusi as $item) {

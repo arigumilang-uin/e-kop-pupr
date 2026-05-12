@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Services\PermissionRegistry;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 
@@ -17,6 +19,17 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureSuperAdminGate();
+
+        // Deteksi N+1 query lebih dini di environment development
+        Model::preventLazyLoading(! app()->isProduction());
+
+        // View Composer: share sidebar data tanpa query di Blade
+        View::composer('layouts.partials.sidebar-nav', function ($view) {
+            $view->with(
+                'pendingVoidCount',
+                \App\Models\VoidRequest::where('status', 'menunggu')->count()
+            );
+        });
 
         // Gunakan Host bawaan request, karena ini pasti lolos dari Docker
         $host = request()->getHost();

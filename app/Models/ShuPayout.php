@@ -14,6 +14,8 @@ class ShuPayout extends Model
         'total_shu_bersih',
         'total_jasa_modal',
         'total_jasa_usaha',
+        'total_cadangan',
+        'total_dana_kewajiban',
         'jumlah_penerima',
         'total_terdistribusi',
         'dieksekusi_oleh',
@@ -25,6 +27,8 @@ class ShuPayout extends Model
             'total_shu_bersih' => 'decimal:2',
             'total_jasa_modal' => 'decimal:2',
             'total_jasa_usaha' => 'decimal:2',
+            'total_cadangan' => 'decimal:2',
+            'total_dana_kewajiban' => 'decimal:2',
             'total_terdistribusi' => 'decimal:2',
         ];
     }

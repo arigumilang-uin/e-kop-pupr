@@ -17,6 +17,7 @@ class StoreShuDistribusiRequest extends FormRequest
         return [
             'nama' => 'required|string|max:100',
             'persen' => 'required|numeric|min:0.01|max:100',
+            'tipe_routing' => 'required|in:' . implode(',', ShuDistribusi::VALID_ROUTINGS),
             'deskripsi' => 'nullable|string',
         ];
     }

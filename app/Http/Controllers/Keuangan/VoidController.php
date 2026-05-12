@@ -23,44 +23,58 @@ class VoidController extends Controller
         $tab = $request->input('tab', 'ledger');
 
         // === Tab 1: Jurnal Ledger ===
-        $ledgerQuery = Ledger::with(['anggota', 'pencatat', 'voidOf'])
-            ->latest('created_at')
-            ->latest('id');
+        if ($tab === 'ledger') {
+            $ledgerQuery = Ledger::with(['anggota', 'pencatat', 'voidOf'])
+                ->withExists([
+                    'reversals as is_voided',
+                    'voidRequests as has_pending_void' => function ($q) {
+                        $q->where('status', 'menunggu');
+                    },
+                ])
+                ->latest('created_at')
+                ->latest('id');
 
-        if ($request->filled('q')) {
-            $ledgerQuery->where(function ($q) use ($request) {
-                $q->where('no_referensi', 'like', "%{$request->q}%")
-                  ->orWhere('deskripsi', 'like', "%{$request->q}%");
-            });
+            if ($request->filled('q')) {
+                $ledgerQuery->where(function ($q) use ($request) {
+                    $q->where('no_referensi', 'like', "%{$request->q}%")
+                      ->orWhere('deskripsi', 'like', "%{$request->q}%");
+                });
+            }
+
+            if ($request->filled('tipe')) {
+                $ledgerQuery->where('tipe', $request->tipe);
+            }
+
+            if ($request->filled('kategori')) {
+                $ledgerQuery->where('kategori', $request->kategori);
+            }
+
+            if ($request->filled('dari_tanggal')) {
+                $ledgerQuery->where('tanggal_efektif', '>=', $request->dari_tanggal);
+            }
+
+            if ($request->filled('sampai_tanggal')) {
+                $ledgerQuery->where('tanggal_efektif', '<=', $request->sampai_tanggal);
+            }
+
+            $ledgerEntries = $ledgerQuery->paginate(20, ['*'], 'ledger_page')->withQueryString();
+        } else {
+            $ledgerEntries = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
         }
-
-        if ($request->filled('tipe')) {
-            $ledgerQuery->where('tipe', $request->tipe);
-        }
-
-        if ($request->filled('kategori')) {
-            $ledgerQuery->where('kategori', $request->kategori);
-        }
-
-        if ($request->filled('dari_tanggal')) {
-            $ledgerQuery->where('tanggal_efektif', '>=', $request->dari_tanggal);
-        }
-
-        if ($request->filled('sampai_tanggal')) {
-            $ledgerQuery->where('tanggal_efektif', '<=', $request->sampai_tanggal);
-        }
-
-        $ledgerEntries = $ledgerQuery->paginate(20, ['*'], 'ledger_page')->withQueryString();
 
         // === Tab 2: Void Requests ===
-        $voidQuery = VoidRequest::with(['ledger.anggota', 'pemohon', 'pemutus', 'reversalLedger'])
-            ->latest('tanggal_permintaan');
+        if ($tab === 'void') {
+            $voidQuery = VoidRequest::with(['ledger.anggota', 'pemohon', 'pemutus', 'reversalLedger'])
+                ->latest('tanggal_permintaan');
 
-        if ($request->filled('void_status')) {
-            $voidQuery->where('status', $request->void_status);
+            if ($request->filled('void_status')) {
+                $voidQuery->where('status', $request->void_status);
+            }
+
+            $voidRequests = $voidQuery->paginate(15, ['*'], 'void_page')->withQueryString();
+        } else {
+            $voidRequests = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
         }
-
-        $voidRequests = $voidQuery->paginate(15, ['*'], 'void_page')->withQueryString();
 
         $pendingCount = $this->voidService->pendingCount();
 

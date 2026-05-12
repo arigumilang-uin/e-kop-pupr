@@ -37,15 +37,12 @@ class SaldoService
             ->where('status', 'lunas')
             ->sum(DB::raw('nominal_pokok + nominal_bunga'));
 
-        $danaResiko = (float) DB::table('pinjaman')
+        $potongan = DB::table('pinjaman')
             ->whereIn('status', ['berjalan', 'lunas'])
-            ->sum('potongan_dana_resiko');
+            ->selectRaw('SUM(potongan_dana_resiko) as resiko, SUM(potongan_biaya_admin) as admin')
+            ->first();
 
-        $biayaAdmin = (float) DB::table('pinjaman')
-            ->whereIn('status', ['berjalan', 'lunas'])
-            ->sum('potongan_biaya_admin');
-
-        return $simpanan + $angsuranLunas + $danaResiko + $biayaAdmin;
+        return $simpanan + $angsuranLunas + (float) ($potongan->resiko ?? 0) + (float) ($potongan->admin ?? 0);
     }
 
     /**
