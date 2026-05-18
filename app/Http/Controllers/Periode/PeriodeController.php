@@ -44,12 +44,7 @@ class PeriodeController extends Controller
      */
     public function create()
     {
-        $defaults = [
-            'tahun' => (int) now()->format('Y'),
-            'batas_bulan' => $this->pengaturanService->batasBulanPelunasan(),
-        ];
-
-        return view('periode.create', compact('defaults'));
+        return view('periode.create');
     }
 
     /**
@@ -88,6 +83,7 @@ class PeriodeController extends Controller
 
         $periode = PeriodePinjaman::create([
             ...$request->validated(),
+            'tahun' => $tanggalBuka->year,
             'token' => Str::random(32),
             'status' => $initialStatus,
             'dibuka_oleh' => Auth::id(),
@@ -121,11 +117,7 @@ class PeriodeController extends Controller
         $periode->loadCount('pinjaman');
         $adaPengajuan = $periode->pinjaman_count > 0;
 
-        $defaults = [
-            'batas_bulan' => $this->pengaturanService->batasBulanPelunasan(),
-        ];
-
-        return view('periode.edit', compact('periode', 'adaPengajuan', 'defaults'));
+        return view('periode.edit', compact('periode', 'adaPengajuan'));
     }
 
     /**
@@ -159,7 +151,9 @@ class PeriodeController extends Controller
                 );
             }
 
-            $periode->update($request->validated());
+            $updateData = $request->validated();
+            $updateData['tahun'] = \Carbon\Carbon::parse($request->tanggal_buka)->year;
+            $periode->update($updateData);
         }
 
         $this->logger->log(

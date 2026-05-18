@@ -71,10 +71,57 @@
                 <div>
                     <label class="block text-sm font-bold text-stone-700 mb-1.5">Tanggal Masuk Koperasi</label>
                     <x-datepicker name="tanggal_masuk" :value="old('tanggal_masuk', now()->format('Y-m-d'))" />
-                    <p class="mt-1.5 text-[11px] font-medium text-stone-500 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Potongan TPP berlaku di bulan berikutnya.</p>
                     @error('tanggal_masuk') <p class="mt-1.5 text-xs text-red-500 font-medium">{{ $message }}</p> @enderror
                 </div>
             </div>
+
+            {{-- Konfigurasi Potongan TPP --}}
+            <div class="mt-6 p-5 bg-stone-50 rounded-xl border border-stone-200 space-y-5">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <h3 class="text-[11px] uppercase tracking-widest font-bold text-stone-600">Mulai Potongan TPP</h3>
+                </div>
+                <p class="text-[12px] text-stone-500 leading-relaxed -mt-2">Tentukan kapan potongan TPP untuk simpanan pokok dan wajib mulai diberlakukan. Pengaturan ini bersifat independen per jenis simpanan.</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    {{-- Potongan Simpanan Pokok --}}
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Simpanan Pokok Berlaku Mulai <span class="text-red-500">*</span></label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <select name="tpp_mulai_pokok" required class="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm">
+                                @for($m = 1; $m <= 12; $m++)
+                                <option value="{{ $m }}" {{ old('tpp_mulai_pokok', now()->addMonth()->month) == $m ? 'selected' : '' }}>{{ nama_bulan($m) }}</option>
+                                @endfor
+                            </select>
+                            <select name="tpp_tahun_pokok" required class="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm">
+                                @foreach(range(now()->year, now()->year + 2) as $y)
+                                <option value="{{ $y }}" {{ old('tpp_tahun_pokok', now()->addMonth()->year) == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @error('tpp_mulai_pokok') <p class="mt-1 text-xs text-red-500 font-medium">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Potongan Simpanan Wajib --}}
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Simpanan Wajib Berlaku Mulai <span class="text-red-500">*</span></label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <select name="tpp_mulai_wajib" required class="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm">
+                                @for($m = 1; $m <= 12; $m++)
+                                <option value="{{ $m }}" {{ old('tpp_mulai_wajib', now()->addMonth()->month) == $m ? 'selected' : '' }}>{{ nama_bulan($m) }}</option>
+                                @endfor
+                            </select>
+                            <select name="tpp_tahun_wajib" required class="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none text-stone-700 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm">
+                                @foreach(range(now()->year, now()->year + 2) as $y)
+                                <option value="{{ $y }}" {{ old('tpp_tahun_wajib', now()->addMonth()->year) == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @error('tpp_mulai_wajib') <p class="mt-1 text-xs text-red-500 font-medium">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+            </div>
+
 
             <div class="pt-6 mt-8 border-t border-stone-100 flex justify-end">
                 <button type="submit" class="py-2.5 px-6 rounded-xl bg-[#043d2e] hover:bg-[#043d2e]/90 text-white text-sm font-bold transition-all shadow-md hover:shadow-lg active:scale-95 flex items-center gap-2">

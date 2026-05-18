@@ -14,6 +14,7 @@ class KategoriPengeluaran extends Model
 
     protected $fillable = [
         'nama',
+        'jenis',
         'deskripsi',
     ];
 

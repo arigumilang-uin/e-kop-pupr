@@ -18,6 +18,7 @@ class StorePengeluaranRequest extends FormRequest
             'pengeluaran' => 'required|array|min:1',
             'pengeluaran.*.kategori_pengeluaran_id' => 'required|exists:kategori_pengeluaran,id',
             'pengeluaran.*.nominal' => 'required|numeric|min:1',
+            'pengeluaran.*.sumber_dana' => 'required|in:brk,kas',
             'pengeluaran.*.keterangan' => 'required|string',
         ];
     }

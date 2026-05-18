@@ -54,7 +54,7 @@
                 <x-filter-bar 
                     name="q" 
                     value="{{ request('q') }}" 
-                    searchPlaceholder="Cari no. referensi / deskripsi..."
+                    searchPlaceholder="Cari referensi, deskripsi, NIP, atau nama..."
                 >
                     <x-slot name="header">
                         <div class="flex gap-1 p-1 bg-stone-100 rounded-2xl">
@@ -117,9 +117,10 @@
         </form>
 
         {{-- Ledger Table --}}
-        <x-table>
-            <x-table.thead>
-                <tr>
+        <div class="relative">
+            <x-table>
+                <x-table.thead :sticky="true" class="lg:top-[232px]">
+                    <tr>
                     <x-table.th>Tanggal</x-table.th>
                     <x-table.th>No. Referensi</x-table.th>
                     <x-table.th>Tipe</x-table.th>
@@ -312,6 +313,7 @@
                 @endforelse
             </x-table.tbody>
         </x-table>
+        </div>
 
         @if($ledgerEntries->hasPages())
         <div class="px-6 py-4 border-t border-stone-200 bg-stone-50/50">
@@ -340,7 +342,7 @@
                 <x-filter-bar 
                     name="q" 
                     value="{{ request('q') }}" 
-                    searchPlaceholder="Cari alasan / referensi..."
+                    searchPlaceholder="Cari alasan, referensi, NIP, atau nama..."
                 >
                     <x-slot name="header">
                         <div class="flex gap-1 p-1 bg-stone-100 rounded-2xl">

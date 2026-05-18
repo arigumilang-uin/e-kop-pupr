@@ -158,7 +158,72 @@
                             <x-action-dropdown-item href="{{ route('pinjaman.show', $pinjaman->id) }}" icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>'>
                                 Detail
                             </x-action-dropdown-item>
+                            
+                            @can('pinjaman.bayar')
+                            @if($lunasCount < $pinjaman->tenor_bulan)
+                            <div class="border-t border-stone-100 my-1"></div>
+                            <x-action-dropdown-item href="#" @click.prevent="$dispatch('open-modal', 'modal-pelunasan-{{ $pinjaman->id }}')" icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>' class="text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50">
+                                Pelunasan Dipercepat
+                            </x-action-dropdown-item>
+                            @endif
+                            @endcan
                         </x-action-dropdown>
+
+                        @can('pinjaman.bayar')
+                        @if($lunasCount < $pinjaman->tenor_bulan)
+                        <x-modal name="modal-pelunasan-{{ $pinjaman->id }}" title="Pelunasan Dipercepat (Manual)" maxWidth="md">
+                            <div class="p-6 text-left whitespace-normal">
+                                <div class="mb-5">
+                                    <p class="text-sm text-stone-600 font-medium">Bantu anggota <span class="font-bold text-stone-800">{{ $anggota->nama }}</span> untuk melunasi sisa pinjamannya secara langsung hari ini.</p>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4 mb-6">
+                                    <div class="p-4 bg-stone-50 rounded-xl border border-stone-200">
+                                        <p class="text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1">Sisa Pokok</p>
+                                        <p class="text-lg font-black font-mono text-stone-800">Rp {{ number_format($pinjaman->angsuran->where('status', \App\Enums\StatusAngsuran::Belum)->sum('nominal_pokok'), 0, ',', '.') }}</p>
+                                    </div>
+                                    <div class="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                                        <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1">Total Sisa Bunga</p>
+                                        <p class="text-lg font-black font-mono text-amber-800">Rp {{ number_format($pinjaman->angsuran->where('status', \App\Enums\StatusAngsuran::Belum)->sum('nominal_bunga'), 0, ',', '.') }}</p>
+                                    </div>
+                                </div>
+
+                                <form action="{{ route('pinjaman.pelunasan-manual', $pinjaman->id) }}" method="POST" x-data="{ includeBunga: false }">
+                                    @csrf
+                                    <div class="space-y-4">
+                                        <label class="flex items-start gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer" :class="includeBunga ? 'border-[#043d2e] bg-[#043d2e]/5' : 'border-stone-200 hover:border-stone-300'">
+                                            <div class="flex items-center h-5 mt-0.5">
+                                                <input type="radio" name="include_bunga" value="1" x-model="includeBunga" class="w-4 h-4 text-[#043d2e] focus:ring-[#043d2e] border-stone-300">
+                                            </div>
+                                            <div class="flex-grow">
+                                                <p class="text-sm font-bold text-stone-800">Pelunasan Penuh (Pokok + Bunga)</p>
+                                                <p class="text-[11px] text-stone-500 mt-0.5 font-medium leading-relaxed">Peminjam diwajibkan membayar sisa utang pokok beserta seluruh total sisa bunga dari semua angsuran berjalan.</p>
+                                            </div>
+                                        </label>
+
+                                        <label class="flex items-start gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer shadow-sm" :class="!includeBunga ? 'border-emerald-500 bg-emerald-50/50' : 'border-stone-200 hover:border-stone-300'">
+                                            <div class="flex items-center h-5 mt-0.5">
+                                                <input type="radio" name="include_bunga" value="0" x-model="includeBunga" class="w-4 h-4 text-emerald-600 focus:ring-emerald-600 border-stone-300">
+                                            </div>
+                                            <div class="flex-grow">
+                                                <p class="text-sm font-bold text-emerald-900">Pelunasan Pokok Saja (Bunga Dihapus)</p>
+                                                <p class="text-[11px] text-emerald-700/80 mt-0.5 font-medium leading-relaxed">Sistem akan menghapus/memaafkan seluruh sisa tagihan bunga. Peminjam hanya diwajibkan menyetor sisa pokok hutangnya.</p>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="mt-8 pt-5 border-t border-stone-100 flex flex-col sm:flex-row sm:justify-end gap-3">
+                                        <button type="button" @click="show = false" class="px-5 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-xl transition-all">Batal</button>
+                                        <button type="submit" class="px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-600/20 rounded-xl transition-all flex items-center gap-2 justify-center" onclick="return confirm('Proses pelunasan ini tidak dapat dibatalkan. Apakah Anda yakin?')">
+                                            <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                            Eksekusi Pembayaran
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </x-modal>
+                        @endif
+                        @endcan
                     </x-table.td>
                     @endcan
                 </x-table.tr>

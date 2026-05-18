@@ -9,6 +9,8 @@ class LaporanService
 {
     public function __construct(
         private SaldoService $saldo,
+        private PiutangEksternalService $piutangEksternalService,
+        private NeracaService $neracaService,
     ) {}
 
     /**
@@ -33,11 +35,15 @@ class LaporanService
             ->sum('angsuran.nominal_pokok');
         $piutangBerjalan = $totalPokokPinjamanAktif - $angsuranPokokTerbayar;
 
-        $totalAset = $saldoKoperasi + $piutangBerjalan;
+        $piutangLain = $this->piutangEksternalService->totalSisaPiutang();
+
+        $neraca = $this->neracaService->hitung(now()->year);
+        $totalAset = $neraca['aktiva_total'];
 
         // Breakdown Kas
         $masukSimpanan = $totalSimpanan;
         $masukAngsuran = (float) DB::table('angsuran')->where('status', 'lunas')->sum(DB::raw('nominal_pokok + nominal_bunga'));
+        $masukPiutangLain = (float) DB::table('pembayaran_piutang_eksternal')->sum('nominal');
         $masukFee = (float) DB::table('pinjaman')->whereIn('status', ['berjalan', 'lunas'])->sum(DB::raw('potongan_dana_resiko + potongan_biaya_admin'));
         $keluarPinjaman = (float) DB::table('pinjaman')->whereIn('status', ['berjalan', 'lunas'])->sum('nominal_pinjaman');
         $keluarTarik = $totalPenarikan;
@@ -45,13 +51,14 @@ class LaporanService
             ->whereNull('deleted_at')
             ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
             ->sum('nominal');
+        $keluarRealisasiShu = (float) DB::table('shu_realisasi_kewajiban')->sum('nominal');
 
         // Breakdown Simpanan per Jenis (Neto)
         $simpananPerJenis = $this->simpananPerJenisNeto();
 
         return compact(
-            'saldoKoperasi', 'totalSimpanan', 'simpananBersih', 'piutangBerjalan', 'totalAset',
-            'masukSimpanan', 'masukAngsuran', 'masukFee', 'keluarPinjaman', 'keluarTarik', 'keluarPengeluaranKas',
+            'saldoKoperasi', 'totalSimpanan', 'simpananBersih', 'piutangBerjalan', 'piutangLain', 'totalAset',
+            'masukSimpanan', 'masukAngsuran', 'masukPiutangLain', 'masukFee', 'keluarPinjaman', 'keluarTarik', 'keluarPengeluaranKas', 'keluarRealisasiShu',
             'simpananPerJenis', 'totalPenarikan'
         );
     }

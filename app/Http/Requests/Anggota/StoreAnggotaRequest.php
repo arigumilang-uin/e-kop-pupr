@@ -20,6 +20,10 @@ class StoreAnggotaRequest extends FormRequest
             'golongan_asn' => ['required', 'in:pns,pppk'],
             'no_hp' => ['nullable', 'string', 'max:20'],
             'tanggal_masuk' => ['nullable', 'date'],
+            'tpp_mulai_pokok' => ['required', 'integer', 'min:1', 'max:12'],
+            'tpp_tahun_pokok' => ['required', 'integer', 'min:2020', 'max:2050'],
+            'tpp_mulai_wajib' => ['required', 'integer', 'min:1', 'max:12'],
+            'tpp_tahun_wajib' => ['required', 'integer', 'min:2020', 'max:2050'],
         ];
     }
 

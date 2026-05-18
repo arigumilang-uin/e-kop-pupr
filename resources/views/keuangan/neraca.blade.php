@@ -4,7 +4,18 @@
 @section('subtitle', 'Laporan Posisi Keuangan Koperasi Simpan Pinjam Konsumen Tirta Bina Karya')
 
 @section('actions')
-<div class="flex items-center gap-3" x-data="{ open: false }">
+<div class="flex flex-wrap items-center gap-3 justify-end" x-data="{ open: false }">
+    <form method="GET" class="flex items-center gap-2">
+        <select name="tahun" class="w-28 py-2.5 px-3 border-stone-200 rounded-xl shadow-sm focus:ring-[#043d2e]/20 focus:border-[#043d2e] font-bold text-stone-700 bg-white text-sm outline-none">
+            @foreach($availableYears as $y)
+                <option value="{{ $y }}" {{ $tahun == $y ? 'selected' : '' }}>{{ $y }}</option>
+            @endforeach
+        </select>
+        <button type="submit" class="h-10 w-10 bg-white border border-stone-200 hover:bg-stone-50 text-[#043d2e] rounded-xl flex items-center justify-center transition-colors shadow-sm flex-shrink-0" title="Terapkan Filter">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </button>
+    </form>
+
     <div class="relative">
         <button @click="open = !open" @click.away="open = false" 
                 class="inline-flex items-center gap-2 py-2.5 px-4 rounded-xl bg-white border border-stone-200 text-stone-700 hover:bg-stone-50 hover:text-stone-900 text-sm font-bold transition-all shadow-sm">
@@ -12,35 +23,18 @@
             Export Neraca
             <svg class="w-4 h-4 text-stone-400 transition-transform duration-200" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
-
-        <div x-show="open" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 translate-y-2"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 translate-y-0"
-             x-transition:leave-end="opacity-0 translate-y-2"
-             class="absolute right-0 mt-2 w-48 bg-white border border-stone-200 rounded-xl shadow-lg z-50 overflow-hidden" 
-             style="display: none;">
-             
-            <a href="{{ route('keuangan.neraca.export.excel') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 text-stone-700 transition-colors border-b border-stone-100">
+        <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white border border-stone-200 rounded-xl shadow-lg z-50 overflow-hidden" style="display: none;">
+            <a href="{{ route('keuangan.neraca.export.excel', ['tahun' => $tahun]) }}" class="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 text-stone-700 transition-colors border-b border-stone-100">
                 <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
                     <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
                 </div>
-                <div>
-                    <p class="text-sm font-bold">Excel</p>
-                    <p class="text-[10px] text-stone-500">Format .xlsx</p>
-                </div>
+                <div><p class="text-sm font-bold">Excel</p><p class="text-[10px] text-stone-500">Format .xlsx</p></div>
             </a>
-
-            <a href="{{ route('keuangan.neraca.export.pdf') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 text-stone-700 transition-colors" target="_blank">
+            <a href="{{ route('keuangan.neraca.export.pdf', ['tahun' => $tahun]) }}" class="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 text-stone-700 transition-colors" target="_blank">
                 <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
                     <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                 </div>
-                <div>
-                    <p class="text-sm font-bold">PDF</p>
-                    <p class="text-[10px] text-stone-500">Format Dokumen</p>
-                </div>
+                <div><p class="text-sm font-bold">PDF</p><p class="text-[10px] text-stone-500">Format Dokumen</p></div>
             </a>
         </div>
     </div>
@@ -54,30 +48,24 @@
     <div class="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden relative">
         <div class="absolute top-0 inset-x-0 h-1 bg-[#043d2e]"></div>
         
-        <div class="bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-[#043d2e] px-8 py-10 text-center relative overflow-hidden">
-            <!-- Decorative Elements -->
+        <div class="bg-[#043d2e] px-8 py-10 text-center relative overflow-hidden">
             <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/5 blur-3xl"></div>
             <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-[#022a20]/50 blur-3xl"></div>
             
             <div class="relative z-10">
                 <p class="text-amber-400 text-[10px] font-black uppercase tracking-[0.4em] mb-2 opacity-90">Koperasi Simpan Pinjam Konsumen</p>
                 <h1 class="text-2xl md:text-3xl font-black text-white tracking-wide mb-4 drop-shadow-md">TIRTA BINA KARYA <br> DINAS PUPRPKPP PROVINSI RIAU</h1>
-                
                 <div class="flex items-center justify-center gap-4 mb-4">
                     <div class="w-12 h-[1px] bg-stone-500/50"></div>
                     <div class="w-2 h-2 rotate-45 bg-amber-400"></div>
                     <div class="w-12 h-[1px] bg-stone-500/50"></div>
                 </div>
-                
                 <h2 class="text-xl md:text-2xl font-serif font-bold text-white uppercase tracking-[0.2em] mb-2">NERACA</h2>
                 <p class="text-stone-300 text-sm font-medium">Per {{ \Carbon\Carbon::parse($neraca['tanggal'])->translatedFormat('d F Y') }}</p>
             </div>
         </div>
 
         <div class="p-6 md:p-10">
-            {{-- ============================================================ --}}
-            {{-- KOLOM DUA: AKTIVA (Kiri) | PASIVA (Kanan)                    --}}
-            {{-- ============================================================ --}}
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-10">
 
                 {{-- ======================== --}}
@@ -92,44 +80,37 @@
                     </div>
 
                     <div class="flex-grow space-y-6">
-                        <div>
-                            <div class="bg-stone-50 px-3 py-2 rounded-lg mb-3 border border-stone-100">
-                                <p class="text-[11px] font-black text-stone-500 uppercase tracking-widest">Aktiva Lancar</p>
-                            </div>
-
-                            <div class="space-y-1 px-1">
-                                {{-- Kas --}}
-                                <div class="group flex justify-between items-center py-2.5 px-3 hover:bg-stone-50 rounded-xl transition-colors border-b border-dashed border-stone-200">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-stone-300 group-hover:bg-[#043d2e] transition-colors"></div>
-                                        <span class="text-sm font-medium text-stone-700">Kas & Setara Kas</span>
+                        @foreach (\App\Models\ParameterNeraca::posisiAktiva() as $posisi)
+                            @if(isset($neraca['sections'][$posisi]) && (count($neraca['sections'][$posisi]['items']) > 0))
+                                <div>
+                                    <div class="bg-stone-50 px-3 py-2 rounded-lg mb-3 border border-stone-100">
+                                        <p class="text-[11px] font-black text-stone-500 uppercase tracking-widest">{{ $neraca['sections'][$posisi]['label'] }}</p>
                                     </div>
-                                    <span class="text-[14px] font-mono font-black text-stone-800">{{ format_rupiah($neraca['aktiva']['kas']) }}</span>
-                                </div>
-
-                                {{-- Piutang --}}
-                                <div class="group py-2.5 px-3 hover:bg-stone-50 rounded-xl transition-colors border-b border-dashed border-stone-200">
-                                    <div class="flex justify-between items-start mb-1">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-1.5 h-1.5 rounded-full bg-stone-300 group-hover:bg-[#043d2e] transition-colors mt-1.5"></div>
-                                            <span class="text-sm font-medium text-stone-700">Piutang Pinjaman Anggota</span>
-                                        </div>
-                                        <span class="text-[14px] font-mono font-black text-stone-800">{{ format_rupiah($neraca['aktiva']['piutang_pinjaman']) }}</span>
+                                    <div class="space-y-1 px-1">
+                                        @foreach($neraca['sections'][$posisi]['items'] as $item)
+                                            @include('keuangan.partials._neraca-row', [
+                                                'label' => $item['nama'] . ($item['is_pengurang'] ? ' (Pengurang)' : ''), 
+                                                'value' => $item['is_pengurang'] ? -$item['nominal'] : $item['nominal']
+                                            ])
+                                        @endforeach
                                     </div>
-                                    <p class="text-[11px] text-stone-500 pl-4 ml-0.5">
-                                        Total: {{ format_rupiah($neraca['aktiva']['piutang_detail']['total_pokok']) }} − Terbayar: {{ format_rupiah($neraca['aktiva']['piutang_detail']['pokok_terbayar']) }}
-                                    </p>
+                                    @include('keuangan.partials._neraca-subtotal', [
+                                        'label' => 'Jumlah ' . ltrim(substr($neraca['sections'][$posisi]['label'], strpos($neraca['sections'][$posisi]['label'], ' ') + 1)), 
+                                        'value' => $neraca['sections'][$posisi]['total']
+                                    ])
                                 </div>
-                            </div>
-                        </div>
+                            @endif
+                        @endforeach
                     </div>
 
-                    {{-- Total Aktiva --}}
-                    <div class="mt-8 bg-[#043d2e] text-white p-5 rounded-2xl shadow-md border border-[#022a20] relative overflow-hidden">
-                        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                    {{-- Total Aktiva — Glassmorphism Card --}}
+                    <div class="mt-8 p-5 rounded-2xl shadow-lg border border-white/20 relative overflow-hidden"
+                         style="background: linear-gradient(135deg, #043d2e 0%, #065a45 50%, #087a5e 100%);">
+                        <div class="absolute inset-0 backdrop-blur-sm bg-white/5"></div>
+                        <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-emerald-400/10 blur-2xl"></div>
                         <div class="relative z-10 flex justify-between items-center">
                             <span class="text-[13px] font-black uppercase tracking-widest text-emerald-100">TOTAL AKTIVA</span>
-                            <span class="text-xl font-mono font-black">{{ format_rupiah($neraca['aktiva']['total']) }}</span>
+                            <span class="text-xl font-mono font-black text-white drop-shadow-sm">{{ format_rupiah($neraca['aktiva_total']) }}</span>
                         </div>
                     </div>
                 </div>
@@ -146,85 +127,37 @@
                     </div>
 
                     <div class="flex-grow space-y-6">
-                        {{-- I. Kewajiban --}}
-                        <div>
-                            <div class="bg-stone-50 px-3 py-2 rounded-lg mb-3 border border-stone-100">
-                                <p class="text-[11px] font-black text-stone-500 uppercase tracking-widest">I. Kewajiban (Hutang)</p>
-                            </div>
-
-                            <div class="space-y-1 px-1">
-                                @foreach($neraca['kewajiban']['simpanan_items'] as $item)
-                                <div class="group flex justify-between items-center py-2.5 px-3 hover:bg-stone-50 rounded-xl transition-colors border-b border-dashed border-stone-200">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-stone-300 group-hover:bg-[#043d2e] transition-colors"></div>
-                                        <span class="text-sm font-medium text-stone-700">{{ $item->nama }}</span>
+                        @foreach (\App\Models\ParameterNeraca::posisiPasiva() as $posisi)
+                            @if(isset($neraca['sections'][$posisi]) && (count($neraca['sections'][$posisi]['items']) > 0))
+                                <div>
+                                    <div class="bg-stone-50 px-3 py-2 rounded-lg mb-3 border border-stone-100">
+                                        <p class="text-[11px] font-black text-stone-500 uppercase tracking-widest">{{ $neraca['sections'][$posisi]['label'] }}</p>
                                     </div>
-                                    <span class="text-[14px] font-mono font-bold text-stone-800">{{ format_rupiah($item->total) }}</span>
-                                </div>
-                                @endforeach
-
-                                <div class="group flex justify-between items-center py-2.5 px-3 hover:bg-stone-50 rounded-xl transition-colors border-b border-dashed border-stone-200">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-stone-300 group-hover:bg-[#043d2e] transition-colors"></div>
-                                        <span class="text-sm font-medium text-stone-700">Cadangan Dana Resiko</span>
+                                    <div class="space-y-1 px-1">
+                                        @foreach($neraca['sections'][$posisi]['items'] as $item)
+                                            @include('keuangan.partials._neraca-row', [
+                                                'label' => $item['nama'] . ($item['is_pengurang'] ? ' (Pengurang)' : ''), 
+                                                'value' => $item['is_pengurang'] ? -$item['nominal'] : $item['nominal']
+                                            ])
+                                        @endforeach
                                     </div>
-                                    <span class="text-[14px] font-mono font-bold text-stone-800">{{ format_rupiah($neraca['kewajiban']['dana_resiko']) }}</span>
+                                    @include('keuangan.partials._neraca-subtotal', [
+                                        'label' => 'Jumlah ' . ltrim(substr($neraca['sections'][$posisi]['label'], strpos($neraca['sections'][$posisi]['label'], ' ') + 1)), 
+                                        'value' => $neraca['sections'][$posisi]['total']
+                                    ])
                                 </div>
-                            </div>
-                            
-                            <div class="flex justify-between items-center py-3 px-3 bg-stone-100/50 rounded-xl mt-3 border border-stone-200 border-dashed">
-                                <span class="text-[12px] font-black text-stone-600 uppercase tracking-wider pl-4">Total Kewajiban</span>
-                                <span class="text-[14px] font-mono font-black text-stone-800">{{ format_rupiah($neraca['kewajiban']['total']) }}</span>
-                            </div>
-                        </div>
-
-                        {{-- II. Modal / Ekuitas --}}
-                        <div>
-                            <div class="bg-stone-50 px-3 py-2 rounded-lg mb-3 border border-stone-100">
-                                <p class="text-[11px] font-black text-stone-500 uppercase tracking-widest">II. Modal / Ekuitas</p>
-                            </div>
-
-                            <div class="space-y-1 px-1">
-                                @foreach($neraca['modal']['simpanan_items'] as $item)
-                                <div class="group flex justify-between items-center py-2.5 px-3 hover:bg-stone-50 rounded-xl transition-colors border-b border-dashed border-stone-200">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-stone-300 group-hover:bg-[#043d2e] transition-colors"></div>
-                                        <span class="text-sm font-medium text-stone-700">{{ $item->nama }}</span>
-                                    </div>
-                                    <span class="text-[14px] font-mono font-bold text-stone-800">{{ format_rupiah($item->total) }}</span>
-                                </div>
-                                @endforeach
-
-                                <div class="group py-2.5 px-3 hover:bg-stone-50 rounded-xl transition-colors border-b border-dashed border-stone-200">
-                                    <div class="flex justify-between items-start mb-1">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-1.5 h-1.5 rounded-full bg-stone-300 group-hover:bg-[#043d2e] transition-colors mt-1.5"></div>
-                                            <span class="text-sm font-medium text-stone-700">Laba Ditahan <span class="text-stone-400 font-normal">(SHU Berjalan)</span></span>
-                                        </div>
-                                        <span class="text-[14px] font-mono font-black {{ $neraca['modal']['laba_ditahan'] >= 0 ? 'text-emerald-700' : 'text-red-600' }}">
-                                            {{ format_rupiah($neraca['modal']['laba_ditahan']) }}
-                                        </span>
-                                    </div>
-                                    <p class="text-[11px] text-stone-500 pl-4 ml-0.5">
-                                        Pendapatan ({{ format_rupiah($neraca['modal']['detail_laba']['pendapatan_bunga'] + $neraca['modal']['detail_laba']['pendapatan_biaya_admin']) }})
-                                        − Beban ({{ format_rupiah($neraca['modal']['detail_laba']['total_beban']) }})
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="flex justify-between items-center py-3 px-3 bg-stone-100/50 rounded-xl mt-3 border border-stone-200 border-dashed">
-                                <span class="text-[12px] font-black text-stone-600 uppercase tracking-wider pl-4">Total Modal / Ekuitas</span>
-                                <span class="text-[14px] font-mono font-black text-stone-800">{{ format_rupiah($neraca['modal']['total']) }}</span>
-                            </div>
-                        </div>
+                            @endif
+                        @endforeach
                     </div>
 
-                    {{-- Total Pasiva --}}
-                    <div class="mt-8 bg-[#043d2e] text-white p-5 rounded-2xl shadow-md border border-[#022a20] relative overflow-hidden">
-                        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                    {{-- Total Pasiva — Glassmorphism Card --}}
+                    <div class="mt-8 p-5 rounded-2xl shadow-lg border border-white/20 relative overflow-hidden"
+                         style="background: linear-gradient(135deg, #043d2e 0%, #065a45 50%, #087a5e 100%);">
+                        <div class="absolute inset-0 backdrop-blur-sm bg-white/5"></div>
+                        <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-emerald-400/10 blur-2xl"></div>
                         <div class="relative z-10 flex justify-between items-center">
                             <span class="text-[13px] font-black uppercase tracking-widest text-emerald-100">TOTAL PASIVA</span>
-                            <span class="text-xl font-mono font-black">{{ format_rupiah($neraca['pasiva']['total']) }}</span>
+                            <span class="text-xl font-mono font-black text-white drop-shadow-sm">{{ format_rupiah($neraca['pasiva_total']) }}</span>
                         </div>
                     </div>
                 </div>
@@ -234,7 +167,6 @@
 
         {{-- Balance Check Footer --}}
         <div class="border-t-4 {{ $neraca['is_balance'] ? 'border-emerald-500 bg-emerald-50' : 'border-red-500 bg-red-50' }} px-8 py-6 relative overflow-hidden">
-            <!-- Decorative Icon Background -->
             <div class="absolute -right-6 -bottom-6 opacity-[0.03] {{ $neraca['is_balance'] ? 'text-emerald-900' : 'text-red-900' }} pointer-events-none">
                 <svg class="w-48 h-48" fill="currentColor" viewBox="0 0 24 24">
                     @if($neraca['is_balance'])
@@ -244,7 +176,6 @@
                     @endif
                 </svg>
             </div>
-
             <div class="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
                 <div class="flex items-center gap-4">
                     @if($neraca['is_balance'])
@@ -265,18 +196,15 @@
                     </div>
                     @endif
                 </div>
-
-                <div class="flex items-center gap-4 text-sm font-mono bg-white/60 p-3 rounded-xl border {{ $neraca['is_balance'] ? 'border-emerald-200' : 'border-red-200' }}">
+                <div class="flex items-center gap-4 text-sm font-mono bg-white/60 p-3 rounded-xl border {{ $neraca['is_balance'] ? 'border-emerald-200' : 'border-red-200' }} backdrop-blur-sm">
                     <div class="text-right">
                         <p class="text-[10px] text-stone-500 font-sans font-bold uppercase tracking-widest mb-1">AKTIVA</p>
-                        <p class="font-black text-stone-800 text-base">{{ format_rupiah($neraca['aktiva']['total']) }}</p>
+                        <p class="font-black text-stone-800 text-base">{{ format_rupiah($neraca['aktiva_total']) }}</p>
                     </div>
-                    <div class="w-8 h-8 rounded-full {{ $neraca['is_balance'] ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }} flex items-center justify-center font-black text-lg">
-                        =
-                    </div>
+                    <div class="w-8 h-8 rounded-full {{ $neraca['is_balance'] ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }} flex items-center justify-center font-black text-lg">=</div>
                     <div class="text-left">
                         <p class="text-[10px] text-stone-500 font-sans font-bold uppercase tracking-widest mb-1">PASIVA</p>
-                        <p class="font-black text-stone-800 text-base">{{ format_rupiah($neraca['pasiva']['total']) }}</p>
+                        <p class="font-black text-stone-800 text-base">{{ format_rupiah($neraca['pasiva_total']) }}</p>
                     </div>
                 </div>
             </div>
@@ -291,63 +219,48 @@
             </div>
             <h4 class="text-sm font-black text-stone-800 uppercase tracking-widest">Catatan atas Laporan Posisi Keuangan</h4>
         </div>
-        
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-[13px] text-stone-600 leading-relaxed">
             <div class="space-y-4">
                 <div class="flex gap-3">
                     <span class="flex-shrink-0 w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-[11px] font-bold text-stone-600 mt-0.5">1</span>
-                    <p><strong class="text-stone-800 font-bold">Kas & Setara Kas</strong><br>Saldo liquid yang tersedia di kas koperasi (seluruh dana masuk dikurangi seluruh dana keluar).</p>
+                    <p><strong class="text-stone-800 font-bold">Kas & Bank</strong><br>Saldo kas tunai dan rekening bank koperasi per tanggal laporan. Data kas dihitung secara hybrid menyesuaikan parameter pada tahun buku {{ $neraca['tahun'] }}.</p>
                 </div>
                 <div class="flex gap-3">
                     <span class="flex-shrink-0 w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-[11px] font-bold text-stone-600 mt-0.5">2</span>
-                    <p><strong class="text-stone-800 font-bold">Piutang Pokok</strong><br>Sisa pokok pinjaman yang berstatus "berjalan" dan belum diangsur oleh anggota (pendapatan bunga belum diakui sebagai aset/piutang).</p>
-                </div>
-                <div class="flex gap-3">
-                    <span class="flex-shrink-0 w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-[11px] font-bold text-stone-600 mt-0.5">3</span>
-                    <p><strong class="text-stone-800 font-bold">Cadangan Dana Resiko</strong><br>Potongan proporsional (1.5%) dari setiap pencairan pinjaman, dicadangkan untuk menutup risiko kredit macet di masa depan.</p>
+                    <p><strong class="text-stone-800 font-bold">Piutang Legacy</strong><br>Piutang dari berbagai periode pengurus yang masih aktif, termasuk rincian per individu dan akumulasi gelondongan.</p>
                 </div>
             </div>
             <div class="space-y-4">
                 <div class="flex gap-3">
-                    <span class="flex-shrink-0 w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-[11px] font-bold text-stone-600 mt-0.5">4</span>
-                    <p><strong class="text-stone-800 font-bold">Simpanan Pokok & Wajib</strong><br>Dicatat sebagai modal/ekuitas karena bersifat tetap dan tidak dapat ditarik selama anggota masih aktif di koperasi.</p>
+                    <span class="flex-shrink-0 w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-[11px] font-bold text-stone-600 mt-0.5">3</span>
+                    <p><strong class="text-stone-800 font-bold">Kewajiban Jk. Pendek</strong><br>Meliputi simpanan sukarela, dana alokasi SHU (Pendidikan, Sosial, Pemdaker), dana resiko, dan hutang pajak.</p>
                 </div>
                 <div class="flex gap-3">
-                    <span class="flex-shrink-0 w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-[11px] font-bold text-stone-600 mt-0.5">5</span>
-                    <p><strong class="text-stone-800 font-bold">Laba Ditahan (SHU Berjalan)</strong><br>Selisih antara total pendapatan terealisasi (bunga pinjaman terbayar + biaya admin) dengan total beban operasional.</p>
+                    <span class="flex-shrink-0 w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-[11px] font-bold text-stone-600 mt-0.5">4</span>
+                    <p><strong class="text-stone-800 font-bold">Modal Sendiri</strong><br>Terdiri dari simpanan anggota (Pokok, Wajib, SWP), donasi, cadangan, dan SHU tahun berjalan.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Lembar Pengesahan / Tanda Tangan --}}
+    {{-- Lembar Pengesahan --}}
     <div class="bg-white border border-stone-200 rounded-2xl shadow-sm p-10 relative overflow-hidden">
-        {{-- Background Pattern --}}
         <div class="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-        
         <div class="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-10 text-center text-[14px] text-stone-800">
             <div class="flex flex-col items-center justify-end">
                 <p class="font-medium text-stone-500 mb-20">Dibuat oleh,</p>
-                <div class="w-48 border-b-2 border-stone-800 pb-1">
-                    <p class="font-bold text-stone-800">Bendahara</p>
-                </div>
+                <div class="w-48 border-b-2 border-stone-800 pb-1"><p class="font-bold text-stone-800">Bendahara</p></div>
                 <p class="text-xs text-stone-500 mt-1 uppercase tracking-wider">Koperasi Tirta Bina Karya</p>
             </div>
-            
             <div class="flex flex-col items-center justify-end">
                 <p class="font-medium text-stone-500 mb-20">Diperiksa oleh,</p>
-                <div class="w-48 border-b-2 border-stone-800 pb-1">
-                    <p class="font-bold text-stone-800">Pengawas</p>
-                </div>
+                <div class="w-48 border-b-2 border-stone-800 pb-1"><p class="font-bold text-stone-800">Pengawas</p></div>
                 <p class="text-xs text-stone-500 mt-1 uppercase tracking-wider">Koperasi Tirta Bina Karya</p>
             </div>
-            
             <div class="flex flex-col items-center justify-end">
                 <p class="text-xs text-stone-500 mb-1 text-right w-full pr-6">Pekanbaru, {{ now()->translatedFormat('d F Y') }}</p>
                 <p class="font-medium text-stone-500 mb-16">Disetujui oleh,</p>
-                <div class="w-48 border-b-2 border-stone-800 pb-1">
-                    <p class="font-bold text-stone-800">Ketua Koperasi</p>
-                </div>
+                <div class="w-48 border-b-2 border-stone-800 pb-1"><p class="font-bold text-stone-800">Ketua Koperasi</p></div>
                 <p class="text-xs text-stone-500 mt-1 uppercase tracking-wider">Koperasi Tirta Bina Karya</p>
             </div>
         </div>

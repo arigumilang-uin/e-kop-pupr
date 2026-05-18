@@ -22,137 +22,45 @@ use Illuminate\Support\Facades\DB;
  */
 class ShuService
 {
-    /**
-     * Registry: mapping sumber_data ke query-nya.
-     * Setiap entry = Closure(int $tahun): float
-     */
-    private function getDataResolvers(): array
-    {
-        return [
-            // Bunga TEREALISASI: hanya dari angsuran yang sudah lunas di tahun tersebut
-            'bunga_pinjaman' => fn(int $tahun) =>
-                (float) DB::table('angsuran')
-                    ->join('pinjaman', 'angsuran.pinjaman_id', '=', 'pinjaman.id')
-                    ->where('angsuran.status', 'lunas')
-                    ->whereYear('angsuran.tanggal_bayar', $tahun)
-                    ->sum('angsuran.nominal_bunga'),
-
-            'dana_resiko' => fn(int $tahun) =>
-                (float) DB::table('pinjaman')
-                    ->whereIn('status', ['berjalan', 'lunas'])
-                    ->whereYear('tanggal_approval', $tahun)
-                    ->sum('potongan_dana_resiko'),
-
-            'biaya_admin' => fn(int $tahun) =>
-                (float) DB::table('pinjaman')
-                    ->whereIn('status', ['berjalan', 'lunas'])
-                    ->whereYear('tanggal_approval', $tahun)
-                    ->sum('potongan_biaya_admin'),
-
-            'pengeluaran_kas' => fn(int $tahun) =>
-                (float) PengeluaranKas::whereYear('tanggal', $tahun)
-                    ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
-                    ->sum('nominal'),
-
-            'simpanan_swp' => fn(int $tahun) =>
-                (float) DB::table('simpanan')
-                    ->join('jenis_simpanan', 'simpanan.jenis_simpanan_id', '=', 'jenis_simpanan.id')
-                    ->where('jenis_simpanan.kode', 'SWP')
-                    ->whereNull('simpanan.deleted_at')
-                    ->where(function ($q) { $q->where('simpanan.status', 'aktif')->orWhereNull('simpanan.status'); })
-                    ->whereYear('simpanan.tanggal', $tahun)
-                    ->sum('simpanan.nominal'),
-        ];
-    }
-
-    /**
-     * Ambil nominal dari suatu sumber_data untuk tahun tertentu.
-     */
-    public function resolveNominal(string $sumberData, int $tahun): float
-    {
-        $resolvers = $this->getDataResolvers();
-
-        if (isset($resolvers[$sumberData])) {
-            return $resolvers[$sumberData]($tahun);
-        }
-
-        return 0;
-    }
-
-    /**
-     * Hitung seluruh SHU berdasarkan komponen aktif.
-     */
     public function hitung(int $tahun): array
     {
-        $komponenAktif = ShuKomponen::aktif()->orderBy('tipe')->orderBy('urutan')->get();
-        $distribusiAktif = ShuDistribusi::aktif()->orderBy('urutan')->get();
+        // 1. Ambil Laba/Rugi dari Laporan PHU Utama
+        $phu = app(PhuService::class)->hitung($tahun);
 
-        // Hitung setiap komponen
-        $pendapatanItems = [];
-        $bebanItems = [];
-        $totalPendapatan = 0;
-        $totalBeban = 0;
+        $pendapatanItems = $phu['pendapatan']['items'];
+        $bebanItems      = $phu['beban']['items'];
+        $totalPendapatan = $phu['pendapatan']['total'];
+        $totalBeban      = $phu['beban']['total'];
+        $shuBersih       = $phu['shu_bersih'];
 
-        foreach ($komponenAktif as $k) {
-            $nominal = $this->resolveNominal($k->sumber_data, $tahun);
-
-            $item = [
-                'id' => $k->id,
-                'nama' => $k->nama,
-                'sumber_data' => $k->sumber_data,
-                'nominal' => $nominal,
-            ];
-
-            if ($k->tipe === 'pendapatan') {
-                $pendapatanItems[] = $item;
-                $totalPendapatan += $nominal;
-            } else {
-                $bebanItems[] = $item;
-                $totalBeban += $nominal;
-            }
-        }
-
-        $shuBersih = $totalPendapatan - $totalBeban;
         $shuDibagi = $shuBersih > 0 ? $shuBersih : 0;
 
-        // Hitung distribusi
+        // 2. Hitung distribusi dari tabel ShuDistribusi
+        $distribusiAktif = ShuDistribusi::aktif()->orderBy('urutan')->get();
+        
         $distribusiItems = [];
         $totalPersenDistribusi = 0;
         foreach ($distribusiAktif as $d) {
             $distribusiItems[] = [
-                'id' => $d->id,
-                'nama' => $d->nama,
-                'persen' => $d->persen,
+                'id'           => $d->id,
+                'nama'         => $d->nama,
+                'persen'       => $d->persen,
                 'tipe_routing' => $d->tipe_routing,
-                'nominal' => $shuDibagi * ($d->persen / 100),
-                'deskripsi' => $d->deskripsi,
+                'nominal'      => $shuDibagi * ($d->persen / 100),
+                'deskripsi'    => $d->deskripsi,
             ];
             $totalPersenDistribusi += $d->persen;
         }
 
         return [
-            'tahun' => $tahun,
-            'pendapatan_items' => $pendapatanItems,
-            'beban_items' => $bebanItems,
-            'total_pendapatan' => $totalPendapatan,
-            'total_beban' => $totalBeban,
-            'shu_bersih' => $shuBersih,
-            'distribusi_items' => $distribusiItems,
+            'tahun'                   => $tahun,
+            'pendapatan_items'        => $pendapatanItems,
+            'beban_items'             => $bebanItems,
+            'total_pendapatan'        => $totalPendapatan,
+            'total_beban'             => $totalBeban,
+            'shu_bersih'              => $shuBersih,
+            'distribusi_items'        => $distribusiItems,
             'total_persen_distribusi' => $totalPersenDistribusi,
-        ];
-    }
-
-    /**
-     * Daftar semua sumber data yang tersedia untuk dipilih pengurus.
-     */
-    public function sumberDataTersedia(): array
-    {
-        return [
-            'bunga_pinjaman'  => 'Pendapatan Bunga Pinjaman',
-            'dana_resiko'     => 'Pendapatan Dana Resiko (1.5%)',
-            'biaya_admin'     => 'Pendapatan Biaya Admin (0.5%)',
-            'pengeluaran_kas' => 'Beban Pengeluaran Kas Manual',
-            'simpanan_swp'    => 'Simpanan Wajib Pinjam (SWP)',
         ];
     }
 }

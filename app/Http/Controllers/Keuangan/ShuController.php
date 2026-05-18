@@ -3,14 +3,11 @@
 namespace App\Http\Controllers\Keuangan;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Shu\StoreShuKomponenRequest;
-use App\Http\Requests\Shu\UpdateShuKomponenRequest;
 use App\Http\Requests\Shu\StoreShuDistribusiRequest;
 use App\Http\Requests\Shu\UpdateShuDistribusiRequest;
 use App\Models\Anggota;
 use App\Models\JenisSimpanan;
 use App\Models\Simpanan;
-use App\Models\ShuKomponen;
 use App\Models\ShuDistribusi;
 use App\Models\ShuKewajiban;
 use App\Models\ShuPayout;
@@ -29,14 +26,15 @@ class ShuController extends Controller
         private ShuService $shuService,
         private ShuProrataService $prorataService,
         private ActivityLogService $logger,
-    ) {}
+    ) {
+    }
 
     /**
      * Halaman utama Simulasi SHU — perhitungan dinamis.
      */
     public function index(Request $request)
     {
-        $tahun = $request->get('tahun', date('Y'));
+        $tahun = $request->input('tahun', date('Y'));
 
         $shu = $this->shuService->hitung((int) $tahun);
 
@@ -54,10 +52,7 @@ class ShuController extends Controller
 
         rsort($tahunTersedia);
 
-        // Komponen & Distribusi untuk panel konfigurasi
-        $komponenAll = ShuKomponen::orderBy('tipe')->orderBy('urutan')->get();
         $distribusiAll = ShuDistribusi::orderBy('urutan')->get();
-        $sumberTersedia = $this->shuService->sumberDataTersedia();
 
         // Cek apakah payout tahun ini sudah dieksekusi
         $payoutTahunIni = ShuPayout::where('tahun', $tahun)->first();
@@ -83,48 +78,15 @@ class ShuController extends Controller
         }
 
         return view('keuangan.shu.index', compact(
-            'tahun', 'tahunTersedia', 'shu',
-            'komponenAll', 'distribusiAll', 'sumberTersedia',
-            'payoutTahunIni', 'prorata', 'danaJasaModal', 'danaJasaUsaha'
+            'tahun',
+            'tahunTersedia',
+            'shu',
+            'distribusiAll',
+            'payoutTahunIni',
+            'prorata',
+            'danaJasaModal',
+            'danaJasaUsaha'
         ));
-    }
-
-    // =============================================
-    //  CRUD Komponen SHU
-    // =============================================
-
-    public function storeKomponen(StoreShuKomponenRequest $request)
-    {
-        $komponen = ShuKomponen::create([
-            'nama'        => $request->nama,
-            'tipe'        => $request->tipe,
-            'sumber_data' => $request->sumber_data,
-            'deskripsi'   => $request->deskripsi,
-            'urutan'      => ShuKomponen::where('tipe', $request->tipe)->max('urutan') + 1,
-        ]);
-
-        $this->logger->log('shu_komponen_created', "Komponen SHU '{$komponen->nama}' ({$komponen->tipe}) berhasil ditambahkan.");
-
-        return back()->with('success', "Komponen '{$komponen->nama}' berhasil ditambahkan.");
-    }
-
-    public function updateKomponen(UpdateShuKomponenRequest $request, ShuKomponen $komponen)
-    {
-        $komponen->update($request->validated());
-
-        $this->logger->log('shu_komponen_updated', "Komponen SHU '{$komponen->nama}' berhasil diperbarui.");
-
-        return back()->with('success', "Komponen '{$komponen->nama}' berhasil diperbarui.");
-    }
-
-    public function destroyKomponen(ShuKomponen $komponen)
-    {
-        $nama = $komponen->nama;
-        $komponen->delete();
-
-        $this->logger->log('shu_komponen_deleted', "Komponen SHU '{$nama}' berhasil dihapus.");
-
-        return back()->with('success', "Komponen '{$nama}' berhasil dihapus.");
     }
 
     // =============================================
@@ -134,11 +96,11 @@ class ShuController extends Controller
     public function storeDistribusi(StoreShuDistribusiRequest $request)
     {
         $distribusi = ShuDistribusi::create([
-            'nama'         => $request->nama,
-            'persen'       => $request->persen,
+            'nama' => $request->nama,
+            'persen' => $request->persen,
             'tipe_routing' => $request->tipe_routing,
-            'deskripsi'    => $request->deskripsi,
-            'urutan'       => ShuDistribusi::max('urutan') + 1,
+            'deskripsi' => $request->deskripsi,
+            'urutan' => ShuDistribusi::max('urutan') + 1,
         ]);
 
         $routingLabel = ShuDistribusi::ROUTING_OPTIONS[$distribusi->tipe_routing]['label'] ?? $distribusi->tipe_routing;
@@ -214,14 +176,14 @@ class ShuController extends Controller
 
         foreach ($shu['distribusi_items'] as $d) {
             match ($d['tipe_routing']) {
-                ShuDistribusi::ROUTING_PRORATA_SIMPANAN    => $danaJasaModal += $d['nominal'],
-                ShuDistribusi::ROUTING_PRORATA_PINJAMAN    => $danaJasaUsaha += $d['nominal'],
-                ShuDistribusi::ROUTING_BAGI_RATA_PENGURUS  => $danaPengurus += $d['nominal'],
-                ShuDistribusi::ROUTING_EKUITAS             => $danaCadangan += $d['nominal'],
-                ShuDistribusi::ROUTING_KEWAJIBAN           => (function () use ($d, &$danaKewajibanList, &$totalDanaKewajiban) {
-                    $danaKewajibanList[] = ['nama_alokasi' => $d['nama'], 'nominal' => $d['nominal']];
-                    $totalDanaKewajiban += $d['nominal'];
-                })(),
+                ShuDistribusi::ROUTING_PRORATA_SIMPANAN => $danaJasaModal += $d['nominal'],
+                ShuDistribusi::ROUTING_PRORATA_PINJAMAN => $danaJasaUsaha += $d['nominal'],
+                ShuDistribusi::ROUTING_BAGI_RATA_PENGURUS => $danaPengurus += $d['nominal'],
+                ShuDistribusi::ROUTING_EKUITAS => $danaCadangan += $d['nominal'],
+                ShuDistribusi::ROUTING_KEWAJIBAN => (function () use ($d, &$danaKewajibanList, &$totalDanaKewajiban) {
+                        $danaKewajibanList[] = ['nama_alokasi' => $d['nama'], 'nominal' => $d['nominal']];
+                        $totalDanaKewajiban += $d['nominal'];
+                    })(),
                 default => null,
             };
         }
@@ -268,7 +230,7 @@ class ShuController extends Controller
 
             // Pre-calculate reference sequence
             $pattern = "SIM-" . now()->format('Y') . "-";
-            $lastRecord = \App\Models\Simpanan::withTrashed()
+            $lastRecord = Simpanan::withTrashed()
                 ->where('no_referensi', 'like', "{$pattern}%")
                 ->orderByDesc('no_referensi')
                 ->value('no_referensi');
@@ -283,18 +245,18 @@ class ShuController extends Controller
                     }
 
                     $rows[] = [
-                        'no_referensi'      => $pattern . str_pad(++$simpananSeq, 4, '0', STR_PAD_LEFT),
-                        'anggota_id'        => $item->anggota_id,
+                        'no_referensi' => $pattern . str_pad(++$simpananSeq, 4, '0', STR_PAD_LEFT),
+                        'anggota_id' => $item->anggota_id,
                         'jenis_simpanan_id' => $jenisBonusShu->id,
-                        'nominal'           => $item->total_shu,
-                        'tanggal'           => $today,
-                        'bulan_untuk'       => null,
-                        'tahun_untuk'       => null,
-                        'pinjaman_id'       => null,
-                        'keterangan'        => "Distribusi SHU Tahun {$tahun} (Jasa Modal + Jasa Usaha)",
-                        'dicatat_oleh'      => $userId,
-                        'created_at'        => now(),
-                        'updated_at'        => now(),
+                        'nominal' => $item->total_shu,
+                        'tanggal' => $today,
+                        'bulan_untuk' => null,
+                        'tahun_untuk' => null,
+                        'pinjaman_id' => null,
+                        'keterangan' => "Distribusi SHU Tahun {$tahun} (Jasa Modal + Jasa Usaha)",
+                        'dicatat_oleh' => $userId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ];
                 }
 
@@ -311,18 +273,18 @@ class ShuController extends Controller
                 $rowsPengurus = [];
                 foreach ($pengurusEligible as $pg) {
                     $rowsPengurus[] = [
-                        'no_referensi'      => $pattern . str_pad(++$simpananSeq, 4, '0', STR_PAD_LEFT),
-                        'anggota_id'        => $pg->anggota_id,
+                        'no_referensi' => $pattern . str_pad(++$simpananSeq, 4, '0', STR_PAD_LEFT),
+                        'anggota_id' => $pg->anggota_id,
                         'jenis_simpanan_id' => $jenisBonusShu->id,
-                        'nominal'           => $nominalPerPengurus,
-                        'tanggal'           => $today,
-                        'bulan_untuk'       => null,
-                        'tahun_untuk'       => null,
-                        'pinjaman_id'       => null,
-                        'keterangan'        => "Distribusi Dana Pengurus SHU Tahun {$tahun}",
-                        'dicatat_oleh'      => $userId,
-                        'created_at'        => now(),
-                        'updated_at'        => now(),
+                        'nominal' => $nominalPerPengurus,
+                        'tanggal' => $today,
+                        'bulan_untuk' => null,
+                        'tahun_untuk' => null,
+                        'pinjaman_id' => null,
+                        'keterangan' => "Distribusi Dana Pengurus SHU Tahun {$tahun}",
+                        'dicatat_oleh' => $userId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ];
                 }
 
@@ -346,15 +308,15 @@ class ShuController extends Controller
 
             // 4. Catat ke shu_payout
             ShuPayout::create([
-                'tahun'                => $tahun,
-                'total_shu_bersih'     => $shu['shu_bersih'],
-                'total_jasa_modal'     => $danaJasaModal,
-                'total_jasa_usaha'     => $danaJasaUsaha,
-                'total_cadangan'       => $danaCadangan,
+                'tahun' => $tahun,
+                'total_shu_bersih' => $shu['shu_bersih'],
+                'total_jasa_modal' => $danaJasaModal,
+                'total_jasa_usaha' => $danaJasaUsaha,
+                'total_cadangan' => $danaCadangan,
                 'total_dana_kewajiban' => $totalDanaKewajiban,
-                'jumlah_penerima'      => $prorata['ringkasan']['jumlah_penerima'],
-                'total_terdistribusi'  => $prorata['ringkasan']['total_terdistribusi'] + $totalDanaPengurusTerdistribusi,
-                'dieksekusi_oleh'      => Auth::id(),
+                'jumlah_penerima' => $prorata['ringkasan']['jumlah_penerima'],
+                'total_terdistribusi' => $prorata['ringkasan']['total_terdistribusi'] + $totalDanaPengurusTerdistribusi,
+                'dieksekusi_oleh' => Auth::id(),
             ]);
         });
 
@@ -395,7 +357,7 @@ class ShuController extends Controller
         if ($danaPengurus > 0 && $pengurusEligible->isNotEmpty()) {
             $successMessage .= " Dana Pengurus didistribusikan ke {$pengurusEligible->count()} pengurus.";
         }
-        
+
         if ($totalDanaKewajiban > 0) {
             $successMessage .= " " . count($danaKewajibanList) . " pos Dana Kewajiban/Titipan telah dibuat dan siap untuk direalisasikan secara berkala.";
         }

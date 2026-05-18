@@ -19,8 +19,8 @@ class PeriodePinjaman extends Model
         'tahun',
         'tanggal_buka',
         'tanggal_tutup',
-        'batas_bulan_pelunasan',
-        'angsuran_bulan_berjalan',
+        'bulan_potongan_awal',
+        'bulan_potongan_akhir',
         'limit_per_anggota',
         'nominal_min',
         'kelipatan_nominal',
@@ -38,9 +38,16 @@ class PeriodePinjaman extends Model
             'limit_per_anggota' => 'decimal:2',
             'nominal_min' => 'decimal:2',
             'kelipatan_nominal' => 'decimal:2',
-            'angsuran_bulan_berjalan' => 'boolean',
             'status' => StatusPeriode::class,
         ];
+    }
+
+    /**
+     * Hitung tenor maksimal yang tersedia berdasarkan bulan potongan awal dan akhir.
+     */
+    public function tenorTersedia(): int
+    {
+        return $this->bulan_potongan_akhir - $this->bulan_potongan_awal + 1;
     }
 
     // === Relationships ===

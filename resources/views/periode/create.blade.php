@@ -10,7 +10,7 @@
 @section('content')
 <div class="max-w-2xl">
     <div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-        <form method="POST" action="{{ route('periode.store') }}" class="divide-y divide-stone-100 flex flex-col">
+        <form method="POST" action="{{ route('periode.store') }}" class="divide-y divide-stone-100 flex flex-col" x-data="periodeForm()">
             @csrf
 
             <div class="p-6 space-y-5">
@@ -20,6 +20,7 @@
                     <p class="text-[13px] font-bold text-red-800">{{ session('error') }}</p>
                 </div>
                 @endif
+
                 {{-- Nama Periode --}}
                 <div class="space-y-1.5">
                     <label for="nama_periode" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Nama Periode <span class="text-red-500">*</span></label>
@@ -31,44 +32,60 @@
                     @enderror
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {{-- Tahun --}}
-                    <div class="space-y-1.5">
-                        <label for="tahun" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tahun Anggaran <span class="text-red-500">*</span></label>
-                        <input type="number" id="tahun" name="tahun" value="{{ old('tahun', $defaults['tahun']) }}" required min="2020" max="2050"
-                               class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm">
-                        @error('tahun')
-                        <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
-                        @enderror
+                {{-- Bulan Potongan TPP --}}
+                <div class="space-y-4 p-5 bg-stone-50 rounded-xl border border-stone-200">
+                    <h3 class="text-[11px] uppercase tracking-widest font-bold text-stone-600 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Rentang Potongan TPP
+                    </h3>
+                    <p class="text-[12px] text-stone-500 leading-relaxed -mt-1">Tentukan bulan awal dan akhir potongan TPP. Tenor yang tersedia akan otomatis dihitung dari rentang ini.</p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        {{-- Bulan Potongan Awal --}}
+                        <div class="space-y-1.5">
+                            <label for="bulan_potongan_awal" class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Bulan Potongan Awal <span class="text-red-500">*</span></label>
+                            <select id="bulan_potongan_awal" name="bulan_potongan_awal" required x-model="bulanAwal"
+                                    class="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8">
+                                @for($i = 1; $i <= 12; $i++)
+                                <option value="{{ $i }}" {{ old('bulan_potongan_awal', 5) == $i ? 'selected' : '' }}>
+                                    {{ nama_bulan($i) }}
+                                </option>
+                                @endfor
+                            </select>
+                            @error('bulan_potongan_awal')
+                            <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Bulan Potongan Akhir --}}
+                        <div class="space-y-1.5">
+                            <label for="bulan_potongan_akhir" class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Bulan Potongan Akhir <span class="text-red-500">*</span></label>
+                            <select id="bulan_potongan_akhir" name="bulan_potongan_akhir" required x-model="bulanAkhir"
+                                    class="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8">
+                                @for($i = 1; $i <= 12; $i++)
+                                <option value="{{ $i }}" {{ old('bulan_potongan_akhir', 11) == $i ? 'selected' : '' }}>
+                                    {{ nama_bulan($i) }}
+                                </option>
+                                @endfor
+                            </select>
+                            @error('bulan_potongan_akhir')
+                            <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
-                    {{-- Batas Bulan Pelunasan --}}
-                    <div class="space-y-1.5">
-                        <label for="batas_bulan_pelunasan" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Batas Bulan Pelunasan <span class="text-red-500">*</span></label>
-                        <select id="batas_bulan_pelunasan" name="batas_bulan_pelunasan" required
-                                class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm cursor-pointer">
-                            @for($i = 1; $i <= 12; $i++)
-                            <option value="{{ $i }}" {{ old('batas_bulan_pelunasan', $defaults['batas_bulan']) == $i ? 'selected' : '' }}>
-                                Bulan ke-{{ $i }} ({{ nama_bulan($i) }})
-                            </option>
-                            @endfor
-                        </select>
-                        @error('batas_bulan_pelunasan')
-                        <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
-                        @enderror
+                    {{-- Tenor Preview --}}
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-stone-200">
+                        <div class="relative flex h-2 w-2 shrink-0">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#043d2e] opacity-40"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-[#043d2e]"></span>
+                        </div>
+                        <p class="text-[12px] font-medium text-stone-600">
+                            Tenor tersedia: <span class="font-bold text-[#043d2e]" x-text="tenorTersedia + ' bulan'"></span>
+                            <span class="text-stone-400 ml-1" x-text="'(' + namaBulan(bulanAwal) + ' — ' + namaBulan(bulanAkhir) + ')'"></span>
+                        </p>
                     </div>
                 </div>
-
-                {{-- Opsi Angsuran Bulan Berjalan --}}
-                <x-toggle 
-                    name="angsuran_bulan_berjalan" 
-                    :checked="old('angsuran_bulan_berjalan')"
-                >
-                    <x-slot name="label">Angsuran Dimulai dari Bulan Pengajuan</x-slot>
-                    <x-slot name="description">
-                        Jika diaktifkan, angsuran pertama akan jatuh tempo di <strong>bulan yang sama</strong> saat pinjaman diajukan, sehingga tenor maksimal bertambah +1 bulan. Misalnya: batas November, pengajuan April → tenor maks 8 bulan (April s/d November), bukan 7 bulan (Mei s/d November).
-                    </x-slot>
-                </x-toggle>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     {{-- Tanggal Buka --}}
@@ -82,8 +99,8 @@
 
                     {{-- Tanggal Tutup --}}
                     <div class="space-y-1.5">
-                        <label for="tanggal_tutup" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tanggal Tutup <span class="text-stone-400 capitalize normal-case text-[10px]">(Opsional)</span></label>
-                        <x-datepicker name="tanggal_tutup" :value="old('tanggal_tutup')" placeholder="Pilih Tanggal (Bisa Dikosongkan)" />
+                        <label for="tanggal_tutup" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tanggal Tutup <span class="text-red-500">*</span></label>
+                        <x-datepicker name="tanggal_tutup" :value="old('tanggal_tutup')" placeholder="Pilih Tanggal" :required="true" />
                         @error('tanggal_tutup')
                         <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
                         @enderror
@@ -156,4 +173,26 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('periodeForm', () => ({
+        bulanAwal: {{ old('bulan_potongan_awal', 5) }},
+        bulanAkhir: {{ old('bulan_potongan_akhir', 11) }},
+
+        get tenorTersedia() {
+            const awal = parseInt(this.bulanAwal);
+            const akhir = parseInt(this.bulanAkhir);
+            return Math.max(0, akhir - awal + 1);
+        },
+
+        namaBulan(num) {
+            const bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            return bulan[parseInt(num)] || '';
+        }
+    }));
+});
+</script>
+@endpush
 @endsection

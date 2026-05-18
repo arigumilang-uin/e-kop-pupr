@@ -150,13 +150,7 @@
 
     {{-- Panel Konfigurasi --}}
     @can('shu.manage')
-    <div x-data="{ 
-            tab: sessionStorage.getItem('shu_tab') || 'komponen',
-            init() {
-                this.$watch('tab', val => sessionStorage.setItem('shu_tab', val))
-            }
-         }" 
-         class="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden" id="konfigurasi-panel">
+    <div x-data class="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden" id="konfigurasi-panel">
         
         <div class="px-6 py-4 border-b border-stone-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-stone-50/30">
             <div class="flex items-center gap-3">
@@ -165,78 +159,19 @@
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h3 class="font-bold text-stone-800">Konfigurasi Parameter SHU</h3>
+                        <h3 class="font-bold text-stone-800">Konfigurasi Distribusi SHU</h3>
                         <button type="button" @click="$dispatch('open-modal', 'modal-info-shu')" class="w-5 h-5 rounded-full bg-[#043d2e]/10 text-[#043d2e] flex items-center justify-center hover:bg-[#043d2e]/20 transition-colors" title="Informasi Logika SHU">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </button>
                     </div>
-                    <p class="text-[12px] text-stone-500">Sesuaikan sumber pendapatan/beban dan persentase alokasi.</p>
+                    <p class="text-[12px] text-stone-500">Sesuaikan persentase alokasi untuk simulasi.</p>
                 </div>
-            </div>
-
-            <div class="flex p-1 bg-stone-100/80 rounded-xl">
-                <button @click="tab = 'komponen'" :class="tab === 'komponen' ? 'bg-white text-stone-800 shadow-sm font-bold' : 'text-stone-500 hover:text-stone-700 font-medium'" class="px-5 py-2 text-[13px] rounded-lg transition-all">Komponen Nilai</button>
-                <button @click="tab = 'distribusi'" :class="tab === 'distribusi' ? 'bg-white text-stone-800 shadow-sm font-bold' : 'text-stone-500 hover:text-stone-700 font-medium'" class="px-5 py-2 text-[13px] rounded-lg transition-all">Alokasi Distribusi</button>
             </div>
         </div>
 
         <div class="p-6">
-            {{-- TAB: Komponen --}}
-            <div x-show="tab === 'komponen'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
-                <div class="flex justify-between items-center mb-6">
-                    <h4 class="text-sm font-bold text-stone-800">Daftar Komponen</h4>
-                    <button type="button" @click="$dispatch('open-modal', 'modal-tambah-komponen')" class="text-[13px] font-bold text-[#043d2e] hover:text-[#022118] bg-[#043d2e]/5 hover:bg-[#043d2e]/10 px-4 py-2 rounded-xl transition-colors flex items-center gap-2">
-                        + Tambah Komponen
-                    </button>
-                </div>
-
-                <div class="flex flex-col space-y-3">
-                    @foreach($komponenAll as $k)
-                    <div class="flex items-center justify-between p-4 rounded-xl border transition-all {{ $k->is_aktif ? 'bg-white border-stone-200 hover:border-stone-300 shadow-sm' : 'bg-stone-50/50 border-stone-100 opacity-60 grayscale' }}">
-                        <div class="flex items-center gap-5 flex-1">
-                            {{-- Toggle Aktif/Nonaktif --}}
-                            <form action="{{ route('shu.komponen.update', $k->id) }}" method="POST" class="shrink-0 m-0">
-                                @csrf @method('PATCH')
-                                <input type="hidden" name="nama" value="{{ $k->nama }}">
-                                <input type="hidden" name="tipe" value="{{ $k->tipe }}">
-                                <input type="hidden" name="sumber_data" value="{{ $k->sumber_data }}">
-                                <input type="hidden" name="is_aktif" value="{{ $k->is_aktif ? '0' : '1' }}">
-                                <button type="submit" class="relative inline-flex items-center cursor-pointer h-6 w-11 rounded-full transition-colors {{ $k->is_aktif ? 'bg-[#043d2e]' : 'bg-stone-300 hover:bg-stone-400' }}" title="{{ $k->is_aktif ? 'Nonaktifkan' : 'Aktifkan' }}">
-                                    <span class="inline-block w-4 h-4 transform bg-white rounded-full transition-transform {{ $k->is_aktif ? 'translate-x-6' : 'translate-x-1' }}"></span>
-                                </button>
-                            </form>
-
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 {{ $k->tipe === 'pendapatan' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500' }}">
-                                    @if($k->tipe === 'pendapatan')
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                                    @else
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"/></svg>
-                                    @endif
-                                </div>
-                                <div>
-                                    <h5 class="text-[14px] font-bold text-stone-800">{{ $k->nama }}</h5>
-                                    <p class="text-[12px] text-stone-500 font-medium mt-0.5">Sumber: {{ $k->sumber_data }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center">
-                            {{-- Hapus --}}
-                            <form action="{{ route('shu.komponen.destroy', $k->id) }}" method="POST" onsubmit="return confirm('Hapus permanen komponen ini?')" class="m-0">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="w-9 h-9 rounded-xl flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors" title="Hapus Komponen">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- TAB: Distribusi --}}
-            <div x-show="tab === 'distribusi'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">
+            {{-- Daftar Distribusi --}}
+            <div>
                 <div class="flex justify-between items-center mb-6">
                     <h4 class="text-sm font-bold text-stone-800">Daftar Alokasi Distribusi</h4>
                     <button type="button" @click="$dispatch('open-modal', 'modal-tambah-distribusi')" class="text-[13px] font-bold text-[#043d2e] hover:text-[#022118] bg-[#043d2e]/5 hover:bg-[#043d2e]/10 px-4 py-2 rounded-xl transition-colors flex items-center gap-2">
@@ -404,7 +339,7 @@
                             $detailCollection = collect($prorata['detail']);
                             $totalAnggota = $detailCollection->count();
                             $perPage = 15;
-                            $currentPage = request()->get('page', 1);
+                            $currentPage = request()->input('page', 1);
                             $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
                                 $detailCollection->forPage($currentPage, $perPage),
                                 $totalAnggota,
@@ -478,44 +413,6 @@
 
     {{-- MODALS --}}
     @can('shu.manage')
-    {{-- Modal Tambah Komponen --}}
-    <x-modal name="modal-tambah-komponen" title="Tambah Komponen SHU" maxWidth="2xl">
-        <form action="{{ route('shu.komponen.store') }}" method="POST" id="form-tambah-komponen">
-            @csrf
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                    <label class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-2">Nama Komponen <span class="text-red-500">*</span></label>
-                    <input type="text" name="nama" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:border-[#043d2e] focus:ring-2 focus:ring-[#043d2e]/20 text-[13px] outline-none transition-all bg-white">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-2">Tipe <span class="text-red-500">*</span></label>
-                    <select name="tipe" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:border-[#043d2e] focus:ring-2 focus:ring-[#043d2e]/20 text-[13px] outline-none transition-all bg-white font-bold text-stone-700">
-                        <option value="pendapatan">Pendapatan (+)</option>
-                        <option value="beban">Beban (-)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-2">Sumber Data <span class="text-red-500">*</span></label>
-                    <select name="sumber_data" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:border-[#043d2e] focus:ring-2 focus:ring-[#043d2e]/20 text-[13px] outline-none transition-all bg-white">
-                        <option value="" disabled selected>— Pilih sumber data —</option>
-                        @foreach($sumberTersedia as $key => $label)
-                        <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-2">Keterangan Tambahan</label>
-                    <input type="text" name="deskripsi" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:border-[#043d2e] focus:ring-2 focus:ring-[#043d2e]/20 text-[13px] outline-none transition-all bg-white">
-                </div>
-            </div>
-        </form>
-
-        <x-slot name="footer">
-            <button type="button" @click="$dispatch('close-modal', 'modal-tambah-komponen')" class="px-5 py-2.5 text-stone-500 hover:bg-stone-200 rounded-xl text-[13px] font-bold transition-colors">Batal</button>
-            <button type="submit" form="form-tambah-komponen" class="px-5 py-2.5 bg-[#043d2e] text-white rounded-xl text-[13px] font-bold hover:bg-[#022118] transition-colors shadow-sm">Simpan Komponen</button>
-        </x-slot>
-    </x-modal>
-
     {{-- Modal Tambah Distribusi --}}
     <x-modal name="modal-tambah-distribusi" title="Tambah Alokasi Distribusi" maxWidth="2xl">
         <form action="{{ route('shu.distribusi.store') }}" method="POST" id="form-tambah-distribusi">

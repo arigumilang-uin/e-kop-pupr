@@ -78,17 +78,12 @@ class PinjamanGuestController extends Controller
             return view('pinjaman.guest.closed', compact('periode', 'pesan_tutup'));
         }
 
-        $angsuranBulanBerjalan = (bool) $periode->angsuran_bulan_berjalan;
-        $batasBulan = $periode->batas_bulan_pelunasan;
-        $bulanSekarang = (int) now()->format('n');
-        $tenorMaks = $batasBulan - $bulanSekarang;
-        if ($angsuranBulanBerjalan) {
-            $tenorMaks += 1;
-        }
+        $tenorMaks = $periode->tenorTersedia();
 
         $pengaturan = [
             'bunga_persen' => $this->pengaturanService->bungaPersen(),
-            'batas_bulan' => $batasBulan,
+            'bulan_potongan_awal' => $periode->bulan_potongan_awal,
+            'bulan_potongan_akhir' => $periode->bulan_potongan_akhir,
             'tenor_maks' => max(1, $tenorMaks),
             'tenor_min' => $this->pengaturanService->tenorMinimal(),
             'limit' => $periode->limit_per_anggota,
@@ -97,7 +92,6 @@ class PinjamanGuestController extends Controller
             'swp_persen' => $this->pengaturanService->potonganSwpPersen(),
             'resiko_persen' => $this->pengaturanService->potonganDanaResikoPersen(),
             'admin_persen' => $this->pengaturanService->potonganBiayaAdminPersen(),
-            'angsuran_bulan_berjalan' => $angsuranBulanBerjalan,
         ];
 
         return view('pinjaman.guest.form', compact('periode', 'pengaturan'));
@@ -127,8 +121,8 @@ class PinjamanGuestController extends Controller
             $request->nominal_pinjaman,
             $request->tenor_bulan,
             $periode->limit_per_anggota,
-            $periode->batas_bulan_pelunasan,
-            (bool) $periode->angsuran_bulan_berjalan,
+            $periode->bulan_potongan_awal,
+            $periode->bulan_potongan_akhir,
         );
 
         if (!$kelayakan['layak']) {
@@ -172,8 +166,8 @@ class PinjamanGuestController extends Controller
             $request->nominal_pinjaman,
             $request->tenor_bulan,
             $periode->limit_per_anggota,
-            $periode->batas_bulan_pelunasan,
-            (bool) $periode->angsuran_bulan_berjalan,
+            $periode->bulan_potongan_awal,
+            $periode->bulan_potongan_akhir,
         );
 
         if (!$kelayakan['layak']) {

@@ -61,28 +61,14 @@ class PinjamanService
     }
 
     /**
-     * Hitung tenor maksimal dari bulan saat ini.
-     * 
-     * Jika angsuranBulanBerjalan = false (default):
-     *   tenor_maks = batas_bulan - bulan_sekarang
-     *   Contoh: batas Nov (11), bulan April (4) → 11 - 4 = 7 bulan (Mei s/d Nov)
-     * 
-     * Jika angsuranBulanBerjalan = true:
-     *   tenor_maks = batas_bulan - bulan_sekarang + 1
-     *   Contoh: batas Nov (11), bulan April (4) → 11 - 4 + 1 = 8 bulan (Apr s/d Nov)
+     * Hitung tenor maksimal berdasarkan bulan potongan awal dan akhir.
+     *
+     * Contoh: bulan_potongan_awal = 5 (Mei), bulan_potongan_akhir = 11 (Nov)
+     *   → tenor_maks = 11 - 5 + 1 = 7 bulan
      */
-    public function tenorMaksimal(?int $batasBulan = null, bool $angsuranBulanBerjalan = false): int
+    public function tenorMaksimal(int $bulanAwal, int $bulanAkhir): int
     {
-        $batas = $batasBulan ?? $this->pengaturan->batasBulanPelunasan();
-        $bulanSekarang = (int) now()->format('n');
-
-        $tenor = $batas - $bulanSekarang;
-
-        if ($angsuranBulanBerjalan) {
-            $tenor += 1; // +1 karena angsuran pertama di bulan berjalan
-        }
-
-        return max(0, $tenor);
+        return max(0, $bulanAkhir - $bulanAwal + 1);
     }
 
     /**
@@ -94,20 +80,13 @@ class PinjamanService
         float $nominal,
         int $tenor,
         float $limitPerAnggota,
-        int $batasBulanPelunasan,
-        bool $angsuranBulanBerjalan = false,
+        int $bulanPotonganAwal,
+        int $bulanPotonganAkhir,
     ): array {
         $pesan = [];
         $perluOverride = false;
 
-        // 1. Cek bulan
-        $bulanSekarang = (int) now()->format('n');
-        if ($bulanSekarang >= $batasBulanPelunasan) {
-            $pesan[] = 'Bulan pengajuan sudah melewati batas pelunasan.';
-            return ['layak' => false, 'pesan' => $pesan, 'perlu_override' => false];
-        }
-
-        // 2. Cek pinjaman aktif di tahun ini
+        // 1. Cek pinjaman aktif di tahun ini
         $tahun = (int) now()->format('Y');
         $pinjamanAktif = \App\Models\Pinjaman::where('anggota_id', $anggotaId)
             ->whereIn('status', StatusPinjaman::aktif())
@@ -119,14 +98,14 @@ class PinjamanService
             $perluOverride = true;
         }
 
-        // 3. Cek nominal vs limit
+        // 2. Cek nominal vs limit
         if ($nominal > $limitPerAnggota) {
             $pesan[] = 'Nominal melebihi batas per anggota.';
             return ['layak' => false, 'pesan' => $pesan, 'perlu_override' => $perluOverride];
         }
 
-        // 4. Cek tenor
-        $tenorMaks = $this->tenorMaksimal($batasBulanPelunasan, $angsuranBulanBerjalan);
+        // 3. Cek tenor
+        $tenorMaks = $this->tenorMaksimal($bulanPotonganAwal, $bulanPotonganAkhir);
         $tenorMin = $this->pengaturan->tenorMinimal();
         if ($tenor < $tenorMin || $tenor > $tenorMaks) {
             $pesan[] = "Tenor harus antara {$tenorMin} sampai {$tenorMaks} bulan.";

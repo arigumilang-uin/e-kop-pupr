@@ -21,7 +21,7 @@
             </x-slot>
         </x-filter-bar>
 
-        <div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden flex flex-col">
+        <div class="bg-white rounded-2xl border border-stone-200 shadow-sm flex flex-col">
             <x-table>
                 <x-table.thead :sticky="false">
                     <x-table.th>Tipe Laporan</x-table.th>
@@ -47,11 +47,6 @@
                                     <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 13.06L8.18 15.28H9.97L8 12.06L9.93 8.89H8.22L7.13 10.9L6.04 8.89H4.26L6.19 12.06L4.22 15.28H5.96M17 9H11V11H17M20 9H18.5V11H20M17 12H11V14H17M20 12H18.5V14H20M17 15H11V17H17M20 15H18.5V17H20Z"/></svg>
                                 @endif
                                 <span class="font-bold text-[13px] text-stone-800">{{ $item->nama_file }}</span>
-                                @if($item->is_permanent)
-                                    <span class="inline-flex items-center justify-center p-1 rounded-full bg-amber-100 text-amber-600 tooltip" title="Arsip Permanen (Di-Pin)">
-                                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/></svg>
-                                    </span>
-                                @endif
                             </div>
                         </x-table.td>
                         <x-table.td class="align-top">
@@ -61,19 +56,7 @@
                             <span class="text-[12px] text-stone-700 font-bold">{{ $item->user->nama ?? 'Sistem' }}</span>
                         </x-table.td>
                         <x-table.td class="align-top">
-                            <p class="text-[12px] text-stone-700 font-bold mb-0.5">{{ $item->created_at->format('d M Y H:i') }}</p>
-                            @if(!$item->is_permanent)
-                                @php
-                                    $sisaHari = max(0, 30 - (int) $item->created_at->diffInDays(now()));
-                                @endphp
-                                @if($sisaHari <= 5)
-                                    <span class="text-[10px] text-red-500 font-bold tracking-wide">Dihapus otomatis dlm {{ max(0, $sisaHari) }} hari</span>
-                                @else
-                                    <span class="text-[10px] text-stone-400">Dihapus otomatis dlm {{ $sisaHari }} hari</span>
-                                @endif
-                            @else
-                                <span class="text-[10px] text-emerald-600 font-bold tracking-wide">Arsip Permanen</span>
-                            @endif
+                            <p class="text-[12px] text-stone-700 font-bold">{{ $item->created_at->format('d M Y H:i') }}</p>
                         </x-table.td>
                         <x-table.td class="whitespace-nowrap text-right align-top">
                             <x-action-dropdown>
@@ -81,13 +64,7 @@
                                     Download File
                                 </x-action-dropdown-item>
                                 
-                                @can('arsip.manage')
-                                <form action="{{ route('arsip.toggle-pin', $item->id) }}" method="POST" class="border-b border-stone-100">
-                                    @csrf @method('PATCH')
-                                    <x-action-dropdown-item type="button" onclick="this.closest('form').submit()" icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>'>
-                                        {{ $item->is_permanent ? 'Lepas Pin Permanen' : 'Jadikan Permanen (Pin)' }}
-                                    </x-action-dropdown-item>
-                                </form>
+                                @can('laporan.arsip_manage')
                                 <form action="{{ route('arsip.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Hapus arsip ini secara permanen?')">
                                     @csrf @method('DELETE')
                                     <x-action-dropdown-item type="button" color="red" onclick="this.closest('form').submit()" icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>'>

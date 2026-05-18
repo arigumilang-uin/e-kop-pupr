@@ -15,11 +15,10 @@ class StorePeriodeRequest extends FormRequest
     {
         return [
             'nama_periode' => ['required', 'string', 'max:100'],
-            'tahun' => ['required', 'integer', 'min:2020', 'max:2050'],
             'tanggal_buka' => ['required', 'date'],
             'tanggal_tutup' => ['required', 'date', 'after_or_equal:tanggal_buka'],
-            'batas_bulan_pelunasan' => ['required', 'integer', 'min:1', 'max:12'],
-            'angsuran_bulan_berjalan' => ['nullable', 'boolean'],
+            'bulan_potongan_awal' => ['required', 'integer', 'min:1', 'max:12'],
+            'bulan_potongan_akhir' => ['required', 'integer', 'min:1', 'max:12', 'gte:bulan_potongan_awal'],
             'limit_per_anggota' => ['required', 'numeric', 'min:100000'],
             'nominal_min' => ['required', 'numeric', 'min:100000', 'lte:limit_per_anggota'],
             'kelipatan_nominal' => ['required', 'numeric', 'min:50000'],
@@ -31,10 +30,11 @@ class StorePeriodeRequest extends FormRequest
     {
         return [
             'nama_periode.required' => 'Nama periode wajib diisi.',
-            'tahun.required' => 'Tahun wajib diisi.',
             'tanggal_buka.required' => 'Tanggal buka wajib diisi.',
             'tanggal_tutup.after_or_equal' => 'Tanggal tutup harus setelah atau sama dengan tanggal buka.',
-            'batas_bulan_pelunasan.required' => 'Batas bulan pelunasan wajib diisi.',
+            'bulan_potongan_awal.required' => 'Bulan potongan awal TPP wajib diisi.',
+            'bulan_potongan_akhir.required' => 'Bulan potongan akhir TPP wajib diisi.',
+            'bulan_potongan_akhir.gte' => 'Bulan potongan akhir harus sama atau setelah bulan potongan awal.',
             'limit_per_anggota.required' => 'Limit maks per anggota wajib diisi.',
             'limit_per_anggota.min' => 'Limit maks minimal Rp 100.000.',
             'nominal_min.required' => 'Nominal minimum wajib diisi.',

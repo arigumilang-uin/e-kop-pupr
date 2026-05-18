@@ -26,11 +26,11 @@ class PinjamanAdminController extends Controller
             $q->with('bidang')
               ->withCount([
                   'pinjaman as pinjaman_aktif_tahun_ini' => function ($q2) {
-                      $q2->where('status', \App\Enums\StatusPinjaman::Berjalan)
+                      $q2->where('status', StatusPinjaman::Berjalan)
                          ->whereYear('tanggal_pengajuan', now()->year);
                   },
                   'pinjaman as pinjaman_menunggu' => function ($q3) {
-                      $q3->where('status', \App\Enums\StatusPinjaman::Menunggu);
+                      $q3->where('status', StatusPinjaman::Menunggu);
                   }
               ]);
         }, 'periodePinjaman'])->latest('tanggal_pengajuan');
@@ -51,17 +51,17 @@ class PinjamanAdminController extends Controller
 
         if ($request->filled('indikator')) {
             if ($request->indikator === 'ganda') {
-                $query->where('status', \App\Enums\StatusPinjaman::Menunggu)
+                $query->where('status', StatusPinjaman::Menunggu)
                       ->whereHas('anggota', function ($q) {
                           $q->whereHas('pinjaman', function ($q2) {
-                              $q2->where('status', \App\Enums\StatusPinjaman::Menunggu);
+                              $q2->where('status', StatusPinjaman::Menunggu);
                           }, '>', 1);
                       });
             } elseif ($request->indikator === 'aktif') {
-                $query->where('status', \App\Enums\StatusPinjaman::Menunggu)
+                $query->where('status', StatusPinjaman::Menunggu)
                       ->whereHas('anggota', function ($q) {
                           $q->whereHas('pinjaman', function ($q2) {
-                              $q2->where('status', \App\Enums\StatusPinjaman::Berjalan)
+                              $q2->where('status', StatusPinjaman::Berjalan)
                                  ->whereYear('tanggal_pengajuan', now()->year);
                           });
                       });
@@ -91,7 +91,7 @@ class PinjamanAdminController extends Controller
         $query = \App\Models\Anggota::with([
             'bidang',
             'pinjaman' => function($q) use ($request) {
-                $q->where('status', \App\Enums\StatusPinjaman::Berjalan)
+                $q->where('status', StatusPinjaman::Berjalan)
                   ->latest('tanggal_approval')
                   ->with('angsuran');
                   
@@ -113,7 +113,7 @@ class PinjamanAdminController extends Controller
                 }
             }
         ])->whereHas('pinjaman', function($q) use ($request) {
-            $q->where('status', \App\Enums\StatusPinjaman::Berjalan);
+            $q->where('status', StatusPinjaman::Berjalan);
             
             if ($request->filled('bulan_awal')) {
                 $parts = explode('-', $request->bulan_awal);
@@ -149,11 +149,11 @@ class PinjamanAdminController extends Controller
         $bidangs = \App\Models\Bidang::orderBy('nama_bidang')->get();
         $periodes = \App\Models\PeriodePinjaman::latest('tanggal_buka')->get();
         
-        $tenors = \App\Models\Pinjaman::where('status', \App\Enums\StatusPinjaman::Berjalan)
+        $tenors = Pinjaman::where('status', StatusPinjaman::Berjalan)
                                       ->distinct()->orderBy('tenor_bulan')->pluck('tenor_bulan');
-        $nominals = \App\Models\Pinjaman::where('status', \App\Enums\StatusPinjaman::Berjalan)
+        $nominals = Pinjaman::where('status', StatusPinjaman::Berjalan)
                                         ->distinct()->orderBy('nominal_pinjaman')->pluck('nominal_pinjaman');
-        $bulans = \App\Models\Pinjaman::where('status', \App\Enums\StatusPinjaman::Berjalan)
+        $bulans = Pinjaman::where('status', StatusPinjaman::Berjalan)
                                       ->selectRaw("DATE_FORMAT(tanggal_approval, '%Y-%m') as bulan")
                                       ->distinct()->orderBy('bulan', 'desc')->pluck('bulan');
 
@@ -174,6 +174,7 @@ class PinjamanAdminController extends Controller
         $dataHash = md5('Pinjaman Aktif' . 'PDF' . json_encode($data));
         $existings = \App\Models\ArsipLaporan::where('data_hash', $dataHash)->get();
         foreach ($existings as $existing) {
+            /** @var \App\Models\ArsipLaporan $existing */
             if (\Illuminate\Support\Facades\Storage::exists($existing->file_path)) {
                 return \Illuminate\Support\Facades\Storage::download($existing->file_path, $existing->nama_file);
             } else {
@@ -281,7 +282,7 @@ class PinjamanAdminController extends Controller
 
                 // Tulis simpanan SWP ke Ledger
                 $this->ledgerService->catatSimpanan(
-                    $pinjaman->potongan_swp,
+                    (float) $pinjaman->potongan_swp,
                     $simpananSwp->id,
                     $pinjaman->anggota_id,
                     $jenisSwp->nama,
@@ -309,16 +310,18 @@ class PinjamanAdminController extends Controller
             now()->toDateString(),
         );
 
-        $tanggalMulai = now();
-        $angsuranBulanBerjalan = (bool) ($pinjaman->periodePinjaman->angsuran_bulan_berjalan ?? false);
+        // Jadwal angsuran dimulai dari bulan potongan awal
+        $tahunPeriode = $pinjaman->periodePinjaman->tahun ?? now()->year;
+        $bulanAwal = $pinjaman->periodePinjaman->bulan_potongan_awal ?? (now()->month + 1);
 
         for ($i = 1; $i <= $pinjaman->tenor_bulan; $i++) {
-            $offsetBulan = $angsuranBulanBerjalan ? ($i - 1) : $i;
+            $bulanTarget = $bulanAwal + ($i - 1);
+            $tanggalJatuhTempo = \Carbon\Carbon::createFromDate($tahunPeriode, $bulanTarget, 1)->format('Y-m-d');
 
             \App\Models\Angsuran::create([
                 'pinjaman_id' => $pinjaman->id,
                 'angsuran_ke' => $i,
-                'tanggal_jatuh_tempo' => $tanggalMulai->copy()->addMonths($offsetBulan)->format('Y-m-d'),
+                'tanggal_jatuh_tempo' => $tanggalJatuhTempo,
                 'nominal_pokok' => $pinjaman->angsuran_pokok,
                 'nominal_bunga' => $pinjaman->angsuran_bunga,
                 'nominal_total' => $pinjaman->total_angsuran,
@@ -328,7 +331,7 @@ class PinjamanAdminController extends Controller
 
         $this->logger->log(
             'pinjaman_approved',
-            "Pinjaman disetujui untuk {$pinjaman->anggota->nama} senilai Rp " . number_format($pinjaman->nominal_pinjaman, 0, ',', '.'),
+            "Pinjaman disetujui untuk {$pinjaman->anggota->nama} senilai Rp " . number_format((float) $pinjaman->nominal_pinjaman, 0, ',', '.'),
             ['no_referensi' => $pinjaman->no_referensi]
         );
     }
@@ -424,13 +427,13 @@ class PinjamanAdminController extends Controller
             
             if ($belumLunasCount === 0) {
                 $pinjaman->update([
-                    'status' => \App\Enums\StatusPinjaman::Lunas,
+                    'status' => StatusPinjaman::Lunas,
                 ]);
             }
 
             $this->logger->log(
                 'angsuran_paid',
-                "Pembayaran Angsuran Ke-{$angsuran->angsuran_ke} sebesar Rp " . number_format($angsuran->nominal_total, 0, ',', '.') . " diterima untuk Pinjaman Ref: {$pinjaman->no_referensi}.",
+                "Pembayaran Angsuran Ke-{$angsuran->angsuran_ke} sebesar Rp " . number_format((float) $angsuran->nominal_total, 0, ',', '.') . " diterima untuk Pinjaman Ref: {$pinjaman->no_referensi}.",
                 ['angsuran_id' => $angsuran->id, 'pinjaman_id' => $pinjaman->id]
             );
 
@@ -440,6 +443,86 @@ class PinjamanAdminController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal mencatat pembayaran angsuran.');
+        }
+    }
+
+    public function pelunasanManual(Request $request, Pinjaman $pinjaman)
+    {
+        if ($pinjaman->status !== StatusPinjaman::Berjalan) {
+            return back()->with('error', 'Pinjaman sudah lunas atau tidak aktif.');
+        }
+
+        $request->validate([
+            'include_bunga' => 'required|boolean'
+        ]);
+
+        $includeBunga = $request->boolean('include_bunga');
+
+        try {
+            DB::beginTransaction();
+
+            $sisaAngsuran = $pinjaman->angsuran()->where('status', \App\Enums\StatusAngsuran::Belum)->orderBy('angsuran_ke')->get();
+
+            if ($sisaAngsuran->isEmpty()) {
+                return back()->with('error', 'Tidak ada sisa angsuran untuk dilunasi.');
+            }
+
+            $totalDibayar = 0;
+            $totalPokok = 0;
+            $totalBungaCoret = 0;
+
+            foreach ($sisaAngsuran as $angsuran) {
+                $nominalBayar = $angsuran->nominal_pokok;
+                $bungaAwal = $angsuran->nominal_bunga;
+
+                if ($includeBunga) {
+                    $nominalBayar += $bungaAwal;
+                } else {
+                    $totalBungaCoret += $bungaAwal;
+                    // Ubah database angsuran untuk mencatat bahwa bunga akhirnya adalah 0 
+                    // karena dimaafkan / pelunasan dipercepat (hanya bayar pokok)
+                    $angsuran->nominal_bunga = 0;
+                    $angsuran->nominal_total = $nominalBayar;
+                }
+
+                $angsuran->status = \App\Enums\StatusAngsuran::Lunas;
+                $angsuran->tanggal_bayar = now();
+                $angsuran->save();
+
+                $totalDibayar += $nominalBayar;
+                $totalPokok += $angsuran->nominal_pokok;
+
+                // Tulis individual angsuran ke Ledger agar mutasi rekening tercatat runut per baris atau sekaligus.
+                // Disini kita memanggil ledgerService per transaksi angsuran sama halnya dengan bayar eceran
+                $this->ledgerService->catatAngsuran(
+                    (float) $nominalBayar,
+                    $angsuran->id,
+                    $pinjaman->anggota_id,
+                    $angsuran->angsuran_ke,
+                    $pinjaman->no_referensi,
+                    now()->toDateString(),
+                );
+            }
+
+            // Set pinjaman ke Lunas
+            $pinjaman->update([
+                'status' => StatusPinjaman::Lunas,
+            ]);
+
+            $catatanBunga = $includeBunga ? 'beserta bunga penuh' : "hanya pokok (bunga Rp " . number_format($totalBungaCoret, 0, ',', '.') . " dihapuskan/coret)";
+
+            $this->logger->log(
+                'pelunasan_dipercepat',
+                "Pelunasan dipercepat untuk Pinjaman Ref: {$pinjaman->no_referensi} sebesar Rp " . number_format($totalDibayar, 0, ',', '.') . " ({$catatanBunga}).",
+                ['pinjaman_id' => $pinjaman->id]
+            );
+
+            DB::commit();
+
+            return back()->with('success', "Pelunasan manual berhasil. Total dibayar: Rp " . number_format($totalDibayar, 0, ',', '.'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memproses pelunasan manual: ' . $e->getMessage());
         }
     }
 }

@@ -78,13 +78,21 @@ class PotonganService
         int $userId,
         Carbon $periodeFilter,
     ): void {
-        // Cek kelayakan periode berdasar tanggal masuk
+        // Fallback jika tidak ada konfigurasi TPP khusus
         $tanggalMasuk = $anggota->tanggal_masuk;
-        $bulanMulaiPotongan = $tanggalMasuk ? $tanggalMasuk->copy()->addMonth()->startOfMonth() : null;
-        $belumWaktunyaDipotong = $bulanMulaiPotongan && $periodeFilter->lt($bulanMulaiPotongan);
+        $defaultMulaiPotongan = $tanggalMasuk ? $tanggalMasuk->copy()->addMonth()->startOfMonth() : null;
 
         // 1. Simpanan Pokok
         if ($jenisPokok) {
+            $belumWaktunyaPokok = false;
+            
+            if ($anggota->tpp_mulai_pokok && $anggota->tpp_tahun_pokok) {
+                $mulaiPokokDate = Carbon::createFromDate($anggota->tpp_tahun_pokok, $anggota->tpp_mulai_pokok, 1)->startOfMonth();
+                $belumWaktunyaPokok = $periodeFilter->lt($mulaiPokokDate);
+            } else {
+                $belumWaktunyaPokok = $defaultMulaiPotongan && $periodeFilter->lt($defaultMulaiPotongan);
+            }
+
             $sudahBayarPokok = DB::table('simpanan')
                 ->where('anggota_id', $anggota->id)
                 ->where('jenis_simpanan_id', $jenisPokok->id)
@@ -94,7 +102,7 @@ class PotonganService
                 })
                 ->exists();
 
-            if (!$sudahBayarPokok && !$belumWaktunyaDipotong) {
+            if (!$sudahBayarPokok && !$belumWaktunyaPokok) {
                 $simpanan = Simpanan::create([
                     'anggota_id' => $anggota->id,
                     'jenis_simpanan_id' => $jenisPokok->id,
@@ -119,6 +127,15 @@ class PotonganService
 
         // 2. Simpanan Wajib
         if ($jenisWajib) {
+            $belumWaktunyaWajib = false;
+            
+            if ($anggota->tpp_mulai_wajib && $anggota->tpp_tahun_wajib) {
+                $mulaiWajibDate = Carbon::createFromDate($anggota->tpp_tahun_wajib, $anggota->tpp_mulai_wajib, 1)->startOfMonth();
+                $belumWaktunyaWajib = $periodeFilter->lt($mulaiWajibDate);
+            } else {
+                $belumWaktunyaWajib = $defaultMulaiPotongan && $periodeFilter->lt($defaultMulaiPotongan);
+            }
+
             // Validasi duplikat: hanya cek simpanan aktif (menggantikan unique constraint)
             $sudahBayarWajib = DB::table('simpanan')
                 ->where('anggota_id', $anggota->id)
@@ -131,7 +148,7 @@ class PotonganService
                 })
                 ->exists();
 
-            if (!$sudahBayarWajib && !$belumWaktunyaDipotong) {
+            if (!$sudahBayarWajib && !$belumWaktunyaWajib) {
                 $simpanan = Simpanan::create([
                     'anggota_id' => $anggota->id,
                     'jenis_simpanan_id' => $jenisWajib->id,

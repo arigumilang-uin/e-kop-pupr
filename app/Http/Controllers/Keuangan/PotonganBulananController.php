@@ -101,21 +101,34 @@ class PotonganBulananController extends Controller
 
         // PERHITUNGAN RAM LOKAL
         foreach ($anggotas as $anggota) {
-            $tanggalMasuk = $anggota->tanggal_masuk;
-            $bulanMulaiPotongan = $tanggalMasuk ? $tanggalMasuk->copy()->addMonth()->startOfMonth() : null;
+            // Tentukan bulan mulai potongan TPP POKOK
+            if ($anggota->tpp_mulai_pokok && $anggota->tpp_tahun_pokok) {
+                $mulaiPotongPokok = Carbon::createFromDate($anggota->tpp_tahun_pokok, $anggota->tpp_mulai_pokok, 1);
+            } else {
+                $mulaiPotongPokok = $anggota->tanggal_masuk ? $anggota->tanggal_masuk->copy()->addMonth()->startOfMonth() : null;
+            }
+
+            // Tentukan bulan mulai potongan TPP WAJIB
+            if ($anggota->tpp_mulai_wajib && $anggota->tpp_tahun_wajib) {
+                $mulaiPotongWajib = Carbon::createFromDate($anggota->tpp_tahun_wajib, $anggota->tpp_mulai_wajib, 1);
+            } else {
+                $mulaiPotongWajib = $anggota->tanggal_masuk ? $anggota->tanggal_masuk->copy()->addMonth()->startOfMonth() : null;
+            }
+
             $periodeFilter = Carbon::createFromDate($year, $month, 1);
-            $belumWaktunyaDipotong = $bulanMulaiPotongan && $periodeFilter->lt($bulanMulaiPotongan);
+            $belumWaktuPotongPokok = $mulaiPotongPokok && $periodeFilter->lt($mulaiPotongPokok);
+            $belumWaktuPotongWajib = $mulaiPotongWajib && $periodeFilter->lt($mulaiPotongWajib);
 
             $potonganPokok = 0;
             if (!$jenisFilter || $jenisFilter === 'pokok') {
                 $sudahBayarPokok = in_array($anggota->id, $paidPokokIds);
-                $potonganPokok = ($sudahBayarPokok || $belumWaktunyaDipotong) ? 0 : $nominalPokok;
+                $potonganPokok = ($sudahBayarPokok || $belumWaktuPotongPokok) ? 0 : $nominalPokok;
             }
 
             $potonganWajib = 0;
             if (!$jenisFilter || $jenisFilter === 'wajib') {
                 $sudahBayarWajib = in_array($anggota->id, $paidWajibIds);
-                $potonganWajib = ($sudahBayarWajib || $belumWaktunyaDipotong) ? 0 : $nominalWajib;
+                $potonganWajib = ($sudahBayarWajib || $belumWaktuPotongWajib) ? 0 : $nominalWajib;
             }
 
             $potonganPinjaman = 0;

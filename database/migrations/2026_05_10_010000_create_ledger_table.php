@@ -26,7 +26,7 @@ return new class extends Migration
             // Kategori transaksi
             $table->enum('kategori', [
                 'simpanan', 'angsuran', 'pencairan', 'penarikan',
-                'pengeluaran', 'void', 'koreksi', 'lainnya',
+                'pengeluaran', 'piutang_eksternal', 'void', 'koreksi', 'lainnya',
             ])->index();
 
             // Nominal SELALU POSITIF. Arah ditentukan oleh `tipe`.

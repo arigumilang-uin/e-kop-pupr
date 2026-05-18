@@ -11,6 +11,7 @@ use App\Http\Controllers\Keuangan\PengeluaranKasController;
 use App\Http\Controllers\Keuangan\ShuController;
 use App\Http\Controllers\Keuangan\ShuKewajibanController;
 use App\Http\Controllers\Keuangan\NeracaController;
+use App\Http\Controllers\Keuangan\PiutangEksternalController;
 use App\Http\Controllers\Master\AnggotaController;
 use App\Http\Controllers\Periode\PeriodeController;
 use App\Http\Controllers\Pinjaman\PinjamanAdminController;
@@ -166,6 +167,10 @@ Route::middleware('auth')->group(function () {
         ->name('pinjaman.angsuran.bayar')
         ->middleware('permission:pinjaman.bayar');
 
+    Route::post('/pinjaman/{pinjaman}/pelunasan-manual', [PinjamanAdminController::class, 'pelunasanManual'])
+        ->name('pinjaman.pelunasan-manual')
+        ->middleware('permission:pinjaman.bayar');
+
     // =============================================
     // PENGELUARAN KAS
     // =============================================
@@ -181,14 +186,36 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:pengeluaran.delete');
 
     // =============================================
+    // MUTASI REKENING (KAS & BANK)
+    // =============================================
+    Route::get('/mutasi-rekening', [\App\Http\Controllers\Keuangan\MutasiRekeningController::class, 'index'])->name('mutasi-rekening.index')->middleware('permission:pengeluaran.view');
+    Route::post('/mutasi-rekening', [\App\Http\Controllers\Keuangan\MutasiRekeningController::class, 'store'])->name('mutasi-rekening.store')->middleware('permission:pengeluaran.create');
+    Route::delete('/mutasi-rekening/{mutasi_rekening}', [\App\Http\Controllers\Keuangan\MutasiRekeningController::class, 'destroy'])->name('mutasi-rekening.destroy')->middleware('permission:pengeluaran.delete');
+
+    // =============================================
+    // PIUTANG LAIN-LAIN
+    // =============================================
+    Route::middleware('permission:piutang_eksternal.view')->group(function () {
+        Route::get('/piutang-lain', [PiutangEksternalController::class, 'index'])->name('piutang-eksternal.index');
+        Route::get('/piutang-lain/{piutangEksternal}', [PiutangEksternalController::class, 'show'])->name('piutang-eksternal.show');
+    });
+
+    Route::middleware('permission:piutang_eksternal.create')->group(function () {
+        Route::post('/piutang-lain', [PiutangEksternalController::class, 'store'])->name('piutang-eksternal.store');
+        Route::put('/piutang-lain/{piutangEksternal}', [PiutangEksternalController::class, 'update'])->name('piutang-eksternal.update');
+    });
+
+    Route::middleware('permission:piutang_eksternal.bayar')->group(function () {
+        Route::post('/piutang-lain/{piutangEksternal}/bayar', [PiutangEksternalController::class, 'storePembayaran'])->name('piutang-eksternal.bayar');
+        Route::delete('/piutang-lain/{piutangEksternal}/bayar/{pembayaran}', [PiutangEksternalController::class, 'destroyPembayaran'])->name('piutang-eksternal.bayar.destroy');
+    });
+
+    // =============================================
     // SHU
     // =============================================
     Route::get('/keuangan/shu', [ShuController::class, 'index'])->name('keuangan.shu')->middleware('permission:simulasi.shu');
 
     Route::middleware('permission:shu.manage')->group(function () {
-        Route::post('/keuangan/shu/komponen', [ShuController::class, 'storeKomponen'])->name('shu.komponen.store');
-        Route::patch('/keuangan/shu/komponen/{komponen}', [ShuController::class, 'updateKomponen'])->name('shu.komponen.update');
-        Route::delete('/keuangan/shu/komponen/{komponen}', [ShuController::class, 'destroyKomponen'])->name('shu.komponen.destroy');
         Route::post('/keuangan/shu/distribusi', [ShuController::class, 'storeDistribusi'])->name('shu.distribusi.store');
         Route::patch('/keuangan/shu/distribusi/{distribusi}', [ShuController::class, 'updateDistribusi'])->name('shu.distribusi.update');
         Route::delete('/keuangan/shu/distribusi/{distribusi}', [ShuController::class, 'destroyDistribusi'])->name('shu.distribusi.destroy');
@@ -237,6 +264,21 @@ Route::middleware('auth')->group(function () {
         Route::get('/keuangan/neraca', [NeracaController::class, 'index'])->name('keuangan.neraca');
         Route::get('/keuangan/neraca/export/excel', [NeracaController::class, 'exportExcel'])->name('keuangan.neraca.export.excel');
         Route::get('/keuangan/neraca/export/pdf', [NeracaController::class, 'exportPdf'])->name('keuangan.neraca.export.pdf');
+        Route::get('/keuangan/phu', [\App\Http\Controllers\Keuangan\PhuController::class, 'index'])->name('keuangan.phu');
+    });
+
+    // =============================================
+    // PENGATURAN PARAMETER KEUANGAN
+    // =============================================
+    Route::middleware('permission:parameter_neraca.manage')->group(function () {
+        Route::get('/keuangan/parameter', [\App\Http\Controllers\Keuangan\ParameterKeuanganController::class, 'index'])->name('parameter.index');
+        Route::post('/keuangan/parameter/neraca', [\App\Http\Controllers\Keuangan\ParameterKeuanganController::class, 'storeNeraca'])->name('keuangan.parameter.neraca.store');
+        Route::put('/keuangan/parameter/neraca/{parameter}', [\App\Http\Controllers\Keuangan\ParameterKeuanganController::class, 'updateNeraca'])->name('keuangan.parameter.neraca.update');
+        Route::delete('/keuangan/parameter/neraca/{parameter}', [\App\Http\Controllers\Keuangan\ParameterKeuanganController::class, 'destroyNeraca'])->name('keuangan.parameter.neraca.destroy');
+        Route::post('/keuangan/parameter/phu', [\App\Http\Controllers\Keuangan\ParameterKeuanganController::class, 'storePhu'])->name('keuangan.parameter.phu.store');
+        Route::put('/keuangan/parameter/phu/{parameter}', [\App\Http\Controllers\Keuangan\ParameterKeuanganController::class, 'updatePhu'])->name('keuangan.parameter.phu.update');
+        Route::delete('/keuangan/parameter/phu/{parameter}', [\App\Http\Controllers\Keuangan\ParameterKeuanganController::class, 'destroyPhu'])->name('keuangan.parameter.phu.destroy');
+        Route::post('/keuangan/parameter/copy', [\App\Http\Controllers\Keuangan\ParameterKeuanganController::class, 'copyFromPreviousYear'])->name('keuangan.parameter.copy');
     });
 
     // =============================================
@@ -263,10 +305,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/arsip-laporan/{arsip}/download', [\App\Http\Controllers\Sistem\ArsipLaporanController::class, 'download'])
         ->name('arsip.download')
         ->middleware('permission:laporan.arsip');
-
-    Route::patch('/arsip-laporan/{arsip}/toggle-pin', [\App\Http\Controllers\Sistem\ArsipLaporanController::class, 'togglePin'])
-        ->name('arsip.toggle-pin')
-        ->middleware('permission:laporan.arsip_manage');
 
     Route::delete('/arsip-laporan/{arsip}', [\App\Http\Controllers\Sistem\ArsipLaporanController::class, 'destroy'])
         ->name('arsip.destroy')

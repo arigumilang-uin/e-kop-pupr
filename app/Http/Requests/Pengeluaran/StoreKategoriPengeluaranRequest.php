@@ -15,6 +15,7 @@ class StoreKategoriPengeluaranRequest extends FormRequest
     {
         return [
             'nama' => 'required|string|max:100|unique:kategori_pengeluaran,nama',
+            'jenis' => 'required|in:beban,aset',
             'deskripsi' => 'nullable|string',
         ];
     }

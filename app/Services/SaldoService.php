@@ -15,10 +15,17 @@ class SaldoService
 {
     /**
      * Hitung total saldo koperasi saat ini.
+     * Mengkalkulasikan semua dana masuk, dana keluar, DAN saldo awal dari Parameter Neraca (Master).
      */
     public function saldoKoperasi(): float
     {
-        return $this->totalDanaMasuk() - $this->totalDanaKeluar();
+        $paramBank = \App\Models\ParameterNeraca::where('kode_otomatis', 'SALDO_BANK_BRK')->first();
+        $paramKas = \App\Models\ParameterNeraca::where('kode_otomatis', 'SALDO_KAS_TUNAI')->first();
+        
+        $saldoAwalBank = $paramBank ? (float) $paramBank->nominal_manual : 0;
+        $saldoAwalKas = $paramKas ? (float) $paramKas->nominal_manual : 0;
+
+        return $this->totalDanaMasuk() - $this->totalDanaKeluar() + $saldoAwalBank + $saldoAwalKas;
     }
 
     /**
@@ -42,7 +49,9 @@ class SaldoService
             ->selectRaw('SUM(potongan_dana_resiko) as resiko, SUM(potongan_biaya_admin) as admin')
             ->first();
 
-        return $simpanan + $angsuranLunas + (float) ($potongan->resiko ?? 0) + (float) ($potongan->admin ?? 0);
+        $pembayaran_eksternal = (float) DB::table('pembayaran_piutang_eksternal')->sum('nominal');
+
+        return $simpanan + $angsuranLunas + (float) ($potongan->resiko ?? 0) + (float) ($potongan->admin ?? 0) + $pembayaran_eksternal;
     }
 
     /**
@@ -64,7 +73,9 @@ class SaldoService
             })
             ->sum('nominal');
 
-        return $pencairan + $penarikan + $pengeluaran;
+        $realisasiShu = (float) \Illuminate\Support\Facades\DB::table('shu_realisasi_kewajiban')->sum('nominal');
+
+        return $pencairan + $penarikan + $pengeluaran + $realisasiShu;
     }
 
     /**

@@ -66,11 +66,21 @@
             </div>
         </div>
         <div class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-4 opacity-5">
+                <svg class="w-16 h-16 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M11.67 3.87 9.9 2.1 3 9l6.9 6.9 1.77-1.77L5.83 9l5.84-5.13zm6.41 12.26 1.77 1.77L21 9l-6.9-6.9-1.77 1.77L18.17 9l-5.84 5.13z"/></svg>
+            </div>
+            <div class="relative z-10">
+                <p class="text-stone-500 text-xs font-bold mb-1 uppercase tracking-widest">Piutang Lain-Lain</p>
+                <p class="text-2xl font-black font-mono text-stone-800 mt-2 mb-1">{{ format_rupiah($ringkasan['piutangLain']) }}</p>
+                <p class="text-stone-400 text-[11px]">Legacy (Tahun 2024/2025)</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm relative overflow-hidden">
             <div class="absolute inset-x-0 bottom-0 h-1 bg-emerald-500"></div>
             <div class="relative z-10">
                 <p class="text-stone-500 text-xs font-bold mb-1 uppercase tracking-widest">Estimasi Aset</p>
                 <p class="text-2xl font-black font-mono text-emerald-600 mt-2 mb-1">{{ format_rupiah($ringkasan['totalAset']) }}</p>
-                <p class="text-stone-400 text-[11px]">Kas tersedia + Piutang beredar</p>
+                <p class="text-stone-400 text-[11px]">Kas + Piutang Berjalan + Piutang Lain</p>
             </div>
         </div>
     </div>
@@ -112,6 +122,18 @@
                     </div>
                     <div class="w-full bg-stone-100 rounded-full h-2">
                         <div class="bg-amber-400 h-2 rounded-full" style="width: {{ $pctPiutang }}%"></div>
+                    </div>
+                <div>
+                    @php $pctPiutangLain = round(($ringkasan['piutangLain'] / $asetTotal) * 100, 1); @endphp
+                    <div class="flex justify-between items-baseline mb-2">
+                        <span class="text-sm font-bold text-stone-700">Piutang Lain-Lain (Legacy)</span>
+                        <div class="text-right">
+                            <span class="font-mono font-black text-stone-800">{{ format_rupiah($ringkasan['piutangLain']) }}</span>
+                            <span class="inline-block ml-2 px-2 py-0.5 bg-violet-50 text-violet-700 text-[10px] font-bold rounded">{{ $pctPiutangLain }}%</span>
+                        </div>
+                    </div>
+                    <div class="w-full bg-stone-100 rounded-full h-2">
+                        <div class="bg-violet-400 h-2 rounded-full" style="width: {{ $pctPiutangLain }}%"></div>
                     </div>
                 </div>
             </div>
@@ -266,6 +288,13 @@
                 </div>
                 <div class="flex justify-between items-center p-4 bg-stone-50 rounded-xl border border-stone-100 transition-colors hover:bg-emerald-50/50">
                     <div>
+                        <p class="text-sm font-bold text-stone-700">Pembayaran Piutang Lain-Lain</p>
+                        <p class="text-[11px] text-stone-500 mt-0.5">Pengembalian piutang legacy/pihak ketiga</p>
+                    </div>
+                    <span class="font-mono font-black text-emerald-700">{{ format_rupiah($ringkasan['masukPiutangLain']) }}</span>
+                </div>
+                <div class="flex justify-between items-center p-4 bg-stone-50 rounded-xl border border-stone-100 transition-colors hover:bg-emerald-50/50">
+                    <div>
                         <p class="text-sm font-bold text-stone-700">Pendapatan Fee & Admin</p>
                         <p class="text-[11px] text-stone-500 mt-0.5">Potongan dana resiko & biaya administrasi pinjaman</p>
                     </div>
@@ -273,7 +302,7 @@
                 </div>
                 <div class="pt-4 mt-2 border-t-2 border-stone-100 flex justify-between items-center px-2">
                     <span class="font-black text-stone-800 uppercase tracking-widest text-xs">Total Pemasukan</span>
-                    <span class="font-mono text-lg font-black text-emerald-600">{{ format_rupiah($ringkasan['masukSimpanan'] + $ringkasan['masukAngsuran'] + $ringkasan['masukFee']) }}</span>
+                    <span class="font-mono text-lg font-black text-emerald-600">{{ format_rupiah($ringkasan['masukSimpanan'] + $ringkasan['masukAngsuran'] + $ringkasan['masukPiutangLain'] + $ringkasan['masukFee']) }}</span>
                 </div>
             </div>
         </div>
@@ -308,9 +337,16 @@
                     </div>
                     <span class="font-mono font-black text-red-600">{{ format_rupiah($ringkasan['keluarPengeluaranKas']) }}</span>
                 </div>
+                <div class="flex justify-between items-center p-4 bg-stone-50 rounded-xl border border-stone-100 transition-colors hover:bg-red-50/50">
+                    <div>
+                        <p class="text-sm font-bold text-stone-700">Realisasi Dana SHU</p>
+                        <p class="text-[11px] text-stone-500 mt-0.5">Pengeluaran untuk Dana Sosial, Pengurus, dsb.</p>
+                    </div>
+                    <span class="font-mono font-black text-red-600">{{ format_rupiah($ringkasan['keluarRealisasiShu']) }}</span>
+                </div>
                 <div class="pt-4 mt-2 border-t-2 border-stone-100 flex justify-between items-center px-2">
                     <span class="font-black text-stone-800 uppercase tracking-widest text-xs">Total Pengeluaran</span>
-                    <span class="font-mono text-lg font-black text-red-600">{{ format_rupiah($ringkasan['keluarPinjaman'] + $ringkasan['keluarTarik'] + $ringkasan['keluarPengeluaranKas']) }}</span>
+                    <span class="font-mono text-lg font-black text-red-600">{{ format_rupiah($ringkasan['keluarPinjaman'] + $ringkasan['keluarTarik'] + $ringkasan['keluarPengeluaranKas'] + $ringkasan['keluarRealisasiShu']) }}</span>
                 </div>
             </div>
         </div>

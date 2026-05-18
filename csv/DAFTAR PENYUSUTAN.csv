@@ -1,0 +1,37 @@
+Tabel Penyusutan,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7,Unnamed: 8,Unnamed: 9,Unnamed: 10,Unnamed: 11,Unnamed: 12,Unnamed: 13,Unnamed: 14,Unnamed: 15
+No,Item,Tahun Perolehan,Umur Ekonomis,Nilai Perolehan,Nilai Residu,Saldo Ak.Peyusutan Per 31 Des 2022,Tahun,,,,,,,Saldo Ak.Peyusutan Per 31 Des 2023,Nilai Buku per 31 Des 2023
+,,,,,,,2023,2024,2025.0,2026.0,2027.0,2028,2029.0,,
+,,,,,,,,,,,,,,,
+1,Tanah,,0,,0,0,0,0,0.0,0.0,0.0,,,0,0
+2,Bangunan,,,,0,0,0,0,0.0,0.0,0.0,0,,0,0
+3,Gudang Pupuk,,,,0,0,0,0,0.0,0.0,0.0,0,0.0,0,0
+Jumlah,,,,0,0,0,0,0,0.0,0.0,0.0,0,0.0,0,0
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+No,Item,Tahun Perolehan,Umur Ekonomis,Nilai Perolehan,Nilai Residu,Saldo Ak.Peyusutan Per 31 Des 2022,Tahun,,,,,,,Saldo Ak.Peyusutan Per 31 Des 2023,Nilai Buku per 31 Des 2023
+,,,,,,,2023,2024,2025.0,2026.0,2027.0,2028,2029.0,,
+,,,,,,,,,,,,,,,
+1,Peralatan Kantor,,,0,0,0,0,0,0.0,0.0,0.0,0,0.0,0,0
+2,Truck,,5 Tahun,300000000,120000000,40000000,40000000,,,0.0,0.0,0,0.0,80000000,220000000
+Jumlah,,,,300000000,120000000,40000000,40000000,0,0.0,0.0,0.0,0,0.0,80000000,220000000
+,,,,,,,,,,,,,,,
+,,,,,TOTAL NILAI BUKU AKTIVA TETAP,,,,,,,,,,220000000
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+No,Item,Tahun Perolehan,Umur Ekonomis,Nilai Perolehan,Nilai Residu,Saldo Ak.Peyusutan Per 31 Des 2022,Tahun,,,,,,,Saldo Ak.Peyusutan Per 31 Des 2023,Nilai Buku per 31 Des 2023
+,,,,,,,2023,2024,2025.0,2026.0,2027.0,2028,2029.0,,
+,,,,,,,,,,,,,,,
+1,Legalitas , -,5 Tahun,10000000,0,2000000,2000000,0,0.0,0.0,0.0,0,0.0,4000000,6000000
+2, Perpanjangan Legalitas, -,0,0,0,0,,0,0.0,0.0,0.0,0,0.0,,0
+Jumlah,,,,10000000,0,2000000,2000000,0,0.0,0.0,0.0,0,0.0,4000000,6000000
+,,,,,,,,,,,,,,,
+,,,,,TOTAL NILAI BUKU AKTIVA LAIN-LAIN,,,,,,,,,,6000000
+,,,,,,,,,,,,,,,
+,,,,,,,,"..............................,                            2024",,,,,,,
+,,,,,,,,,,,,,,,
+,,,,,,,,PENGURUS KOPERASI................................,,,,,,,
+,,,,,,,,,,,,,,,
+,,,,,,,,KETUA BADAN PENGAWAS,,,,KETUA,,SEKRETARIS,BENDAHARA
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+,,,,,,,,.......................,,,,........................,,..................,...................

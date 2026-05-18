@@ -183,28 +183,9 @@
                 @endif
                 <div class="h-px bg-stone-100"></div>
                 <div>
-                    <p class="text-[11px] font-bold text-stone-500 uppercase tracking-widest mb-1">Maks. Batas Pelunasan</p>
-                    <p class="text-sm font-bold text-stone-800">Bulan ke-{{ $periode->batas_bulan_pelunasan }} ({{ nama_bulan($periode->batas_bulan_pelunasan) }})</p>
-                </div>
-                <div class="h-px bg-stone-100"></div>
-                <div class="bg-[#043d2e]/5 border border-[#043d2e]/10 -mx-3 p-3 rounded-xl border-l-[3px] border-l-[#043d2e]">
-                    <p class="text-[11px] font-bold text-[#043d2e]/60 uppercase tracking-widest mb-1">Limit Pinjaman Plafon</p>
-                    <p class="text-base font-black font-mono text-[#043d2e]">{{ format_rupiah($periode->limit_per_anggota) }}</p>
-                </div>
-                <div class="h-px bg-stone-100"></div>
-                <div>
-                    <p class="text-[11px] font-bold text-stone-500 uppercase tracking-widest mb-1">Angsuran Bulan Berjalan</p>
-                    @if($periode->angsuran_bulan_berjalan)
-                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        Aktif — Tenor +1 Bulan
-                    </span>
-                    @else
-                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold bg-stone-100 text-stone-500 border border-stone-200">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                        Tidak Aktif — Standar
-                    </span>
-                    @endif
+                    <p class="text-[11px] font-bold text-stone-500 uppercase tracking-widest mb-1">Rentang Potongan TPP</p>
+                    <p class="text-sm font-bold text-stone-800">{{ nama_bulan($periode->bulan_potongan_awal) }} — {{ nama_bulan($periode->bulan_potongan_akhir) }}</p>
+                    <p class="text-[11px] font-medium text-stone-500 mt-1">Tenor tersedia: {{ $periode->tenorTersedia() }} bulan</p>
                 </div>
                 <div>
                     <p class="text-[11px] font-bold text-stone-500 uppercase tracking-widest mb-1">Aksi Oleh</p>
@@ -255,45 +236,32 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {{-- Tahun --}}
+                {{-- Bulan Potongan Awal --}}
                 <div class="space-y-1.5">
-                    <label for="tahun" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tahun Anggaran <span class="text-red-500">*</span></label>
-                    <input type="number" id="tahun" name="tahun" value="{{ old('tahun', $periode->tahun) }}" required min="2020" max="2050"
-                           class="w-full px-4 py-3 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm
-                                  {{ $adaPengajuan ? 'bg-stone-100 cursor-not-allowed text-stone-500' : 'bg-stone-50' }}"
-                           {{ $adaPengajuan ? 'disabled' : '' }}>
-                </div>
-
-                {{-- Batas Bulan Pelunasan --}}
-                <div class="space-y-1.5">
-                    <label for="batas_bulan_pelunasan" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Batas Bulan Pelunasan <span class="text-red-500">*</span></label>
-                    <select id="batas_bulan_pelunasan" name="batas_bulan_pelunasan" required
+                    <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Bulan Potongan Awal <span class="text-red-500">*</span></label>
+                    <select name="bulan_potongan_awal" required
                             class="w-full px-4 py-3 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm
                                    {{ $adaPengajuan ? 'bg-stone-100 cursor-not-allowed text-stone-500 opacity-90' : 'bg-stone-50 cursor-pointer' }}"
                             {{ $adaPengajuan ? 'disabled' : '' }}>
                         @for($i = 1; $i <= 12; $i++)
-                        <option value="{{ $i }}" {{ old('batas_bulan_pelunasan', $periode->batas_bulan_pelunasan) == $i ? 'selected' : '' }}>
-                            Bulan ke-{{ $i }} ({{ nama_bulan($i) }})
-                        </option>
+                        <option value="{{ $i }}" {{ old('bulan_potongan_awal', $periode->bulan_potongan_awal) == $i ? 'selected' : '' }}>{{ nama_bulan($i) }}</option>
+                        @endfor
+                    </select>
+                </div>
+
+                {{-- Bulan Potongan Akhir --}}
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Bulan Potongan Akhir <span class="text-red-500">*</span></label>
+                    <select name="bulan_potongan_akhir" required
+                            class="w-full px-4 py-3 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm
+                                   {{ $adaPengajuan ? 'bg-stone-100 cursor-not-allowed text-stone-500 opacity-90' : 'bg-stone-50 cursor-pointer' }}"
+                            {{ $adaPengajuan ? 'disabled' : '' }}>
+                        @for($i = 1; $i <= 12; $i++)
+                        <option value="{{ $i }}" {{ old('bulan_potongan_akhir', $periode->bulan_potongan_akhir) == $i ? 'selected' : '' }}>{{ nama_bulan($i) }}</option>
                         @endfor
                     </select>
                 </div>
             </div>
-
-            {{-- Opsi Angsuran Bulan Berjalan --}}
-            <x-toggle 
-                name="angsuran_bulan_berjalan" 
-                :checked="old('angsuran_bulan_berjalan', $periode->angsuran_bulan_berjalan)"
-                :disabled="$adaPengajuan"
-            >
-                <x-slot name="label">Angsuran Dimulai dari Bulan Pengajuan</x-slot>
-                <x-slot name="description">
-                    Jika diaktifkan, angsuran pertama akan jatuh tempo di bulan yang sama saat pinjaman diajukan.
-                    @if($adaPengajuan)
-                    <span class="block text-[10px] text-stone-400 font-bold mt-1.5 uppercase tracking-wider">🔒 Terkunci (sudah ada pengajuan)</span>
-                    @endif
-                </x-slot>
-            </x-toggle>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {{-- Tanggal Buka --}}

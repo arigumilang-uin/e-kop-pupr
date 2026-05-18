@@ -187,7 +187,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
                     </button>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5">Kategori <span x-text="index + 1"></span></label>
                             <select x-model="item.kategori_id" :name="`pengeluaran[${index}][kategori_pengeluaran_id]`" required class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-sm text-stone-700 bg-white outline-none transition-all cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm">
@@ -199,9 +199,16 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5">Nominal (Rp)</label>
-                            <input type="number" x-model="item.nominal" :name="`pengeluaran[${index}][nominal]`" required min="1" class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-sm text-stone-700 bg-white outline-none transition-all font-mono" placeholder="Contoh: 150000">
+                            <input type="number" x-model="item.nominal" :name="`pengeluaran[${index}][nominal]`" required min="1" class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-sm text-stone-700 bg-white outline-none transition-all font-mono" placeholder="150000">
                         </div>
-                        <div class="md:col-span-2">
+                        <div>
+                            <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5">Sumber Dana</label>
+                            <select x-model="item.sumber_dana" :name="`pengeluaran[${index}][sumber_dana]`" required class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-sm text-stone-700 bg-white outline-none transition-all cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8a29e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-no-repeat bg-[position:right_12px_center] pr-8 shadow-sm">
+                                <option value="brk">Bank BRK Syariah</option>
+                                <option value="kas">Kas Tunai Bendahara</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-3">
                             <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1.5">Keterangan / Tujuan</label>
                             <input type="text" x-model="item.keterangan" :name="`pengeluaran[${index}][keterangan]`" required class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-sm text-stone-700 bg-white outline-none transition-all" placeholder="Contoh: Beli kertas A4 2 rim">
                         </div>
@@ -235,9 +242,20 @@
 <x-modal name="modal-kategori" title="Tambah Master Kategori" maxWidth="md">
     <form id="form-tambah-kategori" action="{{ route('pengeluaran.kategori.store') }}" method="POST" class="contents">
         @csrf
-        <div class="space-y-1.5">
-            <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Nama Kategori</label>
-            <input type="text" name="nama" required class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-stone-700 outline-none transition-all shadow-sm" placeholder="Contoh: ATK">
+        <div class="space-y-4">
+            <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Nama Kategori</label>
+                <input type="text" name="nama" required class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-stone-700 outline-none transition-all shadow-sm" placeholder="Contoh: ATK">
+            </div>
+            
+            <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Jenis Pengeluaran (Penting!)</label>
+                <div class="p-3 bg-red-50 border border-red-100 rounded-xl mb-3 text-red-600 text-xs leading-relaxed font-medium">Hati-hati: Salah pilih Jenis akan menyebabkan Bug di Laba/Rugi.</div>
+                <select name="jenis" required class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] text-stone-700 outline-none transition-all shadow-sm cursor-pointer border-r-8 border-transparent">
+                    <option value="beban">Beban / Belanja Operasional (MENGURANGI SHU/Laba)</option>
+                    <option value="aset">Pembelian Aset / Inventaris Koperasi (TIDAK Mengurangi SHU)</option>
+                </select>
+            </div>
         </div>
 
         <x-slot name="footer">
@@ -251,10 +269,10 @@
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('pengeluaranForm', () => ({
-            items: [{ kategori_id: '', nominal: '', keterangan: '' }],
+            items: [{ kategori_id: '', nominal: '', keterangan: '', sumber_dana: 'brk' }],
             
             addItem() {
-                this.items.push({ kategori_id: '', nominal: '', keterangan: '' });
+                this.items.push({ kategori_id: '', nominal: '', keterangan: '', sumber_dana: 'brk' });
             },
             
             removeItem(index) {

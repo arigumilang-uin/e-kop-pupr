@@ -37,7 +37,11 @@ class VoidController extends Controller
             if ($request->filled('q')) {
                 $ledgerQuery->where(function ($q) use ($request) {
                     $q->where('no_referensi', 'like', "%{$request->q}%")
-                      ->orWhere('deskripsi', 'like', "%{$request->q}%");
+                      ->orWhere('deskripsi', 'like', "%{$request->q}%")
+                      ->orWhereHas('anggota', function ($aq) use ($request) {
+                          $aq->where('nama', 'like', "%{$request->q}%")
+                            ->orWhere('nip', 'like', "%{$request->q}%");
+                      });
                 });
             }
 
@@ -69,6 +73,20 @@ class VoidController extends Controller
 
             if ($request->filled('void_status')) {
                 $voidQuery->where('status', $request->void_status);
+            }
+
+            if ($request->filled('q')) {
+                $voidQuery->where(function ($q) use ($request) {
+                    $q->where('alasan', 'like', "%{$request->q}%")
+                      ->orWhereHas('ledger', function ($lq) use ($request) {
+                          $lq->where('no_referensi', 'like', "%{$request->q}%")
+                            ->orWhere('deskripsi', 'like', "%{$request->q}%")
+                            ->orWhereHas('anggota', function ($aq) use ($request) {
+                                $aq->where('nama', 'like', "%{$request->q}%")
+                                  ->orWhere('nip', 'like', "%{$request->q}%");
+                            });
+                      });
+                });
             }
 
             $voidRequests = $voidQuery->paginate(15, ['*'], 'void_page')->withQueryString();

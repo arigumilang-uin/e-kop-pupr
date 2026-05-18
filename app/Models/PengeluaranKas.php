@@ -21,6 +21,7 @@ class PengeluaranKas extends Model
         'no_referensi',
         'kategori_pengeluaran_id',
         'nominal',
+        'sumber_dana',
         'tanggal',
         'keterangan',
         'dicatat_oleh',

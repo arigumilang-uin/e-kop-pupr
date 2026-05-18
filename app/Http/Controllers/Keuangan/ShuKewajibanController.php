@@ -21,7 +21,7 @@ class ShuKewajibanController extends Controller
      */
     public function index(Request $request)
     {
-        $tahunFilter = $request->get('tahun');
+        $tahunFilter = $request->input('tahun');
 
         $query = ShuKewajiban::withCount('realisasi')
             ->orderByDesc('tahun')
@@ -84,7 +84,7 @@ class ShuKewajibanController extends Controller
 
         // Guard: pastikan saldo mencukupi
         if ($validated['nominal'] > $kewajiban->saldo_tersisa) {
-            return back()->with('error', 'Nominal realisasi (Rp ' . number_format($validated['nominal'], 0, ',', '.') . ') melebihi saldo tersisa (Rp ' . number_format($kewajiban->saldo_tersisa, 0, ',', '.') . ').');
+            return back()->with('error', 'Nominal realisasi (Rp ' . number_format((float) $validated['nominal'], 0, ',', '.') . ') melebihi saldo tersisa (Rp ' . number_format((float) $kewajiban->saldo_tersisa, 0, ',', '.') . ').');
         }
 
         DB::transaction(function () use ($validated, $kewajiban) {
@@ -106,10 +106,10 @@ class ShuKewajibanController extends Controller
 
         $this->logger->log(
             'shu_realisasi_created',
-            "Realisasi dana \"{$kewajiban->nama_alokasi}\" (SHU {$kewajiban->tahun}) sebesar Rp " . number_format($validated['nominal'], 0, ',', '.') . ". Keterangan: {$validated['keterangan']}",
+            "Realisasi dana \"{$kewajiban->nama_alokasi}\" (SHU {$kewajiban->tahun}) sebesar Rp " . number_format((float) $validated['nominal'], 0, ',', '.') . ". Keterangan: {$validated['keterangan']}",
         );
 
-        return back()->with('success', 'Realisasi pengeluaran berhasil dicatat. Saldo tersisa: Rp ' . number_format($kewajiban->saldo_tersisa, 0, ',', '.'));
+        return back()->with('success', 'Realisasi pengeluaran berhasil dicatat. Saldo tersisa: Rp ' . number_format((float) $kewajiban->saldo_tersisa, 0, ',', '.'));
     }
 
     /**
@@ -129,7 +129,7 @@ class ShuKewajibanController extends Controller
             $realisasi->delete();
 
             // Rollback saldo
-            $kewajiban->decrement('nominal_terpakai', $nominal);
+            $kewajiban->decrement('nominal_terpakai', (float) $nominal);
             $kewajiban->update([
                 'saldo_tersisa' => $kewajiban->nominal_awal - $kewajiban->nominal_terpakai,
             ]);
@@ -137,7 +137,7 @@ class ShuKewajibanController extends Controller
 
         $this->logger->log(
             'shu_realisasi_deleted',
-            "Realisasi \"{$keterangan}\" pada dompet \"{$kewajiban->nama_alokasi}\" (SHU {$kewajiban->tahun}) sebesar Rp " . number_format($nominal, 0, ',', '.') . " telah dihapus/rollback.",
+            "Realisasi \"{$keterangan}\" pada dompet \"{$kewajiban->nama_alokasi}\" (SHU {$kewajiban->tahun}) sebesar Rp " . number_format((float) $nominal, 0, ',', '.') . " telah dihapus/rollback.",
         );
 
         return back()->with('success', 'Realisasi berhasil dihapus dan saldo dikembalikan.');

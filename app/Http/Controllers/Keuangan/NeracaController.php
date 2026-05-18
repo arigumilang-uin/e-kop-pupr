@@ -14,25 +14,37 @@ class NeracaController extends Controller
 
     public function index(Request $request)
     {
-        $neraca = $this->neracaService->hitung();
+        $tahun = $request->input('tahun', now()->year);
+        $neraca = $this->neracaService->hitung($tahun);
 
-        return view('keuangan.neraca', compact('neraca'));
+        // Get available years for the dropdown
+        $availableYears = array_unique(array_merge(
+            \App\Models\ParameterNeraca::select('tahun_buku')->pluck('tahun_buku')->toArray(),
+            \App\Models\ParameterPhu::select('tahun_buku')->pluck('tahun_buku')->toArray(),
+            [now()->year, now()->year - 1, now()->year - 2, now()->year - 3, now()->year - 4, now()->year - 5]
+        ));
+        rsort($availableYears);
+
+        return view('keuangan.neraca', compact('neraca', 'tahun', 'availableYears'));
     }
 
     public function exportExcel(Request $request)
     {
-        $neraca = $this->neracaService->hitung();
+        $tahun = $request->input('tahun', now()->year);
+        $neraca = $this->neracaService->hitung($tahun);
         $export = new \App\Exports\NeracaExport($neraca);
         return $export->download();
     }
 
     public function exportPdf(Request $request)
     {
-        $neraca = $this->neracaService->hitung();
+        $tahun = $request->input('tahun', now()->year);
+        $neraca = $this->neracaService->hitung($tahun);
 
         $dataHash = md5('Neraca Keuangan v2' . 'PDF' . json_encode($neraca));
         $existings = \App\Models\ArsipLaporan::where('data_hash', $dataHash)->get();
         foreach ($existings as $existing) {
+            /** @var \App\Models\ArsipLaporan $existing */
             if (\Illuminate\Support\Facades\Storage::exists($existing->file_path)) {
                 return \Illuminate\Support\Facades\Storage::download($existing->file_path, $existing->nama_file);
             } else {

@@ -77,6 +77,12 @@ class PermissionRegistry
                 'pengeluaran.delete' => 'Hapus catatan pengeluaran',
             ],
 
+            'Piutang Lain-Lain' => [
+                'piutang_eksternal.view'   => 'Lihat daftar piutang lain-lain',
+                'piutang_eksternal.create' => 'Catat piutang baru & edit data',
+                'piutang_eksternal.bayar'  => 'Catat pembayaran piutang',
+            ],
+
             'Potongan' => [
                 'potongan.view'   => 'Lihat potongan TPP',
                 'potongan.proses' => 'Proses potongan bulanan',
@@ -86,7 +92,12 @@ class PermissionRegistry
                 'laporan.ringkasan' => 'Lihat ringkasan laporan',
                 'laporan.neraca'    => 'Lihat neraca keuangan',
                 'laporan.arsip'     => 'Lihat daftar arsip laporan',
-                'laporan.arsip_manage' => 'Pin, unpin, hapus arsip laporan',
+                'laporan.arsip_manage' => 'Hapus arsip laporan',
+            ],
+
+            'Pengaturan Parameter' => [
+                'parameter_neraca.manage' => 'Kelola parameter laporan Neraca',
+                'parameter_phu.manage'    => 'Kelola parameter Laporan Laba/Rugi (PHU)',
             ],
 
             'Simulasi' => [
@@ -208,6 +219,8 @@ class PermissionRegistry
             'log.view',
             'laporan.arsip',
             'laporan.arsip_manage',
+            'parameter_neraca.manage',
+            'parameter_phu.manage',
         ];
     }
 
@@ -228,11 +241,15 @@ class PermissionRegistry
             'periode.view', 'periode.create', 'periode.edit', 'periode.delete',
             // Pengeluaran
             'pengeluaran.view', 'pengeluaran.create', 'pengeluaran.delete',
+            // Piutang Lain-Lain
+            'piutang_eksternal.view', 'piutang_eksternal.create', 'piutang_eksternal.bayar',
             // Potongan
             'potongan.view', 'potongan.proses',
             // Laporan & Simulasi
             'laporan.ringkasan', 'laporan.neraca', 'laporan.arsip', 'laporan.arsip_manage',
             'simulasi.aliran_dana', 'simulasi.shu',
+            // Pengaturan Parameter
+            'parameter_neraca.manage', 'parameter_phu.manage',
             // SHU
             'shu.manage',
             // System (view-only)
@@ -260,6 +277,7 @@ class PermissionRegistry
             'pinjaman.reject',
             'periode.view',
             'pengeluaran.view',
+            'piutang_eksternal.view',
             'potongan.view',
             'laporan.ringkasan',
             'laporan.neraca',

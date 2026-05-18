@@ -22,8 +22,3 @@ Artisan::command('test:export {--bidang=} {--jenis=}', function () {
         $this->warn("No rows returned!");
     }
 });
-
-use Illuminate\Support\Facades\Schedule;
-
-// Membersihkan arsip setiap jam 1 pagi
-Schedule::command('arsip:cleanup --days=30')->dailyAt('01:00');

@@ -151,37 +151,28 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {{-- Tahun --}}
+                    {{-- Bulan Potongan Awal --}}
                     <div class="space-y-1.5">
-                        <label for="tahun" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tahun Anggaran <span class="text-red-500">*</span></label>
-                        <input type="number" id="tahun" name="tahun" value="{{ old('tahun', now()->year) }}" required min="2020" max="2050"
-                               class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm">
-                    </div>
-
-                    {{-- Batas Bulan Pelunasan --}}
-                    <div class="space-y-1.5">
-                        <label for="batas_bulan_pelunasan" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Batas Bulan Pelunasan <span class="text-red-500">*</span></label>
-                        <select id="batas_bulan_pelunasan" name="batas_bulan_pelunasan" required
+                        <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Bulan Potongan Awal <span class="text-red-500">*</span></label>
+                        <select name="bulan_potongan_awal" required
                                 class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm cursor-pointer">
                             @for($i = 1; $i <= 12; $i++)
-                            <option value="{{ $i }}" {{ old('batas_bulan_pelunasan', 11) == $i ? 'selected' : '' }}>
-                                Bulan ke-{{ $i }} ({{ nama_bulan($i) }})
-                            </option>
+                            <option value="{{ $i }}" {{ old('bulan_potongan_awal', 5) == $i ? 'selected' : '' }}>{{ nama_bulan($i) }}</option>
+                            @endfor
+                        </select>
+                    </div>
+
+                    {{-- Bulan Potongan Akhir --}}
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Bulan Potongan Akhir <span class="text-red-500">*</span></label>
+                        <select name="bulan_potongan_akhir" required
+                                class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm cursor-pointer">
+                            @for($i = 1; $i <= 12; $i++)
+                            <option value="{{ $i }}" {{ old('bulan_potongan_akhir', 11) == $i ? 'selected' : '' }}>{{ nama_bulan($i) }}</option>
                             @endfor
                         </select>
                     </div>
                 </div>
-
-                {{-- Opsi Angsuran Bulan Berjalan --}}
-                <x-toggle 
-                    name="angsuran_bulan_berjalan" 
-                    :checked="old('angsuran_bulan_berjalan')"
-                >
-                    <x-slot name="label">Angsuran Dimulai dari Bulan Pengajuan</x-slot>
-                    <x-slot name="description">
-                        Jika diaktifkan, angsuran pertama akan jatuh tempo di bulan yang sama saat pinjaman diajukan.
-                    </x-slot>
-                </x-toggle>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {{-- Tanggal Buka --}}

@@ -41,21 +41,6 @@ class ArsipLaporanController extends Controller
         return Storage::download($arsip->file_path, $arsip->nama_file);
     }
 
-    public function togglePin(ArsipLaporan $arsip)
-    {
-        $arsip->update(['is_permanent' => !$arsip->is_permanent]);
-        
-        $status = $arsip->is_permanent ? 'dipin/dikunci' : 'dilepas pinnya';
-        
-        $this->logService->log(
-            'arsip_toggle_pin',
-            "Arsip laporan {$arsip->nama_file} berhasil {$status}.",
-            dataBaru: ['arsip_id' => $arsip->id, 'is_permanent' => $arsip->is_permanent]
-        );
-
-        return back()->with('success', "Arsip laporan berhasil $status.");
-    }
-
     public function destroy(ArsipLaporan $arsip)
     {
         $namaFile = $arsip->nama_file;

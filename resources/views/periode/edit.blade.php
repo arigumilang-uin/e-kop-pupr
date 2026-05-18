@@ -22,7 +22,7 @@
         </div>
         @endif
 
-        <form method="POST" action="{{ route('periode.update', $periode) }}" class="divide-y divide-stone-100 flex flex-col">
+        <form method="POST" action="{{ route('periode.update', $periode) }}" class="divide-y divide-stone-100 flex flex-col" x-data="periodeEditForm()">
             @csrf
             @method('PUT')
 
@@ -45,52 +45,60 @@
                     @enderror
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {{-- Tahun --}}
-                    <div class="space-y-1.5">
-                        <label for="tahun" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tahun Anggaran <span class="text-red-500">*</span></label>
-                        <input type="number" id="tahun" name="tahun" value="{{ old('tahun', $periode->tahun) }}" required min="2020" max="2050"
-                               class="w-full px-4 py-3 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm
-                                      {{ $adaPengajuan ? 'bg-stone-100 cursor-not-allowed text-stone-500' : 'bg-stone-50' }}"
-                               {{ $adaPengajuan ? 'disabled' : '' }}>
-                        @error('tahun')
-                        <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
-                        @enderror
+                {{-- Bulan Potongan TPP --}}
+                <div class="space-y-4 p-5 rounded-xl border {{ $adaPengajuan ? 'bg-stone-50/50 border-stone-200' : 'bg-stone-50 border-stone-200' }}">
+                    <h3 class="text-[11px] uppercase tracking-widest font-bold text-stone-600 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Rentang Potongan TPP
+                        @if($adaPengajuan)
+                        <span class="text-[10px] font-bold text-stone-400 bg-stone-200/50 px-2 py-[1px] rounded uppercase ml-2 border border-stone-200">— TERKUNCI</span>
+                        @endif
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Bulan Potongan Awal <span class="text-red-500">*</span></label>
+                            <select name="bulan_potongan_awal" required x-model="bulanAwal"
+                                    class="w-full px-4 py-3 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm
+                                           {{ $adaPengajuan ? 'bg-stone-100 cursor-not-allowed text-stone-500 opacity-90' : 'bg-white cursor-pointer' }}"
+                                    {{ $adaPengajuan ? 'disabled' : '' }}>
+                                @for($i = 1; $i <= 12; $i++)
+                                <option value="{{ $i }}" {{ old('bulan_potongan_awal', $periode->bulan_potongan_awal) == $i ? 'selected' : '' }}>{{ nama_bulan($i) }}</option>
+                                @endfor
+                            </select>
+                            @error('bulan_potongan_awal')
+                            <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Bulan Potongan Akhir <span class="text-red-500">*</span></label>
+                            <select name="bulan_potongan_akhir" required x-model="bulanAkhir"
+                                    class="w-full px-4 py-3 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm
+                                           {{ $adaPengajuan ? 'bg-stone-100 cursor-not-allowed text-stone-500 opacity-90' : 'bg-white cursor-pointer' }}"
+                                    {{ $adaPengajuan ? 'disabled' : '' }}>
+                                @for($i = 1; $i <= 12; $i++)
+                                <option value="{{ $i }}" {{ old('bulan_potongan_akhir', $periode->bulan_potongan_akhir) == $i ? 'selected' : '' }}>{{ nama_bulan($i) }}</option>
+                                @endfor
+                            </select>
+                            @error('bulan_potongan_akhir')
+                            <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
-                    {{-- Batas Bulan Pelunasan --}}
-                    <div class="space-y-1.5">
-                        <label for="batas_bulan_pelunasan" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Batas Bulan Pelunasan <span class="text-red-500">*</span></label>
-                        <select id="batas_bulan_pelunasan" name="batas_bulan_pelunasan" required
-                                class="w-full px-4 py-3 border border-stone-200 rounded-xl text-stone-800 font-bold focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] outline-none transition-all shadow-sm
-                                       {{ $adaPengajuan ? 'bg-stone-100 cursor-not-allowed text-stone-500 opacity-90' : 'bg-stone-50 cursor-pointer' }}"
-                                {{ $adaPengajuan ? 'disabled' : '' }}>
-                            @for($i = 1; $i <= 12; $i++)
-                            <option value="{{ $i }}" {{ old('batas_bulan_pelunasan', $periode->batas_bulan_pelunasan) == $i ? 'selected' : '' }}>
-                                Bulan ke-{{ $i }} ({{ nama_bulan($i) }})
-                            </option>
-                            @endfor
-                        </select>
-                        @error('batas_bulan_pelunasan')
-                        <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
-                        @enderror
+                    {{-- Tenor Preview --}}
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-stone-200">
+                        <div class="relative flex h-2 w-2 shrink-0">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#043d2e] opacity-40"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-[#043d2e]"></span>
+                        </div>
+                        <p class="text-[12px] font-medium text-stone-600">
+                            Tenor tersedia: <span class="font-bold text-[#043d2e]" x-text="tenorTersedia + ' bulan'"></span>
+                            <span class="text-stone-400 ml-1" x-text="'(' + namaBulan(bulanAwal) + ' — ' + namaBulan(bulanAkhir) + ')'"></span>
+                        </p>
                     </div>
                 </div>
-
-                {{-- Opsi Angsuran Bulan Berjalan --}}
-                <x-toggle 
-                    name="angsuran_bulan_berjalan" 
-                    :checked="old('angsuran_bulan_berjalan', $periode->angsuran_bulan_berjalan)"
-                    :disabled="$adaPengajuan"
-                >
-                    <x-slot name="label">Angsuran Dimulai dari Bulan Pengajuan</x-slot>
-                    <x-slot name="description">
-                        Jika diaktifkan, angsuran pertama akan jatuh tempo di <strong>bulan yang sama</strong> saat pinjaman diajukan, sehingga tenor maksimal bertambah +1 bulan.
-                        @if($adaPengajuan)
-                        <span class="block text-[10px] text-stone-400 font-bold mt-1.5 uppercase tracking-wider">🔒 Terkunci — sudah ada pengajuan</span>
-                        @endif
-                    </x-slot>
-                </x-toggle>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     {{-- Tanggal Buka --}}
@@ -104,8 +112,8 @@
 
                     {{-- Tanggal Tutup --}}
                     <div class="space-y-1.5">
-                        <label for="tanggal_tutup" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tanggal Tutup <span class="text-stone-400 normal-case capitalize text-[10px]">(Opsional)</span></label>
-                        <x-datepicker name="tanggal_tutup" :value="old('tanggal_tutup', $periode->tanggal_tutup?->format('Y-m-d'))" placeholder="Pilih Tanggal (Bisa Dikosongkan)" />
+                        <label for="tanggal_tutup" class="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">Tanggal Tutup <span class="text-red-500">*</span></label>
+                        <x-datepicker name="tanggal_tutup" :value="old('tanggal_tutup', $periode->tanggal_tutup?->format('Y-m-d'))" :required="true" />
                         @error('tanggal_tutup')
                         <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
                         @enderror
@@ -123,32 +131,25 @@
                     </h3>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                        {{-- Nominal Minimum --}}
                         <div class="space-y-1.5">
-                            <label for="nominal_min" class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Minimum <span class="text-red-500">*</span></label>
+                            <label class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Minimum <span class="text-red-500">*</span></label>
                             <x-currency-input name="nominal_min" :value="old('nominal_min', $periode->nominal_min)" :required="true" :disabled="$adaPengajuan" />
                             @error('nominal_min')
                             <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        {{-- Nominal Maksimum --}}
                         <div class="space-y-1.5">
-                            <label for="limit_per_anggota" class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Maksimum <span class="text-red-500">*</span></label>
+                            <label class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Maksimum <span class="text-red-500">*</span></label>
                             <x-currency-input name="limit_per_anggota" :value="old('limit_per_anggota', $periode->limit_per_anggota)" :required="true" :disabled="$adaPengajuan" />
                             @error('limit_per_anggota')
                             <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        {{-- Kelipatan Nominal --}}
                         <div class="space-y-1.5">
-                            <label for="kelipatan_nominal" class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Kelipatan <span class="text-red-500">*</span></label>
+                            <label class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Kelipatan <span class="text-red-500">*</span></label>
                             <x-currency-input name="kelipatan_nominal" :value="old('kelipatan_nominal', $periode->kelipatan_nominal)" :required="true" :disabled="$adaPengajuan" />
-                            <p class="text-stone-400 text-[10px] font-bold mt-1.5 leading-tight flex items-center gap-1">
-                                <svg class="w-3 h-3 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                Syarat kelipatan pengajuan
-                            </p>
                             @error('kelipatan_nominal')
                             <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
                             @enderror
@@ -181,4 +182,26 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('periodeEditForm', () => ({
+        bulanAwal: {{ old('bulan_potongan_awal', $periode->bulan_potongan_awal ?? 5) }},
+        bulanAkhir: {{ old('bulan_potongan_akhir', $periode->bulan_potongan_akhir ?? 11) }},
+
+        get tenorTersedia() {
+            const awal = parseInt(this.bulanAwal);
+            const akhir = parseInt(this.bulanAkhir);
+            return Math.max(0, akhir - awal + 1);
+        },
+
+        namaBulan(num) {
+            const bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            return bulan[parseInt(num)] || '';
+        }
+    }));
+});
+</script>
+@endpush
 @endsection

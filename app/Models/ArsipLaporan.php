@@ -19,13 +19,10 @@ class ArsipLaporan extends Model
         'file_path',
         'data_hash',
         'filter_info',
-        'is_permanent',
         'dibuat_oleh',
     ];
 
-    protected $casts = [
-        'is_permanent' => 'boolean',
-    ];
+    protected $casts = [];
 
     public function user(): BelongsTo
     {

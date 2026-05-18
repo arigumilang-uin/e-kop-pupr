@@ -2,15 +2,21 @@
 @php
     $isGroupActive = fn(array $routes) => collect($routes)->contains(fn($r) => request()->routeIs($r));
     
+    // Custom check for query parameters (tab)
+    $isTabActive = fn($tab) => request()->routeIs('parameter.index') && request('tab', 'neraca') === $tab;
+    
+    $isNeracaGroupActive = fn() => request()->routeIs('keuangan.neraca') || $isTabActive('neraca');
+    $isShuGroupActive = fn() => request()->routeIs(['keuangan.laporan', 'keuangan.phu', 'keuangan.shu', 'shu.kewajiban.*']) || $isTabActive('phu');
+
     $singleActive = fn($route) => request()->routeIs($route) 
         ? 'bg-[#043d2e] text-white font-semibold shadow-md shadow-[#043d2e]/20' 
         : 'text-stone-600 font-medium hover:bg-stone-100 hover:text-stone-900';
         
-    $groupHeaderClass = fn(array $routes) => $isGroupActive($routes)
+    $groupHeaderClass = fn(array $routes, $customActive = false) => ($isGroupActive($routes) || $customActive)
         ? 'bg-[#043d2e] text-white font-semibold shadow-md shadow-[#043d2e]/20'
         : 'text-stone-600 font-medium hover:bg-stone-100 hover:text-stone-900 border border-transparent';
         
-    $subActive = fn($route) => request()->routeIs($route)
+    $subActive = fn($route, $customActive = false) => (request()->routeIs($route) || $customActive)
         ? 'text-[#043d2e] font-semibold bg-[#043d2e]/5'
         : 'text-stone-500 font-normal hover:text-[#043d2e] hover:bg-stone-100/50';
 @endphp
@@ -39,7 +45,7 @@
 @endcan
 
 {{-- Main Operasional --}}
-@canany(['simpanan.view', 'potongan.view', 'pinjaman.view', 'pengeluaran.view', 'void.view'])
+@canany(['simpanan.view', 'potongan.view', 'pinjaman.view', 'pengeluaran.view', 'void.view', 'simulasi.aliran_dana'])
 <p class="px-3 pt-2 pb-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Operasional</p>
 <div class="space-y-2 mb-5">
     
@@ -82,20 +88,38 @@
     @endcanany
 
     {{-- Grup Kas & Arus Dana --}}
-    @can('pengeluaran.view')
-    <div x-data="{ open: {{ $isGroupActive(['pengeluaran.*']) ? 'true' : 'false' }} }">
-        <button @click="open = !open" class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-[14.5px] transition-all duration-200 focus:outline-none {{ $groupHeaderClass(['pengeluaran.*']) }}">
+    @canany(['pengeluaran.view', 'simulasi.aliran_dana'])
+    <div x-data="{ open: {{ $isGroupActive(['pengeluaran.*', 'mutasi-rekening.*', 'keuangan.simulasi']) ? 'true' : 'false' }} }">
+        <button @click="open = !open" class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-[14.5px] transition-all duration-200 focus:outline-none {{ $groupHeaderClass(['pengeluaran.*', 'mutasi-rekening.*', 'keuangan.simulasi']) }}">
             <div class="flex items-center gap-3">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                 </svg>
-                Pengeluaran
+                Kas & Arus Dana
             </div>
             <svg class="w-4 h-4 opacity-70 transition-transform duration-300" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div x-show="open" x-collapse class="pl-11 pr-2 mt-1 space-y-0.5">
-            <a href="{{ route('pengeluaran.index') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('pengeluaran.*') }}">Kas Operasional</a>
+            @can('pengeluaran.view')
+            <a href="{{ route('pengeluaran.index') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('pengeluaran.*') }}">Biaya Operasional</a>
+            <a href="{{ route('mutasi-rekening.index') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('mutasi-rekening.*') }}">Mutasi / Pindah Buku</a>
+            @endcan
+            @can('simulasi.aliran_dana')
+            <a href="{{ route('keuangan.simulasi') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('keuangan.simulasi') }}">Proyeksi Aliran Dana</a>
+            @endcan
         </div>
+    </div>
+    @endcanany
+
+    {{-- Piutang Lain-Lain --}}
+    @can('piutang_eksternal.view')
+    <div>
+        <a href="{{ route('piutang-eksternal.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14.5px] transition-all duration-200 {{ $singleActive('piutang-eksternal.*') }}">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+            Piutang Lain-Lain
+        </a>
     </div>
     @endcan
 
@@ -129,62 +153,78 @@
 </div>
 @endcanany
 
-{{-- Laporan & Analitik --}}
-@canany(['laporan.ringkasan', 'laporan.neraca', 'laporan.arsip', 'simulasi.aliran_dana', 'simulasi.shu'])
-<p class="px-3 pt-2 pb-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Akuntabilitas</p>
+{{-- Laporan & Akuntabilitas --}}
+@canany(['laporan.ringkasan', 'laporan.neraca', 'laporan.arsip', 'simulasi.shu', 'shu.manage', 'parameter_neraca.manage'])
+<p class="px-3 pt-2 pb-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Tutup Buku & Laporan</p>
 <div class="space-y-2 mb-5">
     
-    {{-- Simulasi Koperasi --}}
-    @canany(['simulasi.aliran_dana', 'simulasi.shu', 'shu.manage'])
-    <div x-data="{ open: {{ $isGroupActive(['keuangan.simulasi', 'keuangan.shu', 'shu.kewajiban.*']) ? 'true' : 'false' }} }">
-        <button @click="open = !open" class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-[14.5px] transition-all duration-200 focus:outline-none {{ $groupHeaderClass(['keuangan.simulasi', 'keuangan.shu', 'shu.kewajiban.*']) }}">
+    {{-- GRUP NERACA --}}
+    @canany(['laporan.neraca', 'parameter_neraca.manage'])
+    <div x-data="{ open: {{ $isNeracaGroupActive() ? 'true' : 'false' }} }">
+        <button @click="open = !open" class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-[14.5px] transition-all duration-200 focus:outline-none {{ $groupHeaderClass([], $isNeracaGroupActive()) }}">
             <div class="flex items-center gap-3">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                Simulasi
+                Laporan Neraca
             </div>
             <svg class="w-4 h-4 opacity-70 transition-transform duration-300" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div x-show="open" x-collapse class="pl-11 pr-2 mt-1 space-y-0.5">
-            @can('simulasi.aliran_dana')
-            <a href="{{ route('keuangan.simulasi') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('keuangan.simulasi') }}">Proyeksi Aliran Dana</a>
+            @can('laporan.neraca')
+            <a href="{{ route('keuangan.neraca') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('keuangan.neraca') }}">Neraca Keuangan</a>
             @endcan
-            @can('simulasi.shu')
-            <a href="{{ route('keuangan.shu') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('keuangan.shu') }}">Simulasi S.H.U</a>
-            @endcan
-            @can('shu.manage')
-            <a href="{{ route('shu.kewajiban.index') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('shu.kewajiban.*') }}">Kewajiban Dana SHU</a>
+            @can('parameter_neraca.manage')
+            <a href="{{ route('parameter.index', ['tab' => 'neraca']) }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('', $isTabActive('neraca')) }}">Fondasi & Parameter</a>
             @endcan
         </div>
     </div>
     @endcanany
 
-    {{-- Laporan --}}
-    @canany(['laporan.ringkasan', 'laporan.neraca', 'laporan.arsip'])
-    <div x-data="{ open: {{ $isGroupActive(['keuangan.laporan', 'keuangan.neraca', 'arsip.index']) ? 'true' : 'false' }} }">
-        <button @click="open = !open" class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-[14.5px] transition-all duration-200 focus:outline-none {{ $groupHeaderClass(['keuangan.laporan', 'keuangan.neraca', 'arsip.index']) }}">
+    {{-- GRUP SHU --}}
+    @canany(['laporan.ringkasan', 'simulasi.shu', 'shu.manage', 'parameter_neraca.manage'])
+    <div x-data="{ open: {{ $isShuGroupActive() ? 'true' : 'false' }} }">
+        <button @click="open = !open" class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-[14.5px] transition-all duration-200 focus:outline-none {{ $groupHeaderClass([], $isShuGroupActive()) }}">
             <div class="flex items-center gap-3">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
                 </svg>
-                Laporan
+                Sisa Hasil Usaha (SHU)
             </div>
             <svg class="w-4 h-4 opacity-70 transition-transform duration-300" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div x-show="open" x-collapse class="pl-11 pr-2 mt-1 space-y-0.5">
             @can('laporan.ringkasan')
-            <a href="{{ route('keuangan.laporan') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('keuangan.laporan') }}">Ringkasan Keuangan</a>
+            <a href="{{ route('keuangan.laporan') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('keuangan.laporan') }}">Ringkasan Aset</a>
             @endcan
             @can('laporan.neraca')
-            <a href="{{ route('keuangan.neraca') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('keuangan.neraca') }}">Neraca Keuangan</a>
+            <a href="{{ route('keuangan.phu') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('keuangan.phu') }}">Laporan Laba/Rugi</a>
             @endcan
-            @can('laporan.arsip')
-            <a href="{{ route('arsip.index') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('arsip.index') }}">Arsip Laporan</a>
+            @can('simulasi.shu')
+            <a href="{{ route('keuangan.shu') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('keuangan.shu') }}">Simulasi Pembagian</a>
+            @endcan
+            @can('shu.manage')
+            <a href="{{ route('shu.kewajiban.index') }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('shu.kewajiban.*') }}">Kewajiban Dana SHU</a>
+            @endcan
+            @can('parameter_neraca.manage')
+            <a href="{{ route('parameter.index', ['tab' => 'phu']) }}" class="block px-3 py-2.5 rounded-lg text-[14px] {{ $subActive('', $isTabActive('phu')) }}">Parameter Laba/Rugi</a>
             @endcan
         </div>
     </div>
     @endcanany
+
+    {{-- Arsip Laporan --}}
+    @can('laporan.arsip')
+    <div>
+        <a href="{{ route('arsip.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14.5px] transition-all duration-200 {{ $singleActive('arsip.index') }}">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+            </svg>
+            Arsip Dokumen Laporan
+        </a>
+    </div>
+    @endcan
+
 </div>
 @endcanany
 
@@ -223,13 +263,12 @@
     @can('pengaturan.view')
     <a href="{{ route('pengaturan.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14.5px] transition-all duration-200 {{ $singleActive('pengaturan.*') }}">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        Pengaturan
+        Pengaturan Utama
     </a>
     @endcan
-
 
 </div>
 @endcanany

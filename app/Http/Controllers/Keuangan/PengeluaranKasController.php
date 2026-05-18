@@ -69,6 +69,7 @@ class PengeluaranKasController extends Controller
                 $pengeluaran = PengeluaranKas::create([
                     'kategori_pengeluaran_id' => $item['kategori_pengeluaran_id'],
                     'nominal' => $item['nominal'],
+                    'sumber_dana' => $item['sumber_dana'],
                     'tanggal' => $request->tanggal,
                     'keterangan' => $item['keterangan'],
                     'dicatat_oleh' => auth()->id(),
