@@ -1,4 +1,4 @@
-<header class="bg-[#f7f7f5]/95 backdrop-blur-xl sticky top-0 z-50">
+<header class="bg-[#f0efe9]/95 backdrop-blur-xl sticky top-0 z-50">
     <div class="px-6 md:px-8 h-[92px] flex items-center justify-between gap-4 relative">
         <div class="flex items-center gap-3 min-w-0">
             {{-- Toggle Button (Khusus Mobile) --}}

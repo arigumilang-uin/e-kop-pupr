@@ -1,6 +1,6 @@
 @props(['searchPlaceholder' => 'Cari...'])
 
-<div class="sticky top-[92px] z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-[#f7f7f5]/95 backdrop-blur-xl border-b border-stone-200/60 transition-all duration-200">
+<div class="sticky top-[92px] z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-[#f0efe9]/95 backdrop-blur-xl border-b border-stone-200/60 transition-all duration-200">
     @if(isset($header))
         <div class="mb-4">
             {{ $header }}

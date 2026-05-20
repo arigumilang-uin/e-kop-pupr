@@ -19,7 +19,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
 </head>
-<body class="min-h-screen bg-[#f7f7f5] font-sans">
+<body class="min-h-screen bg-[#f0efe9] font-sans">
     <div class="flex min-h-screen">
         {{-- Mobile Overlay --}}
         <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-[70] hidden lg:hidden" onclick="toggleSidebar()"></div>

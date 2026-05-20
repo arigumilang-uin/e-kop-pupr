@@ -1,4 +1,4 @@
-<aside id="sidebar" class="w-72 bg-[#fafafa] text-stone-800 flex flex-col fixed h-full z-[80]
+<aside id="sidebar" class="w-72 bg-[#ffffff] text-stone-800 flex flex-col fixed h-full z-[80]
            -translate-x-full lg:translate-x-0 transition-transform duration-300 shadow-[4px_0_24px_rgba(0,0,0,0.03)] border-r border-stone-200/50">
     {{-- Logo --}}
     <div class="px-6 h-[92px] flex items-center gap-3 shrink-0">
@@ -20,7 +20,7 @@
     </nav>
 
     {{-- User Info --}}
-    <div class="p-5 bg-stone-50/50 shrink-0">
+    <div class="p-5 bg-black/5 border-t border-stone-300/30 shrink-0">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-emerald-700 flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-sm border border-emerald-800/20">
                 {{ strtoupper(substr(auth()->user()->nama ?? 'U', 0, 1)) }}
