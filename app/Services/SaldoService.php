@@ -73,9 +73,13 @@ class SaldoService
             })
             ->sum('nominal');
 
-        $realisasiShu = (float) \Illuminate\Support\Facades\DB::table('shu_realisasi_kewajiban')->sum('nominal');
+        $piutangBaruKeluar = (float) DB::table('piutang_eksternal')
+            ->whereNotNull('sumber_dana')
+            ->sum('nominal_awal');
 
-        return $pencairan + $penarikan + $pengeluaran + $realisasiShu;
+        $realisasiShu = (float) DB::table('shu_realisasi_kewajiban')->sum('nominal');
+
+        return $pencairan + $penarikan + $pengeluaran + $piutangBaruKeluar + $realisasiShu;
     }
 
     /**

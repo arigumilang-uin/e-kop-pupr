@@ -222,6 +222,17 @@
             </div>
 
             <div class="flex flex-col gap-1.5">
+                <x-label for="sumber_dana" value="Tujuan Uang (Masuk Ke)" />
+                <select id="sumber_dana" name="sumber_dana" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500">
+                    <option value="">-- Kas Umum (Tidak spesifik ke Bank) --</option>
+                    @foreach($sumberDanaOptions as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+                <p class="text-[11px] text-stone-500 font-medium mt-0.5">Saldo rekening yang dipilih akan otomatis bertambah saat pembayaran dicatat.</p>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
                 <x-label for="bukti_bayar" value="Unggah Bukti (Mandatory)" required />
                 <div class="p-4 border-2 border-dashed border-stone-200 rounded-2xl bg-stone-50/50 hover:bg-stone-50 transition-colors flex flex-col items-center gap-2 group cursor-pointer relative">
                     <input type="file" id="bukti_bayar" name="bukti_bayar" class="absolute inset-0 opacity-0 cursor-pointer" required accept="image/*,application/pdf" @change="fileName = $el.files[0].name" x-data="{ fileName: '' }">

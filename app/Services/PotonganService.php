@@ -102,7 +102,20 @@ class PotonganService
                 })
                 ->exists();
 
-            if (!$sudahBayarPokok && !$belumWaktunyaPokok) {
+            $memilikiSim2025 = false;
+            $jenisSim2025 = JenisSimpanan::sim2025();
+            if ($jenisSim2025) {
+                $memilikiSim2025 = DB::table('simpanan')
+                    ->where('anggota_id', $anggota->id)
+                    ->where('jenis_simpanan_id', $jenisSim2025->id)
+                    ->whereNull('deleted_at')
+                    ->where(function ($q) {
+                        $q->where('status', 'aktif')->orWhereNull('status');
+                    })
+                    ->exists();
+            }
+
+            if (!$sudahBayarPokok && !$belumWaktunyaPokok && !$memilikiSim2025) {
                 $simpanan = Simpanan::create([
                     'anggota_id' => $anggota->id,
                     'jenis_simpanan_id' => $jenisPokok->id,

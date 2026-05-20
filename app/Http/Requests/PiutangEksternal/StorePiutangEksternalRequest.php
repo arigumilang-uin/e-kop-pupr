@@ -19,6 +19,7 @@ class StorePiutangEksternalRequest extends FormRequest
             'nama_peminjam' => ['required', 'string', 'max:150'],
             'jabatan_peminjam' => ['nullable', 'string', 'max:100'],
             'kategori_peminjam' => ['required', new Enum(KategoriPeminjam::class)],
+            'sumber_dana' => ['nullable', 'in:brk,kas'],
             'tahun_pinjam' => [
                 'required',
                 'integer',

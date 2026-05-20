@@ -225,6 +225,17 @@
             </div>
 
             <div class="flex flex-col gap-1.5">
+                <x-label for="sumber_dana" value="Sumber Dana Pencairan" />
+                <select id="sumber_dana" name="sumber_dana" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e]">
+                    <option value="">-- Tidak Memotong Kas (Piutang Masa Lalu / Legacy) --</option>
+                    @foreach($sumberDanaOptions as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+                <p class="text-[11px] text-stone-500 font-medium mt-0.5">Jika diisi (untuk Piutang Baru), saldo rekening/kas yang dipilih akan otomatis dipotong di Buku Besar.</p>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
                 <x-label for="nominal_awal" value="Total Nominal Piutang" required />
                 <x-currency-input id="nominal_awal" name="nominal_awal" placeholder="0" required />
                 <p class="text-[11px] text-amber-600 font-medium">Input nominal total piutang yang tercatat (sebelum pengembalian).</p>

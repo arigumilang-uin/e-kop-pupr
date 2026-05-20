@@ -65,6 +65,18 @@ class PotonganBulananController extends Controller
                 ->toArray();
         }
 
+        // 1.5. Ambil array ID anggota yang memiliki simpanan 2025 (pokok dianggap lunas)
+        $jenisSim2025 = \App\Models\JenisSimpanan::sim2025();
+        $hasSim2025Ids = [];
+        if ($jenisSim2025 && (!$jenisFilter || $jenisFilter === 'pokok')) {
+            $hasSim2025Ids = DB::table('simpanan')
+                ->where('jenis_simpanan_id', $jenisSim2025->id)
+                ->whereNull('deleted_at')
+                ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
+                ->pluck('anggota_id')
+                ->toArray();
+        }
+
         // 2. Ambil array ID anggota yang sudah bayar wajib bulan & tahun ini
         $paidWajibIds = [];
         if (!$jenisFilter || $jenisFilter === 'wajib') {
@@ -122,7 +134,8 @@ class PotonganBulananController extends Controller
             $potonganPokok = 0;
             if (!$jenisFilter || $jenisFilter === 'pokok') {
                 $sudahBayarPokok = in_array($anggota->id, $paidPokokIds);
-                $potonganPokok = ($sudahBayarPokok || $belumWaktuPotongPokok) ? 0 : $nominalPokok;
+                $memilikiSim2025 = in_array($anggota->id, $hasSim2025Ids);
+                $potonganPokok = ($sudahBayarPokok || $belumWaktuPotongPokok || $memilikiSim2025) ? 0 : $nominalPokok;
             }
 
             $potonganWajib = 0;

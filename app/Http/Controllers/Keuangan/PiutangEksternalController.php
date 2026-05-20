@@ -64,9 +64,14 @@ class PiutangEksternalController extends Controller
             ->orderByDesc('tahun_pinjam')
             ->pluck('tahun_pinjam');
 
+        $sumberDanaOptions = [
+            'brk' => 'Bank BRK Syariah',
+            'kas' => 'Kas Tunai',
+        ];
+
         return view('piutang-eksternal.index', compact(
             'piutangs', 'totalAktif', 'totalLunas', 'countAktif',
-            'sisaPerTahun', 'kategoriOptions', 'tahunOptions'
+            'sisaPerTahun', 'kategoriOptions', 'tahunOptions', 'sumberDanaOptions'
         ));
     }
 
@@ -86,9 +91,15 @@ class PiutangEksternalController extends Controller
     public function show(PiutangEksternal $piutangEksternal)
     {
         $piutangEksternal->load(['pembayaran.pencatat', 'pencatat']);
+        
+        $sumberDanaOptions = [
+            'brk' => 'Bank BRK Syariah',
+            'kas' => 'Kas Tunai',
+        ];
 
         return view('piutang-eksternal.show', [
             'piutang' => $piutangEksternal,
+            'sumberDanaOptions' => $sumberDanaOptions,
         ]);
     }
 
@@ -102,9 +113,9 @@ class PiutangEksternalController extends Controller
             'jabatan_peminjam' => ['nullable', 'string', 'max:100'],
             'kategori_peminjam' => [
                 'required',
-                new \Illuminate\Validation\Rules\Enum(\App\Enums\KategoriPeminjam::class),
+                new \Illuminate\Validation\Rules\Enum(KategoriPeminjam::class),
                 function ($attribute, $value, $fail) use ($piutangEksternal) {
-                    if ($value === \App\Enums\KategoriPeminjam::Anggota->value && (int) $piutangEksternal->tahun_pinjam >= now()->year) {
+                    if ($value === KategoriPeminjam::Anggota->value && (int) $piutangEksternal->tahun_pinjam >= now()->year) {
                         $fail('Untuk Piutang Anggota, data hanya valid untuk pinjaman dari periode tahun sebelum ' . now()->year . ' (data ini tercatat di tahun ' . $piutangEksternal->tahun_pinjam . ').');
                     }
                 },
@@ -134,6 +145,7 @@ class PiutangEksternalController extends Controller
                 $request->tanggal_bayar,
                 $buktiPath,
                 $request->keterangan,
+                $request->sumber_dana,
                 auth()->id(),
             );
 

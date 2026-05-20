@@ -14,6 +14,7 @@ class StorePembayaranRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'sumber_dana' => ['nullable', 'in:brk,kas'],
             'nominal' => ['required', 'numeric', 'min:1000'],
             'tanggal_bayar' => ['required', 'date'],
             'bukti_bayar' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],

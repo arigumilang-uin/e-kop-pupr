@@ -126,9 +126,18 @@ class AnggotaController extends Controller
             $neto = $bruto - $tarik;
             if ($neto > 0) {
                 $simpananPerJenis->put($nama, $neto);
-                $totalSimpanan += $neto;
             }
         }
+
+        // Jika anggota memiliki simpanan tahun 2025, maka simpanan pokok dianggap tidak ada / 0
+        $sim2025Name = \App\Models\JenisSimpanan::sim2025()?->nama;
+        $pokokName = \App\Models\JenisSimpanan::pokok()?->nama;
+
+        if ($sim2025Name && $pokokName && $simpananPerJenis->get($sim2025Name, 0) > 0) {
+            $simpananPerJenis->put($pokokName, 0);
+        }
+
+        $totalSimpanan = $simpananPerJenis->sum();
 
         // Hitung piutang aktif tersisa
         $pinjamanAktif = $anggota->pinjaman->filter(fn($p) => $p->status->value === 'berjalan');

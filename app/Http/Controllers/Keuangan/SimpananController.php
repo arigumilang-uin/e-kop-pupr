@@ -76,6 +76,7 @@ class SimpananController extends Controller
               ->withSum(['simpanan as sum_bonus_shu' => $sumSetor($jenisBonusShuId)], 'nominal')
               ->withSum(['penarikanSimpanan as tarik_bonus_shu' => $sumTarik($jenisBonusShuId)], 'nominal');
 
+        $queryForTotals = clone $query;
         $anggotas = $query->paginate(15)->withQueryString();
 
         foreach ($anggotas as $anggota) {
@@ -85,6 +86,11 @@ class SimpananController extends Controller
             $swp = ($anggota->sum_swp ?? 0) - ($anggota->tarik_swp ?? 0);
             $bonusShu = ($anggota->sum_bonus_shu ?? 0) - ($anggota->tarik_bonus_shu ?? 0);
 
+            // Jika anggota memiliki simpanan tahun 2025, maka simpanan pokok dianggap tidak ada / 0
+            if ($sim2025 > 0) {
+                $pokok = 0;
+            }
+
             $anggota->neto_pokok = max(0, $pokok);
             $anggota->neto_wajib = max(0, $wajib);
             $anggota->neto_sim2025 = max(0, $sim2025);
@@ -93,40 +99,32 @@ class SimpananController extends Controller
             $anggota->neto_total = $anggota->neto_pokok + $anggota->neto_wajib + $anggota->neto_sim2025 + $anggota->neto_swp + $anggota->neto_bonus_shu;
         }
 
-        // Calculate Grand Total for the filtered result per tab
-        $baseSimpananQuery = \App\Models\Simpanan::aktif()->whereHas('anggota', $anggotaFilters)
-            ->when($dariTanggal, fn($q) => $q->where('tanggal', '>=', $dariTanggal))
-            ->when($sampaiTanggal, fn($q) => $q->where('tanggal', '<=', $sampaiTanggal));
-
-        $basePenarikanQuery = \App\Models\PenarikanSimpanan::whereHas('anggota', $anggotaFilters)
-            ->when($dariTanggal, fn($q) => $q->where('tanggal', '>=', $dariTanggal))
-            ->when($sampaiTanggal, fn($q) => $q->where('tanggal', '<=', $sampaiTanggal));
-
-        $simpananGrouped = (clone $baseSimpananQuery)
-            ->selectRaw('jenis_simpanan_id, SUM(nominal) as total')
-            ->groupBy('jenis_simpanan_id')
-            ->pluck('total', 'jenis_simpanan_id');
-
-        $penarikanGrouped = (clone $basePenarikanQuery)
-            ->selectRaw('jenis_simpanan_id, SUM(nominal) as total')
-            ->groupBy('jenis_simpanan_id')
-            ->pluck('total', 'jenis_simpanan_id');
-
-        $grandTotalPokok = max(0, ($simpananGrouped[$jenisPokokId] ?? 0) - ($penarikanGrouped[$jenisPokokId] ?? 0));
-        $grandTotalWajib = max(0, ($simpananGrouped[$jenisWajibId] ?? 0) - ($penarikanGrouped[$jenisWajibId] ?? 0));
-        $grandTotalSim2025 = max(0, ($simpananGrouped[$jenisSim2025Id] ?? 0) - ($penarikanGrouped[$jenisSim2025Id] ?? 0));
-        $grandTotalSwp = max(0, ($simpananGrouped[$jenisSwpId] ?? 0) - ($penarikanGrouped[$jenisSwpId] ?? 0));
-        $grandTotalBonusShu = max(0, ($simpananGrouped[$jenisBonusShuId] ?? 0) - ($penarikanGrouped[$jenisBonusShuId] ?? 0));
-
-        $grandTotal = $grandTotalPokok + $grandTotalWajib + $grandTotalSim2025 + $grandTotalSwp + $grandTotalBonusShu;
-        
+        // Calculate Grand Total iteratively to apply the same business rules
+        $allAnggotas = $queryForTotals->get();
         $grandTotals = [
-            'pokok' => $grandTotalPokok,
-            'wajib' => $grandTotalWajib,
-            'sim2025' => $grandTotalSim2025,
-            'swp' => $grandTotalSwp,
-            'bonus_shu' => $grandTotalBonusShu,
+            'sim2025' => 0, 'pokok' => 0, 'wajib' => 0, 'swp' => 0, 'bonus_shu' => 0,
         ];
+
+        foreach ($allAnggotas as $anggota) {
+            $sim2025 = max(0, ($anggota->sum_sim2025 ?? 0) - ($anggota->tarik_sim2025 ?? 0));
+            $pokok = max(0, ($anggota->sum_pokok ?? 0) - ($anggota->tarik_pokok ?? 0));
+            $wajib = max(0, ($anggota->sum_wajib ?? 0) - ($anggota->tarik_wajib ?? 0));
+            $swp = max(0, ($anggota->sum_swp ?? 0) - ($anggota->tarik_swp ?? 0));
+            $bonusShu = max(0, ($anggota->sum_bonus_shu ?? 0) - ($anggota->tarik_bonus_shu ?? 0));
+
+            // Jika anggota memiliki simpanan tahun 2025, maka simpanan pokok dianggap tidak ada / 0
+            if ($sim2025 > 0) {
+                $pokok = 0;
+            }
+
+            $grandTotals['sim2025'] += $sim2025;
+            $grandTotals['pokok'] += $pokok;
+            $grandTotals['wajib'] += $wajib;
+            $grandTotals['swp'] += $swp;
+            $grandTotals['bonus_shu'] += $bonusShu;
+        }
+
+        $grandTotal = array_sum($grandTotals);
 
         $bidangs = Bidang::orderBy('nama_bidang')->get();
         $jenisSimpananList = JenisSimpanan::orderBy('nama')->get();

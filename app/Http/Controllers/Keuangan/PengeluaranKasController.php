@@ -77,7 +77,7 @@ class PengeluaranKasController extends Controller
 
                 // Tulis ke Ledger
                 $this->ledgerService->catatPengeluaran(
-                    $pengeluaran->nominal,
+                    (float) $pengeluaran->nominal,
                     $pengeluaran->id,
                     $pengeluaran->kategori->nama ?? 'Lainnya',
                     $request->tanggal,
@@ -85,7 +85,7 @@ class PengeluaranKasController extends Controller
 
                 $this->logger->logPengeluaran(
                     $pengeluaran->kategori->nama ?? '-',
-                    $pengeluaran->nominal,
+                    (float) $pengeluaran->nominal,
                     $pengeluaran->no_referensi,
                 );
             }
@@ -96,7 +96,7 @@ class PengeluaranKasController extends Controller
 
     public function destroy(PengeluaranKas $pengeluaran)
     {
-        $this->logger->logPengeluaranDeleted($pengeluaran->no_referensi, $pengeluaran->nominal);
+        $this->logger->logPengeluaranDeleted($pengeluaran->no_referensi, (float) $pengeluaran->nominal);
         $pengeluaran->delete();
         return back()->with('success', 'Data pengeluaran kas berhasil dihapus.');
     }

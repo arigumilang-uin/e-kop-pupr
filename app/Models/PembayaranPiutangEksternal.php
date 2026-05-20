@@ -11,6 +11,7 @@ class PembayaranPiutangEksternal extends Model
 
     protected $fillable = [
         'piutang_eksternal_id',
+        'sumber_dana',
         'nominal',
         'tanggal_bayar',
         'bukti_bayar',

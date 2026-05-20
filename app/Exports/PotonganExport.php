@@ -331,6 +331,17 @@ class PotonganExport
                 ->toArray();
         }
 
+        $jenisSim2025 = \App\Models\JenisSimpanan::sim2025();
+        $hasSim2025Ids = [];
+        if ($jenisSim2025 && (!$jenisFilter || $jenisFilter === 'pokok')) {
+            $hasSim2025Ids = DB::table('simpanan')
+                ->where('jenis_simpanan_id', $jenisSim2025->id)
+                ->whereNull('deleted_at')
+                ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
+                ->pluck('anggota_id')
+                ->toArray();
+        }
+
         $paidWajibIds = [];
         if (!$jenisFilter || $jenisFilter === 'wajib') {
             $paidWajibIds = DB::table('simpanan')
@@ -366,21 +377,35 @@ class PotonganExport
 
         $rows = [];
         foreach ($anggotas as $anggota) {
-            $tanggalMasuk = $anggota->tanggal_masuk;
-            $bulanMulaiPotongan = $tanggalMasuk ? $tanggalMasuk->copy()->addMonth()->startOfMonth() : null;
+            // Tentukan bulan mulai potongan TPP POKOK
+            if ($anggota->tpp_mulai_pokok && $anggota->tpp_tahun_pokok) {
+                $mulaiPotongPokok = Carbon::createFromDate($anggota->tpp_tahun_pokok, $anggota->tpp_mulai_pokok, 1);
+            } else {
+                $mulaiPotongPokok = $anggota->tanggal_masuk ? $anggota->tanggal_masuk->copy()->addMonth()->startOfMonth() : null;
+            }
+
+            // Tentukan bulan mulai potongan TPP WAJIB
+            if ($anggota->tpp_mulai_wajib && $anggota->tpp_tahun_wajib) {
+                $mulaiPotongWajib = Carbon::createFromDate($anggota->tpp_tahun_wajib, $anggota->tpp_mulai_wajib, 1);
+            } else {
+                $mulaiPotongWajib = $anggota->tanggal_masuk ? $anggota->tanggal_masuk->copy()->addMonth()->startOfMonth() : null;
+            }
+
             $periodeFilter = Carbon::createFromDate($year, $month, 1);
-            $belumWaktunyaDipotong = $bulanMulaiPotongan && $periodeFilter->lt($bulanMulaiPotongan);
+            $belumWaktuPotongPokok = $mulaiPotongPokok && $periodeFilter->lt($mulaiPotongPokok);
+            $belumWaktuPotongWajib = $mulaiPotongWajib && $periodeFilter->lt($mulaiPotongWajib);
 
             $potonganPokok = 0;
             if (!$jenisFilter || $jenisFilter === 'pokok') {
                 $sudahBayarPokok = in_array($anggota->id, $paidPokokIds);
-                $potonganPokok = ($sudahBayarPokok || $belumWaktunyaDipotong) ? 0 : $nominalPokok;
+                $memilikiSim2025 = in_array($anggota->id, $hasSim2025Ids);
+                $potonganPokok = ($sudahBayarPokok || $belumWaktuPotongPokok || $memilikiSim2025) ? 0 : $nominalPokok;
             }
 
             $potonganWajib = 0;
             if (!$jenisFilter || $jenisFilter === 'wajib') {
                 $sudahBayarWajib = in_array($anggota->id, $paidWajibIds);
-                $potonganWajib = ($sudahBayarWajib || $belumWaktunyaDipotong) ? 0 : $nominalWajib;
+                $potonganWajib = ($sudahBayarWajib || $belumWaktuPotongWajib) ? 0 : $nominalWajib;
             }
 
             $potonganPinjaman = 0;

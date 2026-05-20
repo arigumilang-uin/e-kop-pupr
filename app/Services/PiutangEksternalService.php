@@ -16,9 +16,6 @@ class PiutangEksternalService
         private ActivityLogService $logger,
     ) {}
 
-    /**
-     * Buat piutang eksternal baru (Opening Balance — tanpa entry ledger).
-     */
     public function store(array $data, int $userId): PiutangEksternal
     {
         return DB::transaction(function () use ($data, $userId) {
@@ -30,6 +27,22 @@ class PiutangEksternalService
                 'tanggal_catat' => $data['tanggal_catat'] ?? now()->toDateString(),
                 'dicatat_oleh' => $userId,
             ]);
+
+            // Jika ada sumber dana (bukan piutang masa lalu), catat ke Ledger sebagai Pengeluaran (Debit)
+            if (!empty($data['sumber_dana'])) {
+                $this->ledgerService->catat(
+                    TipeLedger::Debit,
+                    KategoriLedger::PiutangEksternal,
+                    $piutang->nominal_awal,
+                    "Pencairan Piutang Lain-Lain: {$piutang->nama_peminjam}",
+                    [
+                        'transaksi_ref_id' => $piutang->id,
+                        'transaksi_ref_type' => PiutangEksternal::class,
+                        'tanggal_efektif' => $piutang->tanggal_catat,
+                        'dicatat_oleh' => $userId,
+                    ],
+                );
+            }
 
             $this->logger->log(
                 'piutang_eksternal_created',
@@ -60,16 +73,13 @@ class PiutangEksternalService
         return $piutang->fresh();
     }
 
-    /**
-     * Catat pembayaran piutang eksternal.
-     * Ini AKAN membuat entry Ledger (kredit — uang masuk ke kas).
-     */
     public function catatPembayaran(
         PiutangEksternal $piutang,
         float $nominal,
         string $tanggalBayar,
         ?string $buktiPath,
         ?string $keterangan,
+        ?string $sumberDana,
         int $userId,
     ): PembayaranPiutangEksternal {
         if ($nominal <= 0) {
@@ -80,10 +90,11 @@ class PiutangEksternalService
             throw new \InvalidArgumentException('Nominal pembayaran melebihi sisa piutang (' . format_rupiah($piutang->sisa_piutang) . ').');
         }
 
-        return DB::transaction(function () use ($piutang, $nominal, $tanggalBayar, $buktiPath, $keterangan, $userId) {
+        return DB::transaction(function () use ($piutang, $nominal, $tanggalBayar, $buktiPath, $keterangan, $sumberDana, $userId) {
             // 1. Simpan record pembayaran
             $pembayaran = PembayaranPiutangEksternal::create([
                 'piutang_eksternal_id' => $piutang->id,
+                'sumber_dana' => $sumberDana,
                 'nominal' => $nominal,
                 'tanggal_bayar' => $tanggalBayar,
                 'bukti_bayar' => $buktiPath,

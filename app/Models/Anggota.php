@@ -102,13 +102,57 @@ class Anggota extends Model
      */
     public function totalSimpanan(?int $jenisSimpananId = null): float
     {
-        $querySetor = $this->simpanan()
-            ->when($jenisSimpananId, fn ($q) => $q->where('jenis_simpanan_id', $jenisSimpananId));
+        if ($jenisSimpananId) {
+            $querySetor = $this->simpanan()->where('jenis_simpanan_id', $jenisSimpananId);
+            $queryTarik = $this->penarikanSimpanan()->where('jenis_simpanan_id', $jenisSimpananId);
+            
+            $total = (float) ($querySetor->sum('nominal') - $queryTarik->sum('nominal'));
+            
+            // Apply business rule: if asking for POKOK, and they have SIM2025, return 0
+            if ($jenisSimpananId === JenisSimpanan::pokok()?->id) {
+                $sim2025Id = JenisSimpanan::sim2025()?->id;
+                if ($sim2025Id) {
+                    $hasSim2025 = ($this->simpanan()->where('jenis_simpanan_id', $sim2025Id)->sum('nominal') - $this->penarikanSimpanan()->where('jenis_simpanan_id', $sim2025Id)->sum('nominal')) > 0;
+                    if ($hasSim2025) return 0;
+                }
+            }
+            return max(0, $total);
+        }
 
-        $queryTarik = $this->penarikanSimpanan()
-            ->when($jenisSimpananId, fn ($q) => $q->where('jenis_simpanan_id', $jenisSimpananId));
+        // Jika minta total semua simpanan, ambil semua lalu hitung dengan aturan
+        $semuaSetor = $this->simpanan()
+            ->selectRaw('jenis_simpanan_id, SUM(nominal) as total')
+            ->groupBy('jenis_simpanan_id')
+            ->pluck('total', 'jenis_simpanan_id');
+            
+        $semuaTarik = $this->penarikanSimpanan()
+            ->selectRaw('jenis_simpanan_id, SUM(nominal) as total')
+            ->groupBy('jenis_simpanan_id')
+            ->pluck('total', 'jenis_simpanan_id');
 
-        return (float) ($querySetor->sum('nominal') - $queryTarik->sum('nominal'));
+        $totalAll = 0;
+        $sim2025Id = JenisSimpanan::sim2025()?->id;
+        $pokokId = JenisSimpanan::pokok()?->id;
+        
+        $hasSim2025 = false;
+        if ($sim2025Id) {
+            $netoSim2025 = ($semuaSetor[$sim2025Id] ?? 0) - ($semuaTarik[$sim2025Id] ?? 0);
+            if ($netoSim2025 > 0) $hasSim2025 = true;
+        }
+
+        foreach ($semuaSetor as $jId => $setor) {
+            $tarik = $semuaTarik[$jId] ?? 0;
+            $neto = $setor - $tarik;
+            
+            if ($neto > 0) {
+                if ($hasSim2025 && $jId === $pokokId) {
+                    continue; // Skip pokok
+                }
+                $totalAll += $neto;
+            }
+        }
+
+        return (float) $totalAll;
     }
 
     // === Scopes ===

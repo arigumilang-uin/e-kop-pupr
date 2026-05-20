@@ -23,6 +23,7 @@ class PiutangEksternal extends Model
         'nama_peminjam',
         'jabatan_peminjam',
         'kategori_peminjam',
+        'sumber_dana',
         'kategori_piutang',
         'bidang',
         'periode_pengurus',

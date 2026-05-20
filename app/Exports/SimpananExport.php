@@ -308,6 +308,12 @@ class SimpananExport
             $wajib = max(0, ($anggota->sum_wajib ?? 0) - ($anggota->tarik_wajib ?? 0));
             $swp = max(0, ($anggota->sum_swp ?? 0) - ($anggota->tarik_swp ?? 0));
             $bonusShu = max(0, ($anggota->sum_bonus_shu ?? 0) - ($anggota->tarik_bonus_shu ?? 0));
+
+            // Jika anggota memiliki simpanan tahun 2025, maka simpanan pokok dianggap tidak ada / 0
+            if ($sim2025 > 0) {
+                $pokok = 0;
+            }
+
             $total = $sim2025 + $pokok + $wajib + $swp + $bonusShu;
 
             $grandTotals['sim2025'] += $sim2025;

@@ -21,16 +21,17 @@ class NeracaService
 
     public function __construct(
         private PhuService $phuService,
-    ) {}
+    ) {
+    }
 
     public function hitung(?int $tahun = null): array
     {
         $tahun = $tahun ?? now()->year;
-        
+
         // Membangun struktur dinamis
         $neraca = [
-            'tanggal'  => now()->toDateString(),
-            'tahun'    => $tahun,
+            'tanggal' => now()->toDateString(),
+            'tahun' => $tahun,
             'sections' => [],
             'aktiva_total' => 0,
             'pasiva_total' => 0,
@@ -66,8 +67,8 @@ class NeracaService
         $total = 0;
 
         foreach ($params as $param) {
-            $nominal = $param->isManual() 
-                ? (float) $param->nominal_manual 
+            $nominal = $param->isManual()
+                ? (float) $param->nominal_manual
                 : $this->resolve($param, $tahun);
 
             $items[] = [
@@ -96,46 +97,48 @@ class NeracaService
     private function resolve(ParameterNeraca $param, int $tahun): float
     {
         $kode = $param->kode_otomatis;
-        if (!$kode) return 0;
-        
+        if (!$kode)
+            return 0;
+
         $this->initContext($tahun);
 
         return match ($kode) {
             'SALDO_BANK_BRK' => $this->resolveBankBrk($tahun),
             'SALDO_KAS_TUNAI' => $this->resolveKasTunai($tahun),
-            
+
             'PIUTANG_PINJAMAN' => $this->context['piutang_pinjaman'],
-            
+
             // Konsep Baru: Generic JSON Config Resolver
             'PIUTANG_EKSTERNAL' => $this->resolvePiutangEksternalDinamis($param->konfigurasi),
-            
+
             'DANA_RESIKO_LIVE' => (float) DB::table('pinjaman')
                 ->whereIn('status', ['berjalan', 'lunas'])
                 ->whereYear('tanggal_approval', '>=', $tahun)
                 ->sum('potongan_dana_resiko'),
-                
+
             'SIMPANAN_ANGGOTA_KUSTOM' => $this->resolveSimpananLive($param->konfigurasi['jenis_simpanan_kode'] ?? '', $tahun),
-            
+
             'SHU_TAHUN_BERJALAN' => $this->context['shu_bersih'],
-            
+
             default => 0,
         };
     }
 
     private function resolvePiutangEksternalDinamis(?array $config): float
     {
-        if (!$config) return 0;
+        if (!$config)
+            return 0;
 
         $query = PiutangEksternal::where('status', 'aktif');
 
         if (!empty($config['kategori_peminjam'])) {
             $query->where('kategori_peminjam', $config['kategori_peminjam']);
         }
-        
+
         if (!empty($config['periode_pengurus'])) {
             $query->where('periode_pengurus', $config['periode_pengurus']);
         }
-        
+
         if (!empty($config['tahun_pinjam'])) {
             $query->where('tahun_pinjam', $config['tahun_pinjam']);
         }
@@ -146,15 +149,25 @@ class NeracaService
     private function resolveKasTunai(int $tahun): float
     {
         $pengeluaranKas = (float) PengeluaranKas::where(function ($q) {
-                $q->where('status', 'aktif')->orWhereNull('status');
-            })
+            $q->where('status', 'aktif')->orWhereNull('status');
+        })
             ->where('sumber_dana', 'kas')
             ->whereYear('tanggal', '>=', $tahun)
             ->sum('nominal');
 
+        $piutangBaruKeluar = (float) DB::table('piutang_eksternal')
+            ->where('sumber_dana', 'kas')
+            ->whereYear('tanggal_catat', '>=', $tahun)
+            ->sum('nominal_awal');
+
         $mutasiMasuk = (float) DB::table('mutasi_rekening')
             ->where('jenis_mutasi', 'brk_ke_kas')
             ->whereYear('tanggal', '>=', $tahun)
+            ->sum('nominal');
+
+        $piutangMasuk = (float) DB::table('pembayaran_piutang_eksternal')
+            ->where('sumber_dana', 'kas')
+            ->whereYear('tanggal_bayar', '>=', $tahun)
             ->sum('nominal');
 
         $mutasiKeluar = (float) DB::table('mutasi_rekening')
@@ -165,7 +178,7 @@ class NeracaService
         $param = ParameterNeraca::where('kode_otomatis', 'SALDO_KAS_TUNAI')->first();
         $saldoAwal = $param ? (float) $param->nominal_manual : 0;
 
-        return $saldoAwal + $mutasiMasuk - $mutasiKeluar - $pengeluaranKas;
+        return $saldoAwal + $mutasiMasuk + $piutangMasuk - $mutasiKeluar - $pengeluaranKas - $piutangBaruKeluar;
     }
 
     private function resolveBankBrk(int $tahun): float
@@ -177,12 +190,16 @@ class NeracaService
             ->sum(DB::raw('nominal_pokok + nominal_bunga'));
 
         $piutangMasuk = (float) DB::table('pembayaran_piutang_eksternal')
+            ->where(function ($q) {
+                $q->where('sumber_dana', 'brk')->orWhereNull('sumber_dana');
+            })
             ->whereYear('tanggal_bayar', '>=', $tahun)
             ->sum('nominal');
 
         $simpananMasuk = (float) DB::table('simpanan')
             ->whereNull('deleted_at')
-            ->where(function ($q) { $q->where('status', 'aktif')->orWhereNull('status'); })
+            ->where(function ($q) {
+                $q->where('status', 'aktif')->orWhereNull('status'); })
             ->whereYear('tanggal', '>=', $tahun)
             ->sum('nominal');
 
@@ -208,19 +225,24 @@ class NeracaService
             ->sum('nominal_pinjaman');
 
         $pengeluaranKeluar = (float) PengeluaranKas::where(function ($q) {
-                $q->where('status', 'aktif')->orWhereNull('status');
-            })
+            $q->where('status', 'aktif')->orWhereNull('status');
+        })
             ->where(function ($q) {
                 $q->where('sumber_dana', 'brk')->orWhereNull('sumber_dana');
             })
             ->whereYear('tanggal', '>=', $tahun)
             ->sum('nominal');
+            
+        $piutangBaruKeluar = (float) DB::table('piutang_eksternal')
+            ->where('sumber_dana', 'brk')
+            ->whereYear('tanggal_catat', '>=', $tahun)
+            ->sum('nominal_awal');
 
         $penarikanKeluar = (float) DB::table('penarikan_simpanan')
             ->whereYear('tanggal', '>=', $tahun)
             ->sum('nominal');
 
-        $pengeluaranLive = $pencairanKeluar + $pengeluaranKeluar + $penarikanKeluar;
+        $pengeluaranLive = $pencairanKeluar + $pengeluaranKeluar + $penarikanKeluar + $piutangBaruKeluar;
 
         // Mutasi Keluar ke Kas
         $mutasiKeluar = (float) DB::table('mutasi_rekening')
@@ -243,7 +265,8 @@ class NeracaService
         $masuk = (float) DB::table('simpanan')
             ->join('jenis_simpanan', 'simpanan.jenis_simpanan_id', '=', 'jenis_simpanan.id')
             ->whereNull('simpanan.deleted_at')
-            ->where(function ($q) { $q->where('simpanan.status', 'aktif')->orWhereNull('simpanan.status'); })
+            ->where(function ($q) {
+                $q->where('simpanan.status', 'aktif')->orWhereNull('simpanan.status'); })
             ->where('jenis_simpanan.kode', $kodeSimpanan)
             ->whereYear('simpanan.tanggal', '>=', $tahun)
             ->sum('simpanan.nominal');
@@ -263,7 +286,8 @@ class NeracaService
 
     private function initContext(int $tahun): void
     {
-        if ($this->context !== null) return;
+        if ($this->context !== null)
+            return;
 
         // Piutang Pinjaman Anggota
         $totalPokokBerjalan = (float) DB::table('pinjaman')

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class ParameterKeuanganController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, \App\Services\NeracaService $neracaService, \App\Services\PhuService $phuService)
     {
         $tahun = $request->input('tahun', now()->year);
 
@@ -25,6 +25,10 @@ class ParameterKeuanganController extends Controller
             ->orderBy('urutan')
             ->get()
             ->groupBy('tipe');
+
+        // Fetch Live Values for Preview
+        $neracaReport = $neracaService->hitung($tahun);
+        $phuReport = $phuService->hitung($tahun);
 
         // Populate last 5 years + any existing data years
         $pastYears = [];
@@ -42,7 +46,7 @@ class ParameterKeuanganController extends Controller
         $jenisSimpananList = \App\Models\JenisSimpanan::orderBy('nama')->get();
         $tab = $request->input('tab', 'neraca');
 
-        return view('keuangan.parameter.index', compact('parameterNeraca', 'parameterPhu', 'tahun', 'tahunBukuList', 'jenisSimpananList', 'tab'));
+        return view('keuangan.parameter.index', compact('parameterNeraca', 'parameterPhu', 'tahun', 'tahunBukuList', 'jenisSimpananList', 'tab', 'neracaReport', 'phuReport'));
     }
 
     public function storeNeraca(Request $request)
