@@ -1,6 +1,12 @@
 @props(['searchPlaceholder' => 'Cari...'])
 
-<div class="sticky top-[92px] z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-[#f0efe9]/95 dark:bg-stone-950/95 backdrop-blur-xl border-b border-stone-200/60 dark:border-stone-850 transition-all duration-200">
+<style>
+    html.theme-white .filter-bar-custom {
+        background-color: #fafaf9 !important;
+    }
+</style>
+
+<div class="filter-bar-custom sticky top-[120px] z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-[#f0efe9] dark:bg-stone-950 transition-all duration-200">
     @if(isset($header))
         <div class="mb-4">
             {{ $header }}

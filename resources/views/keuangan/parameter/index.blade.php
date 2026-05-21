@@ -59,7 +59,7 @@
         @else
             <div class="bg-white rounded-2xl shadow-sm border border-stone-200 flex flex-col mt-6 mb-8">
                 <x-table>
-                    <x-table.thead :sticky="true" topOffset="lg:top-[92px]">
+                    <x-table.thead :sticky="true" topOffset="lg:top-[120px]">
                         <x-table.th class="w-1/2">Kategori Utama / Kelompok Akun / Nama Akun</x-table.th>
                         <x-table.th class="text-right">Nilai</x-table.th>
                         <x-table.th>Keterangan</x-table.th>
@@ -344,7 +344,7 @@
         @else
             <div class="bg-white rounded-2xl shadow-sm border border-stone-200 flex flex-col mt-6 mb-8">
                 <x-table>
-                    <x-table.thead :sticky="true" topOffset="lg:top-[92px]">
+                    <x-table.thead :sticky="true" topOffset="lg:top-[120px]">
                         <x-table.th class="w-1/2">Kategori Utama / Kelompok Akun / Nama Akun</x-table.th>
                         <x-table.th class="text-right">Nilai</x-table.th>
                         <x-table.th>Keterangan</x-table.th>

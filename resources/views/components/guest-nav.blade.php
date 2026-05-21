@@ -1,4 +1,4 @@
-<header x-data="{ mobileMenuOpen: false }" class="bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-b border-slate-200/50">
+<header x-data="{ mobileMenuOpen: false }" class="bg-white/80 backdrop-blur-xl sticky top-0 z-50">
     <div class="max-w-[1440px] mx-auto px-6 lg:px-10 py-3 flex items-center justify-between">
         <!-- Brand -->
         <div class="flex items-center gap-3 md:gap-4">

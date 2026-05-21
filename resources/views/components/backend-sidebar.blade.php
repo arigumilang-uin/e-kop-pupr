@@ -3,12 +3,12 @@
         /* Premium Layout Positioning & Dimensions */
         #sidebar {
             left: 0 !important;
-            top: 136px !important;
-            height: calc(100vh - 160px) !important;
+            top: 180px !important;
+            height: calc(100vh - 236px) !important;
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.005) !important;
             border: 1px solid rgba(4, 61, 46, 0.06) !important;
             background: #ffffff !important;
-            border-radius: 36px !important;
+            border-radius: 40px !important;
             transition: all 0.38s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
 
@@ -120,7 +120,7 @@
         /* Dynamic Collapsed State styling (80px Width with High Fidelity) */
         .sidebar-collapsed-custom {
             width: 80px !important;
-            border-radius: 28px !important;
+            border-radius: 40px !important;
         }
         
         .sidebar-collapsed-custom nav {
@@ -134,8 +134,8 @@
             padding-left: 0 !important;
             padding-right: 0 !important;
             gap: 0 !important;
-            width: 64px !important;
-            height: 64px !important;
+            width: 48px !important;
+            height: 48px !important;
             margin-left: auto !important;
             margin-right: auto !important;
             border-radius: 9999px !important;
@@ -155,8 +155,8 @@
         .sidebar-collapsed-custom nav a svg:first-child,
         .sidebar-collapsed-custom nav button svg:first-child,
         .sidebar-collapsed-custom nav button div svg:first-child {
-            width: 28px !important;
-            height: 28px !important;
+            width: 22px !important;
+            height: 22px !important;
         }
 
         /* Resolve nesting inside submenu buttons so they center perfectly across all browsers (bypassing button shadow DOM bugs) */

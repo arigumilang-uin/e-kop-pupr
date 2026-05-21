@@ -1,7 +1,7 @@
 <style>
     /* Hide topbar actions if a filter-bar exists on the page */
-    body:has(.sticky.top-\[92px\]) #topbar-actions-desktop,
-    body:has(.sticky.top-\[92px\]) #topbar-actions-mobile {
+    body:has(.sticky.top-\[120px\]) #topbar-actions-desktop,
+    body:has(.sticky.top-\[120px\]) #topbar-actions-mobile {
         display: none !important;
     }
 </style>
@@ -9,12 +9,12 @@
 <header x-data="{ theme: localStorage.getItem('theme') || 'light' }"
         @theme-changed.window="theme = $event.detail"
         :class="{
-            'bg-[#f0efe9]/95 border-b border-stone-200/40': theme === 'light',
-            'bg-white/95 border-b border-stone-200/50': theme === 'white',
-            'bg-stone-950/95 border-b border-stone-900/65': theme === 'dark'
+            'bg-[#f0efe9]': theme === 'light',
+            'bg-white': theme === 'white',
+            'bg-stone-950': theme === 'dark'
         }"
-        class="backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
-    <div class="px-6 md:px-8 h-[92px] flex items-center justify-between gap-4 relative">
+        class="sticky top-0 z-50 transition-all duration-300">
+    <div class="px-6 md:px-8 h-[120px] flex items-center justify-between gap-4 relative">
         {{-- Mobile & Desktop Left Container --}}
         <div class="flex items-center gap-3 min-w-0 flex-1">
             {{-- Toggle Button (Khusus Mobile) --}}
@@ -307,10 +307,6 @@
             </div>
         </div>
 
-        {{-- Garis Pemisah Presisi (Menyesuaikan Pinning Sidebar) --}}
-        <div class="absolute bottom-0 right-6 md:right-8 h-[2px] bg-stone-300 dark:bg-stone-800/80 transition-all duration-300"
-             :class="sidebarPinned ? 'left-6 md:left-8' : 'left-6 md:left-1'"
-             x-data="{ sidebarPinned: localStorage.getItem('sidebar-pinned') === 'true' }"
-             @sidebar-pin-changed.window="sidebarPinned = $event.detail"></div>
+
     </div>
 </header>
