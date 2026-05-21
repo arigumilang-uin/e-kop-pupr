@@ -3,46 +3,33 @@
 @section('title', 'Neraca Keuangan')
 @section('subtitle', 'Laporan Posisi Keuangan Koperasi Simpan Pinjam Konsumen Tirta Bina Karya')
 
-@section('actions')
-<div class="flex flex-wrap items-center gap-3 justify-end" x-data="{ open: false }">
-    <form method="GET" class="flex items-center gap-2">
-        <select name="tahun" class="w-28 py-2.5 px-3 border-stone-200 rounded-xl shadow-sm focus:ring-[#043d2e]/20 focus:border-[#043d2e] font-bold text-stone-700 bg-white text-sm outline-none">
-            @foreach($availableYears as $y)
-                <option value="{{ $y }}" {{ $tahun == $y ? 'selected' : '' }}>{{ $y }}</option>
-            @endforeach
-        </select>
-        <button type="submit" class="h-10 w-10 bg-white border border-stone-200 hover:bg-stone-50 text-[#043d2e] rounded-xl flex items-center justify-center transition-colors shadow-sm flex-shrink-0" title="Terapkan Filter">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        </button>
-    </form>
-
-    <div class="relative">
-        <button @click="open = !open" @click.away="open = false" 
-                class="inline-flex items-center gap-2 py-2.5 px-4 rounded-xl bg-white border border-stone-200 text-stone-700 hover:bg-stone-50 hover:text-stone-900 text-sm font-bold transition-all shadow-sm">
-            <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            Export Neraca
-            <svg class="w-4 h-4 text-stone-400 transition-transform duration-200" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </button>
-        <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white border border-stone-200 rounded-xl shadow-lg z-50 overflow-hidden" style="display: none;">
-            <a href="{{ route('keuangan.neraca.export.excel', ['tahun' => $tahun]) }}" class="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 text-stone-700 transition-colors border-b border-stone-100">
-                <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-                </div>
-                <div><p class="text-sm font-bold">Excel</p><p class="text-[10px] text-stone-500">Format .xlsx</p></div>
-            </a>
-            <a href="{{ route('keuangan.neraca.export.pdf', ['tahun' => $tahun]) }}" class="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 text-stone-700 transition-colors" target="_blank">
-                <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                </div>
-                <div><p class="text-sm font-bold">PDF</p><p class="text-[10px] text-stone-500">Format Dokumen</p></div>
-            </a>
-        </div>
-    </div>
-</div>
-@endsection
-
 @section('content')
 <div class="space-y-8">
+
+    {{-- Page Controls (Moved from Topbar to Content Body for absolute cleanliness) --}}
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-transparent dark:bg-transparent mb-6">
+        <form method="GET" class="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wider whitespace-nowrap">Tahun Buku:</span>
+                <select name="tahun" class="w-32 h-12 px-4 border border-stone-200 dark:border-stone-800 rounded-xl shadow-sm focus:ring-2 focus:ring-[#043d2e]/20 focus:border-[#043d2e] dark:focus:border-emerald-500 font-bold text-stone-700 dark:text-stone-300 bg-white dark:bg-stone-900 text-sm outline-none cursor-pointer">
+                    @foreach($availableYears as $y)
+                        <option value="{{ $y }}" {{ $tahun == $y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <x-button type="submit" variant="primary" class="bg-[#043d2e] hover:bg-[#065a45] text-white whitespace-nowrap h-12">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                Terapkan Filter
+            </x-button>
+        </form>
+
+        <div class="w-full md:w-auto flex justify-end">
+            <x-export-dropdown 
+                :excelRoute="route('keuangan.neraca.export.excel', ['tahun' => $tahun])" 
+                :pdfRoute="route('keuangan.neraca.export.pdf', ['tahun' => $tahun])" 
+            />
+        </div>
+    </div>
 
     {{-- Header Dokumen Formal --}}
     <div class="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden relative">

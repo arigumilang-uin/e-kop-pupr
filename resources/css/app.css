@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
@@ -58,4 +60,99 @@ input[type=range]::-webkit-slider-runnable-track {
     height: 4px;
     background: #e2e8f0;
     border-radius: 2px;
+}
+
+/* ==========================================
+   AUTO DARK MODE SYSTEM OVERRIDES
+   ========================================== */
+.dark {
+    /* Backgrounds Auto Adaptation */
+    .bg-white {
+        background-color: #1c1917 !important; /* stone-900 */
+    }
+    
+    .bg-stone-50 {
+        background-color: #272421 !important; /* stone-850 */
+    }
+
+    .bg-stone-50\/50 {
+        background-color: rgba(39, 36, 33, 0.5) !important;
+    }
+
+    .bg-stone-100 {
+        background-color: #272421 !important; /* stone-850 */
+    }
+
+    .hover\:bg-stone-50\/80:hover {
+        background-color: rgba(39, 36, 33, 0.4) !important;
+    }
+
+    /* Borders & Grid Dividers */
+    .border-stone-200 {
+        border-color: rgba(120, 113, 108, 0.15) !important;
+    }
+
+    .border-stone-200\/60 {
+        border-color: rgba(120, 113, 108, 0.10) !important;
+    }
+
+    .border-stone-100 {
+        border-color: rgba(120, 113, 108, 0.12) !important;
+    }
+
+    .divide-stone-100 > :not([hidden]) ~ :not([hidden]) {
+        border-color: rgba(120, 113, 108, 0.12) !important;
+    }
+
+    /* Text Colors Adaptation */
+    .text-stone-800 {
+        color: #e7e5e4 !important; /* stone-200 */
+    }
+
+    .text-stone-900 {
+        color: #f5f5f4 !important; /* stone-100 */
+    }
+
+    .text-stone-700 {
+        color: #d6d3d1 !important; /* stone-300 */
+    }
+
+    .text-stone-600 {
+        color: #a8a29e !important; /* stone-400 */
+    }
+
+    .text-stone-550 {
+        color: #878076 !important;
+    }
+
+    .text-stone-500 {
+        color: #78716c !important; /* stone-500 */
+    }
+
+    /* Form Fields Auto Styling (Inputs, Selects, Textareas inside filters & modals) */
+    input[type="text"], 
+    input[type="number"], 
+    input[type="email"], 
+    input[type="password"], 
+    select, 
+    textarea {
+        background-color: #272421 !important; /* stone-850 */
+        border-color: rgba(120, 113, 108, 0.25) !important;
+        color: #f5f5f4 !important;
+    }
+
+    select option {
+        background-color: #1c1917 !important; /* stone-900 */
+        color: #f5f5f4 !important;
+    }
+
+    /* Specific elements: button bg adjustments */
+    .bg-stone-100.text-stone-500 {
+        background-color: #272421 !important;
+        color: #a8a29e !important;
+    }
+
+    .hover\:bg-stone-200:hover {
+        background-color: #44403c !important; /* stone-700 */
+    }
 }

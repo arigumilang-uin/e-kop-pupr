@@ -6,32 +6,35 @@
 @section('content')
 <div class="space-y-6" x-data="{ tab: '{{ $tab }}' }">
 
-@section('actions')
-    <div class="flex flex-wrap items-center gap-3">
-        <form method="GET" class="relative bg-white border border-stone-200 rounded-xl px-4 py-2.5 shadow-sm flex items-center gap-2">
+    {{-- Page Controls (Moved from Topbar to Content Body for absolute cleanliness) --}}
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-transparent dark:bg-transparent mb-6">
+        <form method="GET" class="flex items-center gap-3 w-full md:w-auto">
             <input type="hidden" name="tab" value="{{ $tab }}">
-            <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            <span class="text-[12px] font-bold text-stone-500 whitespace-nowrap">Tahun Pembukuan:</span>
-            <select name="tahun" onchange="this.form.submit()" class="bg-transparent border-none text-stone-700 text-sm font-black p-0 py-0.5 outline-none cursor-pointer focus:ring-0">
-                @foreach($tahunBukuList as $th)
-                    <option value="{{ $th }}" {{ $th == $tahun ? 'selected' : '' }}>{{ $th }}</option>
-                @endforeach
-            </select>
+            <div class="flex items-center gap-3 px-4 h-12 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-850 rounded-xl shadow-sm w-full sm:w-auto">
+                <svg class="w-4 h-4 text-stone-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span class="text-xs font-bold text-stone-500 dark:text-stone-400 whitespace-nowrap">Tahun Pembukuan:</span>
+                <select name="tahun" onchange="this.form.submit()" class="bg-transparent border-none text-stone-700 dark:text-stone-300 text-sm font-black p-0 outline-none cursor-pointer focus:ring-0">
+                    @foreach($tahunBukuList as $th)
+                        <option value="{{ $th }}" {{ $th == $tahun ? 'selected' : '' }}>{{ $th }}</option>
+                    @endforeach
+                </select>
+            </div>
         </form>
 
-        @if($tab === 'neraca')
-        <button x-data @click="$dispatch('open-modal', 'modal-tambah-neraca')" class="inline-flex justify-center items-center gap-2 px-5 py-2.5 bg-[#043d2e] hover:bg-[#065a45] text-white text-[13px] font-bold rounded-xl shadow-sm transition-all hover:scale-[1.02]">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Tambah Akun Neraca
-        </button>
-        @elseif($tab === 'phu')
-        <button x-data @click="$dispatch('open-modal', 'modal-tambah-phu')" class="inline-flex justify-center items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[13px] font-bold rounded-xl shadow-sm transition-all hover:scale-[1.02]">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Tambah Akun Laba/Rugi
-        </button>
-        @endif
+        <div class="w-full md:w-auto flex justify-end">
+            @if($tab === 'neraca')
+            <x-button type="button" @click="$dispatch('open-modal', 'modal-tambah-neraca')" class="bg-[#043d2e] hover:bg-[#065a45] text-white w-full sm:w-auto h-12">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Tambah Akun Neraca
+            </x-button>
+            @elseif($tab === 'phu')
+            <x-button type="button" @click="$dispatch('open-modal', 'modal-tambah-phu')" class="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto h-12">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Tambah Akun Laba/Rugi
+            </x-button>
+            @endif
+        </div>
     </div>
-@endsection
 
     @if($tab === 'neraca')
     {{-- TAB NERACA --}}

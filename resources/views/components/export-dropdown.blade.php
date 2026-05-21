@@ -1,8 +1,8 @@
 @props(['excelRoute', 'pdfRoute'])
 
-<div x-data="{ openExport: false }" class="relative w-full md:w-auto">
-    <button @click="openExport = !openExport" type="button" class="w-full py-2.5 px-4 rounded-xl bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-bold transition-colors flex items-center justify-between gap-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#043d2e]/20">
-        <div class="flex items-center gap-2">
+<div x-data="{ openExport: false }" class="relative w-full md:w-auto shrink-0">
+    <button @click="openExport = !openExport" type="button" class="w-full py-2.5 px-4 rounded-xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 text-sm font-bold transition-colors flex items-center justify-between gap-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#043d2e]/20 whitespace-nowrap">
+        <div class="flex items-center gap-2 whitespace-nowrap">
             <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>

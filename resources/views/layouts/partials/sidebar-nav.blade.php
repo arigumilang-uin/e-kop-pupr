@@ -9,16 +9,16 @@
     $isShuGroupActive = fn() => request()->routeIs(['keuangan.laporan', 'keuangan.phu', 'keuangan.shu', 'shu.kewajiban.*']) || $isTabActive('phu');
 
     $singleActive = fn($route) => request()->routeIs($route) 
-        ? 'bg-[#043d2e] text-white font-semibold shadow-md shadow-[#043d2e]/20' 
-        : 'text-stone-600 font-medium hover:bg-stone-100 hover:text-stone-900';
+        ? 'bg-[#043d2e] dark:bg-emerald-800 text-white font-semibold shadow-md shadow-[#043d2e]/20 dark:shadow-emerald-800/10' 
+        : 'text-stone-600 dark:text-stone-400 font-medium hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-white transition-colors';
         
     $groupHeaderClass = fn(array $routes, $customActive = false) => ($isGroupActive($routes) || $customActive)
-        ? 'bg-[#043d2e] text-white font-semibold shadow-md shadow-[#043d2e]/20'
-        : 'text-stone-600 font-medium hover:bg-stone-100 hover:text-stone-900 border border-transparent';
+        ? 'bg-[#043d2e] dark:bg-emerald-800 text-white font-semibold shadow-md shadow-[#043d2e]/20 dark:shadow-emerald-800/10'
+        : 'text-stone-600 dark:text-stone-400 font-medium hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-white border border-transparent transition-colors';
         
     $subActive = fn($route, $customActive = false) => (request()->routeIs($route) || $customActive)
-        ? 'text-[#043d2e] font-semibold bg-[#043d2e]/5'
-        : 'text-stone-500 font-normal hover:text-[#043d2e] hover:bg-stone-100/50';
+        ? 'text-[#043d2e] dark:text-emerald-400 font-semibold bg-[#043d2e]/5 dark:bg-emerald-500/5'
+        : 'text-stone-500 dark:text-stone-400 font-normal hover:text-[#043d2e] dark:hover:text-emerald-300 hover:bg-stone-100/50 dark:hover:bg-stone-800/50 transition-colors';
 @endphp
 
 {{-- Dashboard --}}

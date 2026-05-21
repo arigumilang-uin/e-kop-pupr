@@ -22,23 +22,54 @@
     <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
 </head>
 
-<body class="min-h-screen bg-[#f0efe9] font-sans" 
-      x-data="{ sidebarPinned: localStorage.getItem('sidebar-pinned') === 'true' }"
-      @sidebar-pin-changed.window="sidebarPinned = $event.detail">
+<body class="min-h-screen font-sans transition-all duration-350" 
+      :class="{
+          'bg-[#f0efe9] text-stone-800': theme === 'light',
+          'bg-[#fafaf9] text-stone-850': theme === 'white',
+          'bg-stone-950 text-stone-100': theme === 'dark'
+      }"
+      x-data="{ 
+          sidebarPinned: localStorage.getItem('sidebar-pinned') === 'true',
+          theme: localStorage.getItem('theme') || 'light'
+      }"
+      x-init="
+          $watch('theme', val => {
+              if (val === 'dark') {
+                  document.documentElement.classList.add('dark');
+                  document.documentElement.classList.remove('theme-white');
+                  localStorage.setItem('theme', 'dark');
+              } else if (val === 'white') {
+                  document.documentElement.classList.remove('dark');
+                  document.documentElement.classList.add('theme-white');
+                  localStorage.setItem('theme', 'white');
+              } else {
+                  document.documentElement.classList.remove('dark');
+                  document.documentElement.classList.remove('theme-white');
+                  localStorage.setItem('theme', 'light');
+              }
+          });
+          if (theme === 'dark') {
+              document.documentElement.classList.add('dark');
+          } else if (theme === 'white') {
+              document.documentElement.classList.add('theme-white');
+          }
+      "
+      @sidebar-pin-changed.window="sidebarPinned = $event.detail"
+      @theme-changed.window="theme = $event.detail">
     <div class="flex min-h-screen">
         {{-- Mobile Overlay --}}
         <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-[70] hidden lg:hidden" onclick="toggleSidebar()">
         </div>
 
         {{-- Brand Header (Always Visible on Desktop) --}}
-        <div class="hidden lg:flex items-center gap-4 fixed top-6 left-6 z-[90] h-[72px] min-w-0 select-none">
+        <div class="hidden lg:flex items-center gap-4 fixed top-6 left-[38px] z-[90] h-[72px] min-w-0 select-none">
             <img src="{{ asset('assets/images/logo_riau.png') }}" alt="Logo Riau"
                 class="w-[52px] h-[52px] object-contain drop-shadow-sm shrink-0">
             <div class="flex flex-col min-w-0 pb-0.5">
-                <h1 class="text-[22px] font-medium tracking-tight text-stone-800 leading-tight truncate">
+                <h1 class="text-[22px] font-medium tracking-tight text-stone-800 dark:text-stone-100 leading-tight truncate transition-colors">
                     Koperasi Tirta Bina Karya
                 </h1>
-                <p class="text-[13px] text-stone-500 font-normal mt-0.5 tracking-wide truncate">
+                <p class="text-[13px] text-stone-500 dark:text-stone-400 font-normal mt-0.5 tracking-wide truncate transition-colors">
                     Dinas PUPRPKPP Provinsi Riau
                 </p>
             </div>
@@ -49,7 +80,7 @@
 
         {{-- Main Content --}}
         <main id="main-content" 
-              :class="sidebarPinned ? 'lg:ml-[392px]' : 'lg:ml-[88px]'"
+              :class="sidebarPinned ? 'lg:ml-[392px]' : 'lg:ml-[120px]'"
               class="flex-1 min-w-0 transition-all duration-300">
             {{-- Top Bar Component --}}
             <x-backend-topbar />

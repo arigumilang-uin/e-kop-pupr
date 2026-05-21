@@ -31,6 +31,19 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
+        // View Composer: share pending loans to the topbar
+        View::composer('components.backend-topbar', function ($view) {
+            if (auth()->check()) {
+                $pendingPinjaman = \App\Models\Pinjaman::with('anggota')
+                    ->where('status', \App\Enums\StatusPinjaman::Menunggu)
+                    ->orderBy('tanggal_pengajuan', 'desc')
+                    ->get();
+                $view->with('pendingPinjaman', $pendingPinjaman);
+            } else {
+                $view->with('pendingPinjaman', collect());
+            }
+        });
+
         // Gunakan Host bawaan request, karena ini pasti lolos dari Docker
         $host = request()->getHost();
 
