@@ -20,9 +20,44 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
+
+    <style>
+        /* Prevent layout transition flashes on initial page render */
+        .preload, 
+        .preload *,
+        .preload #sidebar,
+        .preload #sidebar * {
+            transition: none !important;
+            animation: none !important;
+        }
+
+        /* Smooth, Luxurious Color Mode Theme Transition */
+        .theme-transitioning,
+        .theme-transitioning * {
+            transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important, 
+                        border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important, 
+                        color 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important, 
+                        box-shadow 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important,
+                        opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        /* Smooth, Luxurious Page Entrance Motion (Pure GPU-Accelerated Opacity Fade-in) */
+        @keyframes premiumEntrance {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+        .animate-entrance {
+            animation: premiumEntrance 0.35s ease-out forwards;
+            will-change: opacity;
+        }
+    </style>
 </head>
 
-<body class="min-h-screen font-sans transition-all duration-350" 
+<body class="min-h-screen font-sans transition-all duration-350 preload" 
       :class="{
           'bg-[#f0efe9] text-stone-800': theme === 'light',
           'bg-[#fafaf9] text-stone-850': theme === 'white',
@@ -34,6 +69,12 @@
       }"
       x-init="
           $watch('theme', val => {
+              // Trigger smooth temporary transition classes to prevent layout side-effects
+              document.documentElement.classList.add('theme-transitioning');
+              setTimeout(() => {
+                  document.documentElement.classList.remove('theme-transitioning');
+              }, 550);
+
               if (val === 'dark') {
                   document.documentElement.classList.add('dark');
                   document.documentElement.classList.remove('theme-white');
@@ -53,6 +94,11 @@
           } else if (theme === 'white') {
               document.documentElement.classList.add('theme-white');
           }
+          
+          // Disable preload state after the initial Alpine.js rendering pass to enable subsequent smooth interactions
+          this.$nextTick(() => {
+              document.body.classList.remove('preload');
+          });
       "
       @sidebar-pin-changed.window="sidebarPinned = $event.detail"
       @theme-changed.window="theme = $event.detail">
@@ -81,7 +127,7 @@
         {{-- Main Content --}}
         <main id="main-content" 
               :class="sidebarPinned ? 'lg:ml-[392px]' : 'lg:ml-[120px]'"
-              class="flex-1 min-w-0 transition-all duration-300">
+              class="flex-1 min-w-0 transition-all duration-300 animate-entrance">
             {{-- Top Bar Component --}}
             <x-backend-topbar />
 

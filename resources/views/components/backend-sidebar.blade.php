@@ -10,6 +10,7 @@
             background: #ffffff !important;
             border-radius: 40px !important;
             transition: all 0.38s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            overflow: hidden !important;
         }
 
         html.theme-white #sidebar {
@@ -74,7 +75,6 @@
         /* User profile area and border */
         html.theme-white #sidebar > div {
             border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-            background-color: rgba(0, 0, 0, 0.1) !important;
         }
         html.theme-white #sidebar > div p {
             color: #ffffff !important;
@@ -220,7 +220,7 @@
 
 <aside id="sidebar" 
        x-data="{ 
-           isHovered: false, 
+           isHovered: sessionStorage.getItem('sidebar-was-hovered') === 'true', 
            isPinned: localStorage.getItem('sidebar-pinned') === 'true',
            hoverTimeout: null,
            init() {
@@ -228,6 +228,10 @@
                    localStorage.setItem('sidebar-pinned', value);
                    window.dispatchEvent(new CustomEvent('sidebar-pin-changed', { detail: value }));
                });
+               // Clear the flag after a short delay so it doesn't get stuck if the mouse is not actually there
+               setTimeout(() => {
+                   sessionStorage.removeItem('sidebar-was-hovered');
+               }, 800);
            },
            handleMouseEnter() {
                clearTimeout(this.hoverTimeout);
@@ -239,11 +243,13 @@
                clearTimeout(this.hoverTimeout);
                this.hoverTimeout = setTimeout(() => {
                    this.isHovered = false;
+                   sessionStorage.removeItem('sidebar-was-hovered');
                }, 80);
            }
        }"
        @mouseenter="handleMouseEnter()"
        @mouseleave="handleMouseLeave()"
+       @click="sessionStorage.setItem('sidebar-was-hovered', 'true')"
        :class="isPinned || isHovered ? 'lg:w-[352px]' : 'sidebar-collapsed-custom'"
         class="w-72 bg-[#ffffff] dark:bg-stone-900 text-stone-800 dark:text-stone-200 flex flex-col fixed h-full z-[80]
                -translate-x-full lg:translate-x-0 transition-all duration-300 shadow-[4px_0_24px_rgba(0,0,0,0.03)] border-r border-stone-200/50 dark:border-stone-800/50
@@ -264,18 +270,20 @@
     {{-- Navigation --}}
     <nav :class="isPinned || isHovered ? 'px-4 pt-1.5 pb-1.5' : 'lg:px-1 lg:pt-1.5 lg:pb-1.5'"
          class="flex-1 space-y-1 overflow-y-auto custom-scrollbar transition-all duration-300" 
-         x-init="$el.scrollTop = sessionStorage.getItem('sidebarScroll') || 0; $el.addEventListener('scroll', () => sessionStorage.setItem('sidebarScroll', $el.scrollTop))">
+         x-init="$nextTick(() => { setTimeout(() => { $el.scrollTop = sessionStorage.getItem('sidebarScroll') || 0; }, 10); }); $el.addEventListener('scroll', () => sessionStorage.setItem('sidebarScroll', $el.scrollTop))">
         @include('layouts.partials.sidebar-nav')
     </nav>
 
     {{-- User Info --}}
     <div :class="isPinned || isHovered ? 'px-4 py-2.5' : 'lg:p-2.5 lg:flex lg:justify-center'"
-         class="bg-black/5 dark:bg-white/5 border-t border-stone-300/30 dark:border-stone-700/30 shrink-0 transition-all duration-300">
+         class="border-t border-stone-300/30 dark:border-stone-700/30 shrink-0 transition-all duration-300">
         <div :class="isPinned || isHovered ? 'justify-between' : 'lg:justify-center lg:gap-0'"
              class="flex items-center gap-3 transition-all duration-300">
-            <div :class="isPinned || isHovered ? 'w-10 h-10 rounded-xl' : 'lg:w-[52px] lg:h-[52px] lg:rounded-full lg:text-base'" 
-                 class="bg-emerald-700 flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-sm border border-emerald-800/20 transition-all duration-300">
-                 {{ strtoupper(substr(auth()->user()->nama ?? 'U', 0, 1)) }}
+            <div :class="isPinned || isHovered ? 'w-10 h-10 rounded-xl' : 'lg:w-[48px] lg:h-[48px] lg:rounded-full'" 
+                 class="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20 transition-all duration-300">
+                 <svg :class="isPinned || isHovered ? 'w-5 h-5' : 'lg:w-6 lg:h-6'" class="transition-all duration-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                 </svg>
             </div>
             <div x-show="isPinned || isHovered" x-transition.opacity class="flex-1 min-w-0">
                 <p class="text-sm font-bold text-stone-800 dark:text-stone-200 truncate transition-colors">{{ auth()->user()->nama ?? 'Guest' }}</p>
